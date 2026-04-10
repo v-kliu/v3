@@ -3,6 +3,7 @@ interface Project {
   title: string
   description: string
   github: string
+  live?: string
   image: string
 }
 
@@ -12,6 +13,7 @@ const projects: Project[] = [
     title: 'Soarin',
     description: 'Founded Soarin, an EdTech platform that helps students transform their college applications into professional resumes and LinkedIn profiles.',
     github: 'https://github.com/v-kliu/eduresume',
+    live: 'https://soarin.dev/',
     image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/eduresume-QmOdluSZ6Fo5oUSrQa35dpbs6NzjyM.png',
   },
   {
@@ -19,6 +21,7 @@ const projects: Project[] = [
     title: 'TimeSync',
     description: 'Led team of 4 to develop a full-stack app syncing personal calendars to highlight shared availability. Integrated Google Calendar API with Firebase handling 7000+ data points.',
     github: 'https://github.com/v-kliu/time-sync',
+    live: 'https://time-sync-uw.vercel.app/',
     image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/timesync-apAgHHPQCNmDFmsVu1n2kyJ4ilxOH4.png',
   },
   {
@@ -31,7 +34,7 @@ const projects: Project[] = [
   {
     id: 'ecall',
     title: 'eCall',
-    description: "Global emergency assistance platform from DubHacks. Uses T-Mobile location services and Twilio to connect travelers with local emergency services.",
+    description: 'Global emergency assistance platform from DubHacks. Uses T-Mobile location services and Twilio to connect travelers with local emergency services.',
     github: 'https://github.com/v-kliu/eCall',
     image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ecall.jpg-AagulZD67RqzoDQlAXsPfHjxYpqw2g.jpeg',
   },
@@ -51,6 +54,8 @@ const projects: Project[] = [
   },
 ]
 
+const monoFont = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
+
 function ProjectCard({ project }: { project: Project }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -69,13 +74,35 @@ function ProjectCard({ project }: { project: Project }) {
         onError={(e) => { e.currentTarget.style.display = 'none' }}
       />
       <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.3rem', marginTop: 0, color: 'var(--text)' }}>
-        <a href={project.github} target="_blank" rel="noopener noreferrer">
-          {project.title}
-        </a>
+        {project.title}
       </h3>
-      <p style={{ fontSize: '0.85rem', lineHeight: 1.6, color: 'var(--text-muted)', marginTop: 0, marginBottom: 0, flex: 1 }}>
+      <p style={{ fontSize: '0.85rem', lineHeight: 1.6, color: 'var(--text-muted)', marginTop: 0, marginBottom: '0.5rem', flex: 1 }}>
         {project.description}
       </p>
+      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <a
+          href={project.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontFamily: monoFont, fontSize: '0.7rem', color: 'var(--text-faint)', textDecoration: 'none' }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-faint)' }}
+        >
+          github ↗
+        </a>
+        {project.live && (
+          <a
+            href={project.live}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontFamily: monoFont, fontSize: '0.7rem', color: 'var(--text-faint)', textDecoration: 'none' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-faint)' }}
+          >
+            live ↗
+          </a>
+        )}
+      </div>
     </div>
   )
 }

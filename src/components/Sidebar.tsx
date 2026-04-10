@@ -151,7 +151,7 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
         </div>
 
         <p style={{
-          fontSize: '0.65rem',
+          fontSize: '0.78rem',
           color: 'var(--text-faint)',
           margin: '0.5rem 0 0',
           letterSpacing: '0.01em',
