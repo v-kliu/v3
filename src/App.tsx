@@ -117,7 +117,7 @@ export default function App() {
         {/* Desktop sidebar — opaque so snake hides behind it */}
         <aside
           className="hidden lg:block fixed left-0 top-0 h-screen w-[25%] overflow-y-auto border-r paper-crease"
-          style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
+          style={{ borderColor: 'var(--border)' }}
           aria-label="Site sidebar"
         >
           <Sidebar activeSection={activeSection} onNavClick={handleNavClick} />
