@@ -149,6 +149,15 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
             <Mail size={15} />
           </a>
         </div>
+
+        <p style={{
+          fontSize: '0.65rem',
+          color: 'var(--text-faint)',
+          margin: '0.5rem 0 0',
+          letterSpacing: '0.01em',
+        }}>
+          made with ❤️ by victor
+        </p>
       </div>
     </div>
   )
