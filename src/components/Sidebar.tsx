@@ -32,10 +32,10 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
       <div style={{ width: '100%' }}>
         <h1
           style={{
-            fontSize: '1.15rem',
+            fontSize: '1.45rem',
             fontWeight: 700,
             color: 'var(--text)',
-            margin: '0 0 0.3rem 0',
+            margin: '0 0 0.35rem 0',
             letterSpacing: '-0.01em',
             lineHeight: 1.2,
           }}
@@ -44,7 +44,7 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
         </h1>
         <p
           style={{
-            fontSize: '0.72rem',
+            fontSize: '0.88rem',
             color: 'var(--text-faint)',
             margin: 0,
             lineHeight: 1.5,
