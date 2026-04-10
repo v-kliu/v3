@@ -32,7 +32,7 @@ export default function Hero() {
             i build things that matter.
           </p>
           <p style={{ fontSize: '0.92rem', color: 'var(--text-faint)', lineHeight: 1.5, marginBottom: '0.2rem', marginTop: 0 }}>
-            cs + entrepreneurship @ uw. incoming swe @ google.
+            cs + business alum @ uw. incoming swe @ google.
           </p>
           <p style={{ fontSize: '0.92rem', color: 'var(--text-faint)', lineHeight: 1.5, marginTop: 0, marginBottom: 0 }}>
             born in nevada. based in seattle.
