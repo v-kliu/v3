@@ -17,11 +17,11 @@ interface ExperienceEntry {
 const jobEntries: ExperienceEntry[] = [
   {
     id: 'google',
-    period: 'May 2025 - Aug 2025',
-    role: 'Software Engineering Intern',
+    period: 'Aug 2026 -',
+    role: 'Incoming Software Engineer',
     organization: 'Google',
     location: 'Mountain View, CA',
-    description: 'Software Engineering Intern at Google, contributing to the development of scalable systems.',
+    description: 'Incoming Software Engineer at Google.',
     logo: '/images/google.png',
   },
   {
