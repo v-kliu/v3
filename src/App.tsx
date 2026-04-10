@@ -45,7 +45,7 @@ export default function App() {
       <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh' }}>
         {/* Sidebar — always visible */}
         <aside
-          className="fixed left-0 top-0 h-screen w-[25%] overflow-y-auto border-r paper-crease"
+          className="hidden lg:block fixed left-0 top-0 h-screen w-[25%] overflow-y-auto border-r paper-crease"
           style={{ borderColor: 'var(--border)' }}
           aria-label="Site sidebar"
         >
@@ -53,7 +53,7 @@ export default function App() {
         </aside>
 
         {/* Main content */}
-        <main className="ml-[25%]">
+        <main className="lg:ml-[25%]">
           <Hero />
           <About />
           <Experience />

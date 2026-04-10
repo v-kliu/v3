@@ -40,6 +40,9 @@ a:hover {
 
 .section-target { scroll-margin-top: 2rem; }
 
+.section-pad { padding: 1.5rem 1.25rem; }
+@media (min-width: 1024px) { .section-pad { padding: 1.5rem 4rem 1.5rem 5rem; } }
+
 .paper-crease {
   box-shadow:
     inset -2px 0 6px rgba(80, 55, 20, 0.12),
