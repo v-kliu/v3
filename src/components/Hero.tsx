@@ -23,13 +23,14 @@ export default function Hero() {
           src="/images/profile.jpg"
           alt="Victor Liu"
           style={{
-            width: 'clamp(80px, 8vw, 110px)',
-            height: 'clamp(80px, 8vw, 110px)',
+            width: 'clamp(120px, 14vw, 180px)',
+            height: 'clamp(120px, 14vw, 180px)',
             objectFit: 'cover',
             flexShrink: 0,
             borderRadius: '4px',
             border: '1px solid var(--border)',
             marginTop: '4px',
+            marginLeft: '1.5rem',
           }}
           onError={(e) => { e.currentTarget.style.display = 'none' }}
         />

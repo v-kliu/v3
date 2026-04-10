@@ -41,13 +41,11 @@ const logoWrapStyle: React.CSSProperties = {
   flexShrink: 0,
   borderRadius: '6px',
   border: '1px solid var(--border)',
-  background: '#fff',
   overflow: 'hidden',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   marginTop: '3px',
-  padding: '3px',
 }
 
 export default function Education() {
@@ -83,7 +81,7 @@ export default function Education() {
                 src={entry.logo}
                 alt=""
                 aria-hidden="true"
-                style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 onError={(e) => {
                   const parent = e.currentTarget.parentElement
                   if (parent) parent.style.display = 'none'
