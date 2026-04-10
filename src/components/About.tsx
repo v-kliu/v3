@@ -29,9 +29,9 @@ export default function About() {
         }}
       >
         I was born and raised in Reno, NV, where I became fascinated with tech through the flashy
-        slot machines my parents programmed for work. Seeking greater opportunities, I moved to
-        Seattle to study Computer Science and Entrepreneurship at the University of Washington,
-        and I'm now an incoming SWE at Google.
+        slot machines my parents programmed for work. I moved to
+        Seattle to study Computer Science and Business at the University of Washington, and
+        post-grad I'm an incoming Software Engineer at Google.
       </p>
 
       <p

@@ -51,7 +51,7 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
             letterSpacing: '0.02em',
           }}
         >
-          student · founder · engineer
+          engineer · founder · napper
         </p>
       </div>
 

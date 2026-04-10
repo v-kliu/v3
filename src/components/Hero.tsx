@@ -29,13 +29,13 @@ export default function Hero() {
               marginTop: 0,
             }}
           >
-            i build things that matter.
+            i like to build.
           </p>
           <p style={{ fontSize: '0.92rem', color: 'var(--text-faint)', lineHeight: 1.5, marginBottom: '0.2rem', marginTop: 0 }}>
             cs + business alum @ uw. incoming swe @ google.
           </p>
           <p style={{ fontSize: '0.92rem', color: 'var(--text-faint)', lineHeight: 1.5, marginTop: 0, marginBottom: 0 }}>
-            born in nevada. based in seattle.
+            born in nevada. based in seattle/sf.
           </p>
         </div>
 
