@@ -8,6 +8,7 @@ interface SidebarProps {
 const navItems = [
   { id: 'about', label: 'About' },
   { id: 'experience', label: 'Experience' },
+  { id: 'education', label: 'Education' },
   { id: 'projects', label: 'Projects' },
   { id: 'contact', label: 'Contact' },
 ]
@@ -24,11 +25,11 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
         textAlign: 'center',
       }}
     >
-      {/* Top spacer — pushes identity block down */}
-      <div style={{ flex: '0 0 auto', height: '12vh', minHeight: '60px' }} />
+      {/* Top spacer — pushes name down to ~35-40% from top */}
+      <div style={{ flex: 1 }} />
 
       {/* Identity */}
-      <div style={{ marginBottom: '2.5rem', width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <h1
           style={{
             fontSize: '1.15rem',
@@ -54,15 +55,14 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
         </p>
       </div>
 
-      {/* Navigation — centered in remaining space */}
+      {/* Gap between name and nav */}
+      <div style={{ flex: 0.4 }} />
+
+      {/* Navigation */}
       <nav
         aria-label="Main navigation"
         style={{
-          flex: 1,
           width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
         }}
       >
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -96,6 +96,9 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
           })}
         </ul>
       </nav>
+
+      {/* Space below nav */}
+      <div style={{ flex: 1 }} />
 
       {/* Bottom: resume + socials */}
       <div
