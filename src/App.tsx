@@ -4,10 +4,11 @@ import Sidebar from './components/Sidebar'
 import Hero from './components/Hero'
 import About from './components/About'
 import Experience from './components/Experience'
+import Education from './components/Education'
 import Projects from './components/Projects'
 import Contact from './components/Contact'
 
-const SECTIONS = ['about', 'experience', 'projects', 'contact'] as const
+const SECTIONS = ['about', 'experience', 'education', 'projects', 'contact'] as const
 type SectionId = (typeof SECTIONS)[number]
 
 export default function App() {
@@ -61,7 +62,7 @@ export default function App() {
   }, [mobileOpen])
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh' }}>
       {/* Mobile header */}
       <header
         className="lg:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-6 py-4 border-b"
@@ -138,6 +139,7 @@ export default function App() {
         <Hero />
         <About />
         <Experience />
+        <Education />
         <Projects />
         <Contact />
       </main>

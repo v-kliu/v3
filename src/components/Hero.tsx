@@ -4,7 +4,7 @@ export default function Hero() {
       aria-label="Introduction"
       className="px-6 pt-10 pb-6 lg:pl-[5rem] lg:pr-[4rem] lg:pt-14 lg:pb-8"
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '2rem' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.5rem' }}>
         {/* Text block */}
         <div style={{ flex: 1 }}>
           <h1
@@ -44,8 +44,8 @@ export default function Hero() {
           src="/images/profile.jpg"
           alt="Victor Liu"
           style={{
-            width: 'clamp(120px, 14vw, 180px)',
-            height: 'clamp(120px, 14vw, 180px)',
+            width: 'clamp(100px, 10vw, 140px)',
+            height: 'clamp(100px, 10vw, 140px)',
             objectFit: 'cover',
             flexShrink: 0,
             borderRadius: '4px',
