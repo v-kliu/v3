@@ -51,7 +51,7 @@ export default function Hero() {
             borderRadius: '4px',
             border: '1px solid var(--border)',
             marginTop: '4px',
-            marginLeft: '1.5rem',
+            marginLeft: '3rem',
           }}
           onError={(e) => { e.currentTarget.style.display = 'none' }}
         />

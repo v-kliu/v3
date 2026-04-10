@@ -268,50 +268,51 @@ export default function SnakeGame() {
         style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}
       />
 
-      {/* Auto / Manual toggle */}
-      <button
-        onClick={toggleMode}
-        style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem',
-          zIndex: 10,
-          fontFamily: monoFont,
-          fontSize: '0.65rem',
-          letterSpacing: '0.04em',
-          color: 'var(--text-muted)',
-          background: 'var(--bg)',
-          border: '1px solid var(--border)',
-          borderRadius: '4px',
-          padding: '0.25rem 0.6rem',
-          cursor: 'pointer',
-          opacity: 0.8,
-          userSelect: 'none',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = '1' }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = '0.8' }}
-      >
-        {mode === 'auto' ? 'auto' : 'manual'}
-      </button>
-
-      {/* Score */}
+      {/* Bottom-right: toggle + score/best grouped together */}
       <div style={{
         position: 'fixed',
         bottom: '1.25rem',
         right: '1.25rem',
         zIndex: 10,
-        fontFamily: monoFont,
-        fontSize: '0.65rem',
-        color: 'var(--text-muted)',
-        textAlign: 'right',
-        lineHeight: 1.7,
-        pointerEvents: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: '0.3rem',
         userSelect: 'none',
-        opacity: 0.8,
       }}>
-        {dead && <div style={{ color: 'var(--accent)', opacity: 0.75, marginBottom: '0.1rem' }}>game over</div>}
-        <div>score  {score}</div>
-        <div>best   {highScore}</div>
+        <button
+          onClick={toggleMode}
+          style={{
+            fontFamily: monoFont,
+            fontSize: '0.65rem',
+            letterSpacing: '0.04em',
+            color: 'var(--text-muted)',
+            background: 'var(--bg)',
+            border: '1px solid var(--border)',
+            borderRadius: '4px',
+            padding: '0.2rem 0.55rem',
+            cursor: 'pointer',
+            opacity: 0.8,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '1' }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '0.8' }}
+        >
+          {mode === 'auto' ? 'auto' : 'manual'}
+        </button>
+
+        <div style={{
+          fontFamily: monoFont,
+          fontSize: '0.65rem',
+          color: 'var(--text-muted)',
+          textAlign: 'right',
+          lineHeight: 1.7,
+          pointerEvents: 'none',
+          opacity: 0.8,
+        }}>
+          {dead && <div style={{ color: 'var(--accent)', opacity: 0.75, marginBottom: '0.1rem' }}>game over</div>}
+          <div>score  {score}</div>
+          <div>best   {highScore}</div>
+        </div>
       </div>
     </>
   )
