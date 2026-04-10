@@ -18,10 +18,10 @@ const entries: EducationEntry[] = [
   {
     id: 'uw',
     institution: 'University of Washington',
-    degree: 'B.S. Computer Science, minor Entrepreneurship',
+    degree: 'B.S. Computer Science, Minor in Business Administration',
     period: 'Aug 2023 - Mar 2026',
     location: 'Seattle, WA',
-    description: 'Pursuing a B.S. in Computer Science with a minor in Entrepreneurship. Coursework includes Data Structures, Algorithms, Systems Programming, and Database Systems. Active in tech clubs, hackathons, and teaching assistantships.',
+    description: 'Obtained degree in 2.5 years at 20 years old. Held various leadership positions, am a TA, and was active in the startup community on campus.',
     logo: '/images/uw_logo.png',
   },
   {
@@ -30,7 +30,7 @@ const entries: EducationEntry[] = [
     degree: 'Study Abroad',
     period: 'Aug 2025 - Dec 2025',
     location: 'Singapore',
-    description: 'Studied abroad at NUS, one of Asia\'s top-ranked universities. Coursework focused on advanced computing topics in an international academic environment.',
+    description: 'Completed a university exchange at NUS to explore Asia\'s entrepreneurial ecosystem and gain a global perspective while taking computing curriculum.',
     logo: '/images/nus_logo.jpg',
   },
 ]
