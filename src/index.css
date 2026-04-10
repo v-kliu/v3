@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --bg: #F0E9D6;
-  --bg-alt: #E8E0C8;
+  --bg: #E8DEC8;
+  --bg-alt: #DDD3B8;
   --text: #1a1a1a;
   --text-muted: #5a5a5a;
   --text-faint: #9A8E78;
   --accent: #8B0000;
-  --border: #C4BAA0;
+  --border: #B8AC92;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -18,15 +18,16 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  /* Layered background: base yellowed paper + ultra-faint horizontal fiber lines */
+  /* Aged, darkened newspaper base — more yellow-brown than before */
   background-color: var(--bg);
+  /* Horizontal fiber lines at low opacity */
   background-image:
     repeating-linear-gradient(
       0deg,
       transparent,
       transparent 28px,
-      rgba(180, 160, 120, 0.04) 28px,
-      rgba(180, 160, 120, 0.04) 29px
+      rgba(100, 80, 40, 0.07) 28px,
+      rgba(100, 80, 40, 0.07) 29px
     );
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -37,64 +38,81 @@ body {
 }
 
 /*
-  Layer 1 — Grain/noise texture
-  An feTurbulence SVG filter rendered as a base64 background-image.
-  Fixed positioning pins it to the viewport so it never scrolls,
-  giving a consistent material feel rather than a tiling pattern.
-  pointer-events: none ensures it never intercepts clicks.
+  CRUMPLE LAYER — rendered OVER all content via z-index: 9999.
+  Uses feTurbulence SVG grain + overlay blend mode so the texture
+  visibly tints both light and dark areas of the page.
+  pointer-events: none so it never blocks clicks.
 */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: 9999;
   pointer-events: none;
-  /* feTurbulence noise: baseFrequency 0.65 gives fine grain close to newsprint.
-     numOctaves 4 adds multi-scale detail so it reads as organic fiber, not pixel noise.
-     The result is stitchTiles-safe and tileable at any viewport size. */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
   background-repeat: repeat;
-  background-size: 300px 300px;
-  opacity: 0.13;
-  mix-blend-mode: multiply;
+  background-size: 200px 200px;
+  opacity: 0.28;
+  mix-blend-mode: overlay;
 }
 
 /*
-  Layer 2 — Aged-edge vignette
-  A radial gradient that brightens slightly at the center and
-  deepens to a warm amber-brown at the corners — the way old
-  newsprint oxidizes unevenly from the edges inward.
-  A second diagonal linear gradient adds a very faint tonal
-  shift (lighter top-left, slightly darker bottom-right) that
-  breaks the flat symmetry and makes the paper feel physically real.
+  CRUMPLE FOLD LINES — simulates the irregular creases of crumpled paper.
+  Multiple diagonal and near-vertical gradients at different angles and
+  positions produce visible darker streaks that read as fold shadows.
+  Also rendered over content (z-index: 9999).
 */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: 9999;
   pointer-events: none;
   background-image:
+    /* Aged-edge vignette — deep amber corners */
     radial-gradient(
       ellipse at 50% 42%,
-      transparent 38%,
-      rgba(139, 110, 60, 0.09) 65%,
-      rgba(101, 76, 30, 0.22) 100%
+      transparent 30%,
+      rgba(120, 88, 30, 0.14) 60%,
+      rgba(80, 52, 10, 0.38) 100%
     ),
+    /* Fold crease — upper left diagonal */
+    linear-gradient(
+      128deg,
+      transparent 0%,
+      transparent 22%,
+      rgba(60, 40, 10, 0.09) 22.5%,
+      transparent 23%,
+      transparent 100%
+    ),
+    /* Fold crease — middle right diagonal */
+    linear-gradient(
+      74deg,
+      transparent 0%,
+      transparent 48%,
+      rgba(50, 30, 5, 0.07) 48.5%,
+      transparent 49.2%,
+      transparent 100%
+    ),
+    /* Fold crease — lower left, shallower */
+    linear-gradient(
+      155deg,
+      transparent 0%,
+      transparent 61%,
+      rgba(60, 38, 8, 0.08) 61.5%,
+      transparent 62.2%,
+      transparent 100%
+    ),
+    /* Broad tonal shift — lighter top-left, darker bottom-right */
     linear-gradient(
       135deg,
-      rgba(255, 252, 230, 0.04) 0%,
-      transparent 45%,
-      rgba(90, 65, 20, 0.05) 100%
+      rgba(255, 248, 215, 0.06) 0%,
+      transparent 40%,
+      rgba(70, 45, 10, 0.08) 100%
     );
 }
 
-/*
-  All content must sit above the texture pseudo-elements.
-  Any direct child of body that holds real UI gets z-index: 1.
-  Using a broad selector here so layout components don't need
-  individual z-index declarations.
-*/
+/* Content must sit BELOW the overlay texture layers */
 body > * {
   position: relative;
   z-index: 1;
@@ -114,14 +132,8 @@ a:hover {
 
 .section-target { scroll-margin-top: 2rem; }
 
-/*
-  Crease shadow utility — apply to sidebar borders or divider elements
-  to give a subtle paper-fold depth without a hard line.
-  The inset shadows simulate the slight shadow a fold casts on
-  the recessed side of the crease.
-*/
 .paper-crease {
   box-shadow:
-    inset -2px 0 4px rgba(100, 80, 40, 0.06),
-    inset -1px 0 1px rgba(100, 80, 40, 0.04);
+    inset -2px 0 6px rgba(80, 55, 20, 0.12),
+    inset -1px 0 2px rgba(80, 55, 20, 0.08);
 }
