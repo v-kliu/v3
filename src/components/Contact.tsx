@@ -3,7 +3,7 @@ export default function Contact() {
     <section
       id="contact"
       className="section-target"
-      style={{ padding: '5rem 4rem 6rem 5rem' }}
+      style={{ padding: '1.5rem 4rem 3rem 5rem' }}
     >
       <h2
         style={{
