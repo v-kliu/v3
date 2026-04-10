@@ -7,6 +7,7 @@ import Experience from './components/Experience'
 import Education from './components/Education'
 import Projects from './components/Projects'
 import Contact from './components/Contact'
+import SnakeGame from './components/SnakeGame'
 
 const SECTIONS = ['about', 'experience', 'education', 'projects', 'contact'] as const
 type SectionId = (typeof SECTIONS)[number]
@@ -63,6 +64,9 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
+      {/* Background snake game — renders at z-index 0, content above */}
+      <SnakeGame />
+
       {/* Mobile header */}
       <header
         className="lg:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-6 py-4 border-b"
@@ -127,14 +131,14 @@ export default function App() {
       {/* Desktop sidebar */}
       <aside
         className="hidden lg:block fixed left-0 top-0 h-screen w-[25%] overflow-y-auto border-r paper-crease"
-        style={{ borderColor: 'var(--border)' }}
+        style={{ borderColor: 'var(--border)', background: 'var(--bg)', position: 'relative', zIndex: 1 }}
         aria-label="Site sidebar"
       >
         <Sidebar activeSection={activeSection} onNavClick={handleNavClick} />
       </aside>
 
       {/* Main content */}
-      <main className="lg:ml-[25%]">
+      <main className="lg:ml-[25%]" style={{ position: 'relative', zIndex: 1, background: 'var(--bg)' }}>
         <div className="lg:hidden h-16" aria-hidden="true" />
         <Hero />
         <About />
