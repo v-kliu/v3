@@ -221,12 +221,12 @@ export default function SnakeGame() {
         zIndex: 10,
         fontFamily: 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace',
         fontSize: '0.65rem',
-        color: 'var(--text-faint)',
+        color: 'var(--text-muted)',
         textAlign: 'right',
         lineHeight: 1.7,
         pointerEvents: 'none',
         userSelect: 'none',
-        opacity: 0.65,
+        opacity: 0.8,
       }}>
         {dead && <div style={{ color: 'var(--accent)', opacity: 0.75, marginBottom: '0.1rem' }}>game over</div>}
         <div>score  {score}</div>
