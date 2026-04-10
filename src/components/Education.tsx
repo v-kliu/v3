@@ -52,8 +52,7 @@ export default function Education() {
   return (
     <section
       id="education"
-      className="section-target"
-      style={{ padding: '1.5rem 4rem 1.5rem 5rem' }}
+      className="section-target section-pad"
     >
       <h2
         style={{

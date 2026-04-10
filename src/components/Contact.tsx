@@ -2,8 +2,7 @@ export default function Contact() {
   return (
     <section
       id="contact"
-      className="section-target"
-      style={{ padding: '1.5rem 4rem 3rem 5rem' }}
+      className="section-target section-pad"
     >
       <h2
         style={{
@@ -19,11 +18,11 @@ export default function Contact() {
         Contact
       </h2>
 
-      <p style={{ margin: '0 0 0.3rem 0', fontSize: '1rem' }}>
-        <a href="mailto:vkliu@uw.edu">vkliu@uw.edu</a>
-      </p>
       <p style={{ margin: 0, fontSize: '1rem', color: 'var(--text-muted)' }}>
         always happy to chat if you reach out :)
+      </p>
+      <p style={{ margin: '0 0 0.3rem 0', fontSize: '1rem' }}>
+        <a href="mailto:vkliu@uw.edu">vkliu@uw.edu</a>
       </p>
     </section>
   )

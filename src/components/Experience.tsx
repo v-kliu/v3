@@ -61,8 +61,7 @@ export default function Experience() {
   return (
     <section
       id="experience"
-      className="section-target"
-      style={{ padding: '1.5rem 4rem 1.5rem 5rem' }}
+      className="section-target section-pad"
     >
       <h2
         style={{
