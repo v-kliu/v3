@@ -3,7 +3,7 @@ export default function About() {
     <section
       id="about"
       className="section-target"
-      style={{ padding: '2rem 4rem 3rem 5rem' }}
+      style={{ padding: '1.5rem 4rem 1.5rem 5rem' }}
     >
       <h2
         style={{
