@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #F4EFE0;
+  --bg-alt: #EDE7D2;
+  --text: #1a1a1a;
+  --text-muted: #5a5a5a;
+  --text-faint: #9A8E78;
+  --accent: #8B0000;
+  --border: #C8C0A8;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  /* Layered background: base yellowed paper + ultra-faint horizontal fiber lines */
+  background-color: var(--bg);
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 28px,
+      rgba(180, 160, 120, 0.04) 28px,
+      rgba(180, 160, 120, 0.04) 29px
+    );
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/*
+  Layer 1 — Grain/noise texture
+  An feTurbulence SVG filter rendered as a base64 background-image.
+  Fixed positioning pins it to the viewport so it never scrolls,
+  giving a consistent material feel rather than a tiling pattern.
+  pointer-events: none ensures it never intercepts clicks.
+*/
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* feTurbulence noise: baseFrequency 0.65 gives fine grain close to newsprint.
+     numOctaves 4 adds multi-scale detail so it reads as organic fiber, not pixel noise.
+     The result is stitchTiles-safe and tileable at any viewport size. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 300px 300px;
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+}
+
+/*
+  Layer 2 — Aged-edge vignette
+  A radial gradient that brightens slightly at the center and
+  deepens to a warm amber-brown at the corners — the way old
+  newsprint oxidizes unevenly from the edges inward.
+  A second diagonal linear gradient adds a very faint tonal
+  shift (lighter top-left, slightly darker bottom-right) that
+  breaks the flat symmetry and makes the paper feel physically real.
+*/
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      ellipse at 50% 42%,
+      transparent 38%,
+      rgba(139, 110, 60, 0.07) 65%,
+      rgba(101, 76, 30, 0.16) 100%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(255, 252, 230, 0.04) 0%,
+      transparent 45%,
+      rgba(90, 65, 20, 0.05) 100%
+    );
+}
+
+/*
+  All content must sit above the texture pseudo-elements.
+  Any direct child of body that holds real UI gets z-index: 1.
+  Using a broad selector here so layout components don't need
+  individual z-index declarations.
+*/
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.section-target { scroll-margin-top: 2rem; }
+
+/*
+  Crease shadow utility — apply to sidebar borders or divider elements
+  to give a subtle paper-fold depth without a hard line.
+  The inset shadows simulate the slight shadow a fold casts on
+  the recessed side of the crease.
+*/
+.paper-crease {
+  box-shadow:
+    inset -2px 0 4px rgba(100, 80, 40, 0.06),
+    inset -1px 0 1px rgba(100, 80, 40, 0.04);
+}
