@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  /* Color tokens — overridden per theme via JS */
   --bg: #E8DEC8;
   --bg-alt: #DDD3B8;
   --text: #1a1a1a;
@@ -10,6 +11,15 @@
   --text-faint: #9A8E78;
   --accent: #8B0000;
   --border: #B8AC92;
+
+  /* Texture tokens — overridden per theme via JS */
+  --grain-opacity: 0.28;
+  --fold-color-1: rgba(60, 40, 10, 0.09);
+  --fold-color-2: rgba(50, 30, 5, 0.07);
+  --fold-color-3: rgba(60, 38, 8, 0.08);
+  --vignette-mid: rgba(120, 88, 30, 0.14);
+  --vignette-edge: rgba(80, 52, 10, 0.38);
+  --fiber-color: rgba(100, 80, 40, 0.07);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -18,16 +28,14 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  /* Aged, darkened newspaper base — more yellow-brown than before */
   background-color: var(--bg);
-  /* Horizontal fiber lines at low opacity */
   background-image:
     repeating-linear-gradient(
       0deg,
       transparent,
       transparent 28px,
-      rgba(100, 80, 40, 0.07) 28px,
-      rgba(100, 80, 40, 0.07) 29px
+      var(--fiber-color) 28px,
+      var(--fiber-color) 29px
     );
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -38,10 +46,10 @@ body {
 }
 
 /*
-  CRUMPLE LAYER — rendered OVER all content via z-index: 9999.
-  Uses feTurbulence SVG grain + overlay blend mode so the texture
-  visibly tints both light and dark areas of the page.
-  pointer-events: none so it never blocks clicks.
+  GRAIN — rendered over all content at z-index 9999 so the texture
+  is visible regardless of what background color content divs have.
+  mix-blend-mode: overlay lightens peaks and darkens valleys, working
+  on both light and dark backgrounds.
 */
 body::before {
   content: "";
@@ -52,15 +60,14 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 200px 200px;
-  opacity: 0.28;
+  opacity: var(--grain-opacity);
   mix-blend-mode: overlay;
 }
 
 /*
-  CRUMPLE FOLD LINES — simulates the irregular creases of crumpled paper.
-  Multiple diagonal and near-vertical gradients at different angles and
-  positions produce visible darker streaks that read as fold shadows.
-  Also rendered over content (z-index: 9999).
+  CRUMPLE LINES + VIGNETTE — fold shadows and aged-edge darkening.
+  Uses CSS custom properties so each theme can control line color and
+  vignette intensity. Also rendered over content.
 */
 body::after {
   content: "";
@@ -69,50 +76,39 @@ body::after {
   z-index: 9999;
   pointer-events: none;
   background-image:
-    /* Aged-edge vignette — deep amber corners */
     radial-gradient(
       ellipse at 50% 42%,
       transparent 30%,
-      rgba(120, 88, 30, 0.14) 60%,
-      rgba(80, 52, 10, 0.38) 100%
+      var(--vignette-mid) 60%,
+      var(--vignette-edge) 100%
     ),
-    /* Fold crease — upper left diagonal */
     linear-gradient(
       128deg,
       transparent 0%,
       transparent 22%,
-      rgba(60, 40, 10, 0.09) 22.5%,
+      var(--fold-color-1) 22.5%,
       transparent 23%,
       transparent 100%
     ),
-    /* Fold crease — middle right diagonal */
     linear-gradient(
       74deg,
       transparent 0%,
       transparent 48%,
-      rgba(50, 30, 5, 0.07) 48.5%,
+      var(--fold-color-2) 48.5%,
       transparent 49.2%,
       transparent 100%
     ),
-    /* Fold crease — lower left, shallower */
     linear-gradient(
       155deg,
       transparent 0%,
       transparent 61%,
-      rgba(60, 38, 8, 0.08) 61.5%,
+      var(--fold-color-3) 61.5%,
       transparent 62.2%,
       transparent 100%
-    ),
-    /* Broad tonal shift — lighter top-left, darker bottom-right */
-    linear-gradient(
-      135deg,
-      rgba(255, 248, 215, 0.06) 0%,
-      transparent 40%,
-      rgba(70, 45, 10, 0.08) 100%
     );
 }
 
-/* Content must sit BELOW the overlay texture layers */
+/* Content sits below the texture overlay layers */
 body > * {
   position: relative;
   z-index: 1;
