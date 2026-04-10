@@ -7,28 +7,13 @@ import Experience from './components/Experience'
 import Education from './components/Education'
 import Projects from './components/Projects'
 import Contact from './components/Contact'
-import ThemeToggle from './components/ThemeToggle'
-import { themes, Theme } from './themes'
 
 const SECTIONS = ['about', 'experience', 'education', 'projects', 'contact'] as const
 type SectionId = (typeof SECTIONS)[number]
 
-function applyTheme(theme: Theme) {
-  const root = document.documentElement
-  Object.entries(theme.vars).forEach(([key, value]) => {
-    root.style.setProperty(key, value)
-  })
-}
-
 export default function App() {
   const [activeSection, setActiveSection] = useState<SectionId>('about')
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [theme, setTheme] = useState<Theme>(themes[0])
-
-  // Apply theme vars to :root on mount and on change
-  useEffect(() => {
-    applyTheme(theme)
-  }, [theme])
 
   const handleNavClick = (section: string) => {
     const el = document.getElementById(section)
@@ -78,9 +63,6 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      {/* Theme switcher — fixed top-right, above grain overlay */}
-      <ThemeToggle current={theme} onChange={setTheme} />
-
       {/* Mobile header */}
       <header
         className="lg:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-6 py-4 border-b"
