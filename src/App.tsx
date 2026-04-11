@@ -6,6 +6,7 @@ import Experience from './components/Experience'
 import Education from './components/Education'
 import Projects from './components/Projects'
 import Contact from './components/Contact'
+import StatsForNerds from './components/StatsForNerds'
 import SnakeGame from './components/SnakeGame'
 
 const SECTIONS = ['about', 'experience', 'education', 'projects', 'contact'] as const
@@ -60,6 +61,7 @@ export default function App() {
           <Education />
           <Projects />
           <Contact />
+          <StatsForNerds />
         </main>
       </div>
     </>
