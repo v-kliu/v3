@@ -2,7 +2,10 @@ import { Redis } from '@upstash/redis'
 import { createClient } from '@supabase/supabase-js'
 
 const redis = Redis.fromEnv()
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_ANON_KEY!
+)
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -11,12 +14,24 @@ export default async function handler(req: any, res: any) {
 
   const totalVisits = await redis.incr('totalVisits')
 
-  await supabase.from('visits').insert({
-    country: 'unknown',
-    city: 'unknown',
-    region: 'unknown',
-    device: 'unknown'
-  })
+  try {
+    const country = (req.headers['x-vercel-ip-country'] as string) ?? 'unknown'
+    const city = decodeURIComponent((req.headers['x-vercel-ip-city'] as string) ?? 'unknown')
+    const region = (req.headers['x-vercel-ip-country-region'] as string) ?? 'unknown'
 
-  return res.status(200).json({ totalVisits })
+    const { error } = await supabase.from('visits').insert({
+      country,
+      city,
+      region,
+      device: 'unknown',
+    })
+
+    if (error) {
+      return res.status(500).json({ error: error.message })
+    }
+
+    return res.status(200).json({ totalVisits })
+  } catch (err) {
+    return res.status(500).json({ error: 'Internal server error' })
+  }
 }
