@@ -11,28 +11,12 @@ export default async function handler(req: any, res: any) {
 
   const totalVisits = await redis.incr('totalVisits')
 
-  try {
-    const country = (req.headers['x-vercel-ip-country'] as string) ?? 'unknown'
-    const city = decodeURIComponent((req.headers['x-vercel-ip-city'] as string) ?? 'unknown')
-    const region = (req.headers['x-vercel-ip-country-region'] as string) ?? 'unknown'
-    const latitude = (req.headers['x-vercel-ip-latitude'] as string) ?? null
-    const longitude = (req.headers['x-vercel-ip-longitude'] as string) ?? null
+  await supabase.from('visits').insert({
+    country: 'unknown',
+    city: 'unknown',
+    region: 'unknown',
+    device: 'unknown'
+  })
 
-    const { error } = await supabase.from('visits').insert({
-      country,
-      city,
-      region,
-      latitude,
-      longitude,
-      device: 'unknown', // TODO: parse from user-agent if needed
-    })
-
-    if (error) {
-      return res.status(500).json({ error: error.message })
-    }
-
-    return res.status(200).json({ totalVisits })
-  } catch (err) {
-    return res.status(500).json({ error: 'Internal server error' })
-  }
+  return res.status(200).json({ totalVisits })
 }
