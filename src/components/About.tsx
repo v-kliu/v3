@@ -44,7 +44,7 @@ export default function About() {
           marginBottom: 0,
         }}
       >
-        I like to push myself to grow mainly by constantly seeking discomfort in new environments and taking on new challenges. 
+        I like to push myself to grow by constantly seeking discomfort in new environments and taking on new challenges. 
         I am currently side questing and building Soarin, an EdTech platform
         that helps students turn their college applications into professional resumes.
       </p>
