@@ -19,11 +19,22 @@ export default async function handler(req: any, res: any) {
     const city = decodeURIComponent((req.headers['x-vercel-ip-city'] as string) ?? 'unknown')
     const region = (req.headers['x-vercel-ip-country-region'] as string) ?? 'unknown'
 
+    const latitude = (req.headers['x-vercel-ip-latitude'] as string) ?? null
+    const longitude = (req.headers['x-vercel-ip-longitude'] as string) ?? null
+
+    const ua = (req.headers['user-agent'] as string) ?? ''
+    const device = /mobile/i.test(ua) ? 'mobile' : /tablet|ipad/i.test(ua) ? 'tablet' : 'desktop'
+    const is_admin = false
+
+
     const { error } = await supabase.from('visits').insert({
       country,
       city,
       region,
-      device: 'unknown',
+      device,
+      latitude,
+      longitude,
+      is_admin
     })
 
     if (error) {

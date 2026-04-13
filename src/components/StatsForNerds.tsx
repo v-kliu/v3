@@ -7,27 +7,31 @@ const monoStyle: React.CSSProperties = {
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
-export interface VisitorDot {
-  longitude: number
+interface Dot {
   latitude: number
+  longitude: number
 }
 
-interface Props {
-  dots?: VisitorDot[]
-}
-
-export default function StatsForNerds({ dots = [] }: Props) {
+export default function StatsForNerds() {
   const [totalVisits, setTotalVisits] = useState<number | null>(null)
-  const [error, setError] = useState(false)
+  const [visitError, setVisitError] = useState(false)
+  const [dots, setDots] = useState<Dot[]>([])
 
   useEffect(() => {
     fetch('/api/visit', { method: 'POST' })
       .then((res) => res.json())
       .then((data: { totalVisits: number }) => setTotalVisits(data.totalVisits))
-      .catch(() => setError(true))
+      .catch(() => setVisitError(true))
   }, [])
 
-  const countDisplay = error
+  useEffect(() => {
+    fetch('/api/locations')
+      .then((res) => res.json())
+      .then((data: { dots: Dot[] }) => setDots(data.dots))
+      .catch(() => {/* silently ignore — map still renders without dots */})
+  }, [])
+
+  const countDisplay = visitError
     ? '—'
     : totalVisits === null
       ? '...'
@@ -53,10 +57,9 @@ export default function StatsForNerds({ dots = [] }: Props) {
       <p style={{ ...monoStyle, fontSize: '0.85rem', color: 'var(--text-faint)', marginBottom: '1.25rem', marginTop: 0 }}>
         total visits{' '}
         <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{countDisplay}</span>
-        {!error && totalVisits !== null && ' and counting!'}
+        {!visitError && totalVisits !== null && ' and counting!'}
       </p>
 
-      {/* World map — dots will be added here once visitor API is ready */}
       <div style={{ width: '380px', maxWidth: '100%', margin: '0 auto' }}>
         <ComposableMap
           projection="geoNaturalEarth1"
@@ -68,34 +71,33 @@ export default function StatsForNerds({ dots = [] }: Props) {
               geographies
                 .filter((geo) => geo.properties.name !== 'Antarctica')
                 .map((geo) => (
-                <Geography
-                  key={geo.rsmKey}
-                  geography={geo}
-                  style={{
-                    default: {
-                      fill: 'rgba(34, 197, 94, 0.45)',
-                      stroke: 'rgba(74, 222, 128, 0.75)',
-                      strokeWidth: 0.4,
-                      outline: 'none',
-                    },
-                    hover: {
-                      fill: 'rgba(34, 197, 94, 0.45)',
-                      stroke: 'rgba(74, 222, 128, 0.75)',
-                      strokeWidth: 0.4,
-                      outline: 'none',
-                    },
-                    pressed: {
-                      fill: 'rgba(34, 197, 94, 0.45)',
-                      stroke: 'rgba(74, 222, 128, 0.75)',
-                      strokeWidth: 0.4,
-                      outline: 'none',
-                    },
-                  }}
-                />
-              ))
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    style={{
+                      default: {
+                        fill: 'rgba(34, 197, 94, 0.45)',
+                        stroke: 'rgba(74, 222, 128, 0.75)',
+                        strokeWidth: 0.4,
+                        outline: 'none',
+                      },
+                      hover: {
+                        fill: 'rgba(34, 197, 94, 0.45)',
+                        stroke: 'rgba(74, 222, 128, 0.75)',
+                        strokeWidth: 0.4,
+                        outline: 'none',
+                      },
+                      pressed: {
+                        fill: 'rgba(34, 197, 94, 0.45)',
+                        stroke: 'rgba(74, 222, 128, 0.75)',
+                        strokeWidth: 0.4,
+                        outline: 'none',
+                      },
+                    }}
+                  />
+                ))
             }
           </Geographies>
-          {/* Visitor dots — rendered once API returns coordinates */}
           {dots.map((dot, i) => (
             <Marker key={i} coordinates={[dot.longitude, dot.latitude]}>
               <circle r={3} fill="rgba(0, 217, 255, 0.9)" stroke="rgba(0, 217, 255, 0.25)" strokeWidth={5} />
