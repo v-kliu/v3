@@ -1,17 +1,38 @@
 import { Redis } from '@upstash/redis'
+import { createClient } from '@supabase/supabase-js'
 
 const redis = Redis.fromEnv()
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
 
-// req/res typed as any — @vercel/node types not installed locally;
-// api/ is excluded from tsconfig so this doesn't affect the local build.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function handler(req: any, res: any) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed!' })
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' })
+  }
+
+  const totalVisits = await redis.incr('totalVisits')
+
+  try {
+    const country = (req.headers['x-vercel-ip-country'] as string) ?? 'unknown'
+    const city = decodeURIComponent((req.headers['x-vercel-ip-city'] as string) ?? 'unknown')
+    const region = (req.headers['x-vercel-ip-country-region'] as string) ?? 'unknown'
+    const latitude = (req.headers['x-vercel-ip-latitude'] as string) ?? null
+    const longitude = (req.headers['x-vercel-ip-longitude'] as string) ?? null
+
+    const { error } = await supabase.from('visits').insert({
+      country,
+      city,
+      region,
+      latitude,
+      longitude,
+      device: 'unknown', // TODO: parse from user-agent if needed
+    })
+
+    if (error) {
+      return res.status(500).json({ error: error.message })
     }
 
-    // else valid post
-    const totalVisits = await redis.incr('totalVisits')
-
     return res.status(200).json({ totalVisits })
+  } catch (err) {
+    return res.status(500).json({ error: 'Internal server error' })
+  }
 }

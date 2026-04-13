@@ -57,42 +57,37 @@ export default function StatsForNerds({ dots = [] }: Props) {
       </p>
 
       {/* World map — dots will be added here once visitor API is ready */}
-      <div
-        style={{
-          borderRadius: '6px',
-          border: '1px solid rgba(74, 222, 128, 0.15)',
-          overflow: 'hidden',
-          background: 'rgba(10, 12, 20, 0.6)',
-          position: 'relative',
-        }}
-      >
+      <div style={{ width: '380px', maxWidth: '100%', margin: '0 auto' }}>
         <ComposableMap
-          projectionConfig={{ scale: 140, center: [10, 10] }}
+          projection="geoNaturalEarth1"
+          projectionConfig={{ scale: 153, center: [10, 0] }}
           style={{ width: '100%', height: 'auto', display: 'block' }}
         >
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>
-              geographies.map((geo) => (
+              geographies
+                .filter((geo) => geo.properties.name !== 'Antarctica')
+                .map((geo) => (
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
                   style={{
                     default: {
-                      fill: 'rgba(74, 222, 128, 0.18)',
-                      stroke: 'rgba(74, 222, 128, 0.45)',
-                      strokeWidth: 0.5,
+                      fill: 'rgba(34, 197, 94, 0.45)',
+                      stroke: 'rgba(74, 222, 128, 0.75)',
+                      strokeWidth: 0.4,
                       outline: 'none',
                     },
                     hover: {
-                      fill: 'rgba(74, 222, 128, 0.18)',
-                      stroke: 'rgba(74, 222, 128, 0.45)',
-                      strokeWidth: 0.5,
+                      fill: 'rgba(34, 197, 94, 0.45)',
+                      stroke: 'rgba(74, 222, 128, 0.75)',
+                      strokeWidth: 0.4,
                       outline: 'none',
                     },
                     pressed: {
-                      fill: 'rgba(74, 222, 128, 0.18)',
-                      stroke: 'rgba(74, 222, 128, 0.45)',
-                      strokeWidth: 0.5,
+                      fill: 'rgba(34, 197, 94, 0.45)',
+                      stroke: 'rgba(74, 222, 128, 0.75)',
+                      strokeWidth: 0.4,
                       outline: 'none',
                     },
                   }}
@@ -103,7 +98,7 @@ export default function StatsForNerds({ dots = [] }: Props) {
           {/* Visitor dots — rendered once API returns coordinates */}
           {dots.map((dot, i) => (
             <Marker key={i} coordinates={[dot.longitude, dot.latitude]}>
-              <circle r={4} fill="rgba(0, 217, 255, 0.85)" stroke="rgba(0, 217, 255, 0.3)" strokeWidth={6} />
+              <circle r={3} fill="rgba(0, 217, 255, 0.9)" stroke="rgba(0, 217, 255, 0.25)" strokeWidth={5} />
             </Marker>
           ))}
         </ComposableMap>
