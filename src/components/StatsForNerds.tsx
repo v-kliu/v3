@@ -7,10 +7,47 @@ const monoStyle: React.CSSProperties = {
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
+const DOT_COLORS = [
+  'rgba(0, 217, 255, 0.9)',
+  'rgba(255, 59, 130, 0.9)',
+  'rgba(255, 165, 0, 0.9)',
+  'rgba(180, 80, 255, 0.9)',
+  'rgba(255, 230, 0, 0.9)',
+  'rgba(255, 100, 50, 0.9)',
+  'rgba(0, 180, 255, 0.9)',
+  'rgba(255, 60, 60, 0.9)',
+  'rgba(200, 130, 255, 0.9)',
+  'rgba(255, 200, 80, 0.9)',
+  'rgba(80, 220, 255, 0.9)',
+  'rgba(255, 130, 180, 0.9)',
+  'rgba(140, 255, 240, 0.9)',
+  'rgba(255, 80, 200, 0.9)',
+  'rgba(255, 190, 40, 0.9)',
+  'rgba(100, 160, 255, 0.9)',
+]
+
+function randomColor(): string {
+  return DOT_COLORS[Math.floor(Math.random() * DOT_COLORS.length)]
+}
+
 interface Dot {
   latitude: number
   longitude: number
+  color: string
 }
+
+const DEV_DOTS: Dot[] = [
+  { latitude:  37.3382, longitude: -121.8863, color: randomColor() }, // San Jose
+  { latitude:  40.7128, longitude:  -74.0060, color: randomColor() }, // New York
+  { latitude:  51.5074, longitude:   -0.1276, color: randomColor() }, // London
+  { latitude:  48.8566, longitude:    2.3522, color: randomColor() }, // Paris
+  { latitude:  35.6895, longitude:  139.6917, color: randomColor() }, // Tokyo
+  { latitude: -33.8688, longitude:  151.2093, color: randomColor() }, // Sydney
+  { latitude: -23.5505, longitude:  -46.6333, color: randomColor() }, // São Paulo
+  { latitude:  19.0760, longitude:   72.8777, color: randomColor() }, // Mumbai
+  { latitude:  55.7558, longitude:   37.6173, color: randomColor() }, // Moscow
+  { latitude:  -1.2921, longitude:   36.8219, color: randomColor() }, // Nairobi
+]
 
 export default function StatsForNerds() {
   const [totalVisits, setTotalVisits] = useState<number | null>(null)
@@ -25,9 +62,15 @@ export default function StatsForNerds() {
   }, [])
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      setDots(DEV_DOTS)
+      return
+    }
     fetch('/api/locations')
       .then((res) => res.json())
-      .then((data: { dots: Dot[] }) => setDots(data.dots))
+      .then((data: { dots: Omit<Dot, 'color'>[] }) =>
+        setDots(data.dots.map((d) => ({ ...d, color: randomColor() })))
+      )
       .catch(() => {/* silently ignore — map still renders without dots */})
   }, [])
 
@@ -60,7 +103,7 @@ export default function StatsForNerds() {
         {!visitError && totalVisits !== null && ' and counting!'}
       </p>
 
-      <div style={{ width: '380px', maxWidth: '100%', margin: '0 auto' }}>
+      <div style={{ width: '580px', maxWidth: '100%', margin: '0 auto' }}>
         <ComposableMap
           projection="geoNaturalEarth1"
           projectionConfig={{ scale: 153, center: [10, 0] }}
@@ -100,7 +143,7 @@ export default function StatsForNerds() {
           </Geographies>
           {dots.map((dot, i) => (
             <Marker key={i} coordinates={[dot.longitude, dot.latitude]}>
-              <circle r={3} fill="rgba(0, 217, 255, 0.9)" stroke="rgba(0, 217, 255, 0.25)" strokeWidth={5} />
+              <circle r={4} fill={dot.color} stroke={dot.color.replace('0.9)', '0.35)')} strokeWidth={6} />
             </Marker>
           ))}
         </ComposableMap>

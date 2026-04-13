@@ -13,20 +13,29 @@ export default async function handler(req: any, res: any) {
 
   const { data, error } = await supabase
     .from('visits')
-    .select('latitude, longitude')
+    .select('ip, latitude, longitude')
     .not('latitude', 'is', null)
     .not('longitude', 'is', null)
     .neq('latitude', 'unknown')
     .neq('longitude', 'unknown')
+    .neq('ip', 'unknown')
 
   if (error) {
     return res.status(500).json({ error: error.message })
   }
 
-  const dots = data.map((row: { latitude: string; longitude: string }) => ({
-    latitude: parseFloat(row.latitude),
-    longitude: parseFloat(row.longitude),
-  }))
+  // One dot per unique IP address
+  const seen = new Set<string>()
+  const dots = (data as { ip: string; latitude: string; longitude: string }[])
+    .filter((row) => {
+      if (seen.has(row.ip)) return false
+      seen.add(row.ip)
+      return true
+    })
+    .map((row) => ({
+      latitude: parseFloat(row.latitude),
+      longitude: parseFloat(row.longitude),
+    }))
 
   return res.status(200).json({ dots })
 }
