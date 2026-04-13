@@ -40,7 +40,7 @@ About, Experience, Education, Projects
 - No AI-slop patterns — no gradient blobs, no bento boxes, no generic 3-column icon grids
 
 ## Commands
-- npm start — local dev server
+- npm start — local dev server (runs on http://localhost:5173)
 - npm run build — production build
 
 ## Build Requirement
