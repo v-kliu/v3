@@ -36,18 +36,6 @@ interface Dot {
   color: string
 }
 
-const DEV_DOTS: Dot[] = [
-  { latitude:  37.3382, longitude: -121.8863, color: randomColor() }, // San Jose
-  { latitude:  40.7128, longitude:  -74.0060, color: randomColor() }, // New York
-  { latitude:  51.5074, longitude:   -0.1276, color: randomColor() }, // London
-  { latitude:  48.8566, longitude:    2.3522, color: randomColor() }, // Paris
-  { latitude:  35.6895, longitude:  139.6917, color: randomColor() }, // Tokyo
-  { latitude: -33.8688, longitude:  151.2093, color: randomColor() }, // Sydney
-  { latitude: -23.5505, longitude:  -46.6333, color: randomColor() }, // São Paulo
-  { latitude:  19.0760, longitude:   72.8777, color: randomColor() }, // Mumbai
-  { latitude:  55.7558, longitude:   37.6173, color: randomColor() }, // Moscow
-  { latitude:  -1.2921, longitude:   36.8219, color: randomColor() }, // Nairobi
-]
 
 export default function StatsForNerds() {
   const [totalVisits, setTotalVisits] = useState<number | null>(null)
@@ -62,10 +50,6 @@ export default function StatsForNerds() {
   }, [])
 
   useEffect(() => {
-    if (import.meta.env.DEV) {
-      setDots(DEV_DOTS)
-      return
-    }
     fetch('/api/locations')
       .then((res) => res.json())
       .then((data: { dots: Omit<Dot, 'color'>[] }) =>
