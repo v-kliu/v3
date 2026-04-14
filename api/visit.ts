@@ -26,7 +26,7 @@ export default async function handler(req: any, res: any) {
     const device = /mobile/i.test(ua) ? 'mobile' : /tablet|ipad/i.test(ua) ? 'tablet' : 'desktop'
     
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] ?? 'unknown'
-    const is_admin = ip === process.env.ADMIN_IP!
+    const is_admin = (ip === process.env.ADMIN_IP!) || (ip === process.env.ADMIN_IP_MOBILE!)
 
 
     const { error } = await supabase.from('visits').insert({
