@@ -35,7 +35,7 @@ const jobEntries: ExperienceEntry[] = [
   },
   {
     id: 'soarin',
-    period: 'Jan 2025 - Present',
+    period: 'Jan 2025 - Feb 2026',
     role: 'Founder',
     organization: 'Soarin',
     location: 'Seattle, WA',
