@@ -19,7 +19,7 @@ const entries: EducationEntry[] = [
     id: 'uw',
     institution: 'University of Washington',
     degree: 'B.S. Computer Science, Minor in Business Administration',
-    period: 'Aug 2023 - Mar 2026',
+    period: 'Sep 2023 - Mar 2026',
     location: 'Seattle, WA',
     description: 'Obtained degree in 2.5 years at 20 years old. Held leadership positions in DubHacks and Theta Tau, was a TA, and was active in the startup community.',
     logo: '/images/uw_logo.png',
