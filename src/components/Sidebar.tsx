@@ -113,7 +113,7 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
         }}
       >
         <a
-          href="/files/victor_liu_resume.pdf"
+          href="/files/vkliu_post_grad.pdf"
           download
           style={{
             display: 'inline-flex',
