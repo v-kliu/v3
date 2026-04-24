@@ -22,7 +22,7 @@ export default function Contact() {
         always happy to chat if you reach out :)
       </p>
       <p style={{ margin: '0 0 0.3rem 0', fontSize: '1rem' }}>
-        <a href="mailto:vkliu@uw.edu">vkliu@uw.edu</a>
+        <a href="mailto:vkaihongliu@gmail.com">vkaihongliu@gmail.com</a>
       </p>
     </section>
   )
