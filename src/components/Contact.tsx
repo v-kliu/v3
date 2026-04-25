@@ -12,7 +12,7 @@ export default function Contact() {
           marginBottom: '1.25rem',
           marginTop: 0,
           color: 'var(--text)',
-          lineHeight: 1.2,
+          lineHeight: 1.2, 
         }}
       >
         Contact
