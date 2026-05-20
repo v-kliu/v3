@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Github, Linkedin, Mail, Download } from 'lucide-react'
 
 interface SidebarProps {
@@ -156,7 +157,9 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
           margin: '0.5rem 0 0',
           letterSpacing: '0.01em',
         }}>
-          made with ❤️ by victor
+          made with{' '}
+          <Link href="/dashboard/login" style={{ color: 'inherit', textDecoration: 'none' }}>❤️</Link>
+          {' '}by victor
         </p>
       </div>
     </div>
