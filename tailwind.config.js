@@ -1,7 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "./index.html",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx}",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
@@ -22,10 +23,10 @@ export default {
         }
       },
       fontFamily: {
-        syne: ['Syne', 'sans-serif'],
-        serif: ['"DM Serif Display"', 'Georgia', 'serif'],
-        mono: ['"DM Mono"', 'monospace'],
-        body: ['Inter', 'sans-serif'],
+        syne: ['var(--font-syne)', 'sans-serif'],
+        serif: ['var(--font-dm-serif)', 'Georgia', 'serif'],
+        mono: ['var(--font-dm-mono)', 'monospace'],
+        body: ['var(--font-inter)', 'sans-serif'],
       },
     },
   },
