@@ -59,6 +59,29 @@ function formatDuration(seconds: number): string {
   return `${m}m`
 }
 
+function playChime() {
+  try {
+    const ctx = new AudioContext()
+    const tones = [523.25, 659.25, 783.99] // C5, E5, G5
+    tones.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.value = freq
+      const start = ctx.currentTime + i * 0.3
+      gain.gain.setValueAtTime(0, start)
+      gain.gain.linearRampToValueAtTime(0.25, start + 0.05)
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 1.2)
+      osc.start(start)
+      osc.stop(start + 1.2)
+    })
+  } catch { /* AudioContext not available */ }
+}
+
+const MILES_STORAGE_KEY = 'eve-liu-miles'
+
 export default function FlightPomodoroPage() {
   const [phase, setPhase] = useState<Phase>('idle')
   const [input, setInput] = useState('')
@@ -67,7 +90,17 @@ export default function FlightPomodoroPage() {
   const [secondsLeft, setSecondsLeft] = useState(0)
   const [totalSeconds, setTotalSeconds] = useState(0)
   const [liuMiles, setLiuMiles] = useState(0)
+  const [totalMiles, setTotalMiles] = useState(0)
   const savedRef = useRef(false)
+
+  // Load total miles from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(MILES_STORAGE_KEY)
+    if (stored !== null) {
+      const parsed = parseInt(stored, 10)
+      if (!isNaN(parsed)) setTotalMiles(parsed)
+    }
+  }, [])
 
   // Countdown tick
   useEffect(() => {
@@ -85,6 +118,17 @@ export default function FlightPomodoroPage() {
   useEffect(() => {
     if (phase !== 'complete' || !flight || savedRef.current) return
     savedRef.current = true
+
+    // Play completion chime
+    playChime()
+
+    // Update total miles in state and localStorage
+    setTotalMiles((prev) => {
+      const next = prev + liuMiles
+      localStorage.setItem(MILES_STORAGE_KEY, String(next))
+      return next
+    })
+
     fetch('/api/pomodoro', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -184,7 +228,7 @@ export default function FlightPomodoroPage() {
   const progress = totalSeconds > 0 ? (totalSeconds - secondsLeft) / totalSeconds : 0
 
   return (
-    <div style={{ maxWidth: '580px' }}>
+    <div style={{ maxWidth: '580px', width: '100%' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{
           fontSize: '1.4rem',
@@ -195,14 +239,25 @@ export default function FlightPomodoroPage() {
         }}>
           flight pomodoro
         </h1>
-        <p style={{
-          fontSize: '0.85rem',
-          color: 'var(--text-faint)',
-          margin: 0,
-          fontFamily: mono,
-        }}>
-          a real flight becomes your focus session.
-        </p>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '1.5rem', flexWrap: 'wrap' }}>
+          <p style={{
+            fontSize: '0.85rem',
+            color: 'var(--text-faint)',
+            margin: 0,
+            fontFamily: mono,
+          }}>
+            a real flight becomes your focus session.
+          </p>
+          <p style={{
+            fontSize: '0.75rem',
+            color: 'var(--text-faint)',
+            margin: 0,
+            fontFamily: mono,
+            whiteSpace: 'nowrap',
+          }}>
+            total liu miles&nbsp;&nbsp;<span style={{ color: 'var(--text)', fontWeight: 600 }}>{totalMiles.toLocaleString()}</span>
+          </p>
+        </div>
       </div>
 
       {/* ── IDLE / SEARCHING ── */}
@@ -428,7 +483,7 @@ export default function FlightPomodoroPage() {
             display: 'flex',
             alignItems: 'center',
             gap: '0.6rem',
-            marginBottom: '2rem',
+            marginBottom: '1.5rem',
             fontFamily: mono,
             fontSize: '0.8rem',
             color: 'var(--text-faint)',
@@ -439,45 +494,52 @@ export default function FlightPomodoroPage() {
             </span>
           </div>
 
-          <div style={{ marginBottom: '0.75rem' }}>
-            <div style={{
-              fontFamily: mono,
-              fontSize: '5rem',
-              fontWeight: 700,
-              color: 'var(--text)',
-              letterSpacing: '-0.04em',
-              lineHeight: 1,
-            }}>
-              {formatCountdown(secondsLeft)}
-            </div>
-          </div>
-
           <div style={{
-            height: '2px',
-            background: 'var(--border)',
-            borderRadius: '1px',
-            overflow: 'hidden',
+            background: 'var(--bg-alt)',
+            border: '1px solid var(--border)',
+            borderRadius: '4px',
+            padding: '2rem',
             marginBottom: '1.25rem',
           }}>
-            <div style={{
-              height: '100%',
-              width: `${progress * 100}%`,
-              background: 'var(--accent)',
-              transition: 'width 1s linear',
-            }} />
-          </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{
+                fontFamily: mono,
+                fontSize: '5rem',
+                fontWeight: 700,
+                color: 'var(--text)',
+                letterSpacing: '-0.04em',
+                lineHeight: 1,
+              }}>
+                {formatCountdown(secondsLeft)}
+              </div>
+            </div>
 
-          <div style={{
-            display: 'flex',
-            gap: '2rem',
-            marginBottom: '2.5rem',
-            fontFamily: mono,
-            fontSize: '0.75rem',
-            color: 'var(--text-faint)',
-          }}>
-            <span>{formatDuration(totalSeconds - secondsLeft)} elapsed</span>
-            <span>{formatDuration(secondsLeft)} remaining</span>
-            {liuMiles > 0 && <span>~{liuMiles.toLocaleString()} liu miles</span>}
+            <div style={{
+              height: '2px',
+              background: 'var(--border)',
+              borderRadius: '1px',
+              overflow: 'hidden',
+              marginBottom: '1.25rem',
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${progress * 100}%`,
+                background: 'var(--accent)',
+                transition: 'width 1s linear',
+              }} />
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: '2rem',
+              fontFamily: mono,
+              fontSize: '0.75rem',
+              color: 'var(--text-faint)',
+            }}>
+              <span>{formatDuration(totalSeconds - secondsLeft)} elapsed</span>
+              <span>{formatDuration(secondsLeft)} remaining</span>
+              {liuMiles > 0 && <span>~{liuMiles.toLocaleString()} liu miles</span>}
+            </div>
           </div>
 
           <button

@@ -74,7 +74,7 @@ export default function LoginPage() {
               margin: '0 0 0.15rem 0',
               letterSpacing: '-0.01em',
             }}>
-              Eve
+              eve
             </p>
             <p style={{
               fontFamily: mono,

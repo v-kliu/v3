@@ -39,7 +39,7 @@ export default function DashboardSidebar() {
           margin: '0 0 0.5rem 0',
           letterSpacing: '-0.01em',
         }}>
-          Eve
+          eve
         </p>
         <Link href="/" style={{
           fontFamily: mono,

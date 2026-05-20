@@ -6,7 +6,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside style={{ width: '200px', flexShrink: 0, position: 'sticky', top: 0, height: '100vh' }}>
         <DashboardSidebar />
       </aside>
-      <main style={{ flex: 1, padding: '2rem 2.5rem', overflowY: 'auto' }}>
+      <main style={{ flex: 1, padding: '2rem 2.5rem', overflowY: 'auto', display: 'flex', justifyContent: 'center' }}>
         {children}
       </main>
     </div>
