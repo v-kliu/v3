@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose'
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
-const COOKIE_NAME = 'jarvis-session'
+const COOKIE_NAME = 'eve-session'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
 
 export async function signToken(): Promise<string> {

@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Plane, Mic, LogOut } from 'lucide-react'
 
+const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
+
 const navItems = [
   { href: '/dashboard', label: 'Flight Pomodoro', icon: Plane },
   { href: '/dashboard/journal', label: 'Voice Journal', icon: Mic },
@@ -28,16 +30,27 @@ export default function DashboardSidebar() {
     }}
     className="paper-crease"
     >
-      <p style={{
-        fontFamily: 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace',
-        fontSize: '0.7rem',
-        color: 'var(--text-faint)',
-        letterSpacing: '0.08em',
-        margin: '0 0 2rem 0',
-        textTransform: 'uppercase',
-      }}>
-        jarvis
-      </p>
+      <div style={{ marginBottom: '2rem' }}>
+        <p style={{
+          fontFamily: mono,
+          fontSize: '0.85rem',
+          fontWeight: 600,
+          color: 'var(--text)',
+          margin: '0 0 0.5rem 0',
+          letterSpacing: '-0.01em',
+        }}>
+          Eve
+        </p>
+        <Link href="/" style={{
+          fontFamily: mono,
+          fontSize: '0.68rem',
+          color: 'var(--text-faint)',
+          textDecoration: 'none',
+          letterSpacing: '0.03em',
+        }}>
+          ← home
+        </Link>
+      </div>
 
       <nav style={{ flex: 1 }}>
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
