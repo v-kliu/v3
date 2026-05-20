@@ -48,3 +48,13 @@ a:hover {
     inset -2px 0 6px rgba(80, 55, 20, 0.12),
     inset -1px 0 2px rgba(80, 55, 20, 0.08);
 }
+
+/* Main layout sidebar — hidden on mobile, shown on desktop */
+.main-sidebar {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .main-sidebar {
+    display: block;
+  }
+}

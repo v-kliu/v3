@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'flight number required' }, { status: 400 })
   }
 
-  const url = `http://api.aviationstack.com/v1/flights?access_key=${process.env.AVIATIONSTACK_API_KEY}&flight_iata=${flight}&flight_status=active`
+  const url = `http://api.aviationstack.com/v1/flights?access_key=${process.env.AVIATIONSTACK_API_KEY}&flight_iata=${flight}`
 
   const res = await fetch(url, { next: { revalidate: 60 } })
   if (!res.ok) {

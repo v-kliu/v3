@@ -1,9 +1,17 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plane, Search } from 'lucide-react'
+import { Plane, Search, Shuffle } from 'lucide-react'
 
 const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
+
+// Popular routes that are likely to have active flights throughout the day
+const RANDOM_FLIGHTS = [
+  'AA100', 'AA1', 'UA1', 'UA400', 'DL1', 'DL400',
+  'WN1', 'B61', 'AS1', 'F91', 'NK1', 'G41',
+  'BA1', 'BA177', 'LH400', 'AF1', 'EK201', 'QR1',
+  'SQ1', 'CX1', 'NH1', 'JL1', 'KE1', 'OZ1',
+]
 
 interface FlightData {
   flight: { iata: string; number: string }
@@ -14,8 +22,6 @@ interface FlightData {
     scheduled: string
     actual: string | null
     estimated: string | null
-    latitude: number | null
-    longitude: number | null
   }
   arrival: {
     iata: string
@@ -23,28 +29,20 @@ interface FlightData {
     scheduled: string
     actual: string | null
     estimated: string | null
-    latitude: number | null
-    longitude: number | null
   }
   flight_status: string
-  live?: {
-    altitude: number
-    speed_horizontal: number
-  }
 }
 
 type Phase = 'idle' | 'searching' | 'preview' | 'active' | 'complete'
 
-function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 3958.8
-  const dLat = (lat2 - lat1) * (Math.PI / 180)
-  const dLon = (lon2 - lon1) * (Math.PI / 180)
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2
-  return Math.round(2 * R * Math.asin(Math.sqrt(a)))
+// Estimate distance from flight duration × average cruising speed
+function estimateMiles(departureActual: string, arrivalEstimated: string): number {
+  const hrs = (new Date(arrivalEstimated).getTime() - new Date(departureActual).getTime()) / 3_600_000
+  return Math.max(0, Math.round(hrs * 550))
+}
+
+function isAirborne(f: FlightData): boolean {
+  return f.departure.actual !== null && f.arrival.actual === null
 }
 
 function formatCountdown(seconds: number): string {
@@ -76,17 +74,14 @@ export default function FlightPomodoroPage() {
     if (phase !== 'active') return
     const id = setInterval(() => {
       setSecondsLeft((s) => {
-        if (s <= 1) {
-          setPhase('complete')
-          return 0
-        }
+        if (s <= 1) { setPhase('complete'); return 0 }
         return s - 1
       })
     }, 1000)
     return () => clearInterval(id)
   }, [phase])
 
-  // Save session when naturally completed
+  // Save session on natural completion
   useEffect(() => {
     if (phase !== 'complete' || !flight || savedRef.current) return
     savedRef.current = true
@@ -104,9 +99,7 @@ export default function FlightPomodoroPage() {
     }).catch(() => {})
   }, [phase, flight, liuMiles, totalSeconds])
 
-  async function handleSearch() {
-    const num = input.trim().toUpperCase().replace(/\s+/g, '')
-    if (!num) return
+  async function fetchFlight(num: string) {
     setPhase('searching')
     setError('')
     try {
@@ -114,34 +107,29 @@ export default function FlightPomodoroPage() {
       const json = await res.json()
 
       if (!json.data || json.data.length === 0) {
-        setError(`No active flight found for "${num}". Try another (e.g. AA100, UA5).`)
+        setError(`No flight found for "${num}". Try a major carrier (e.g. AA100, BA177, LH400).`)
         setPhase('idle')
         return
       }
 
       const f: FlightData = json.data[0]
 
-      if (f.flight_status !== 'active') {
-        setError(`${num} is ${f.flight_status} — pick a flight currently in the air.`)
+      if (!isAirborne(f)) {
+        const status = f.flight_status
+        setError(
+          status === 'landed'
+            ? `${num} has already landed.`
+            : status === 'scheduled' && !f.departure.actual
+            ? `${num} hasn't departed yet.`
+            : `${num} is ${status} — pick a flight currently in the air.`
+        )
         setPhase('idle')
         return
       }
 
-      if (
-        f.departure.latitude != null &&
-        f.departure.longitude != null &&
-        f.arrival.latitude != null &&
-        f.arrival.longitude != null
-      ) {
-        setLiuMiles(
-          haversine(
-            f.departure.latitude,
-            f.departure.longitude,
-            f.arrival.latitude,
-            f.arrival.longitude
-          )
-        )
-      }
+      const arrStr = f.arrival.estimated || f.arrival.scheduled
+      const depStr = f.departure.actual || f.departure.scheduled
+      if (arrStr && depStr) setLiuMiles(estimateMiles(depStr, arrStr))
 
       setFlight(f)
       setPhase('preview')
@@ -151,18 +139,24 @@ export default function FlightPomodoroPage() {
     }
   }
 
+  function handleSearch() {
+    const num = input.trim().toUpperCase().replace(/\s+/g, '')
+    if (!num) return
+    fetchFlight(num)
+  }
+
+  function handleRandom() {
+    const pick = RANDOM_FLIGHTS[Math.floor(Math.random() * RANDOM_FLIGHTS.length)]
+    setInput(pick)
+    fetchFlight(pick)
+  }
+
   function handleLockIn() {
     if (!flight) return
     const arrStr = flight.arrival.estimated || flight.arrival.scheduled
-    if (!arrStr) {
-      setError('No arrival time available for this flight.')
-      return
-    }
+    if (!arrStr) { setError('No arrival time available for this flight.'); return }
     const secs = Math.max(0, Math.floor((new Date(arrStr).getTime() - Date.now()) / 1000))
-    if (secs === 0) {
-      setError('This flight has already landed.')
-      return
-    }
+    if (secs === 0) { setError('This flight has already landed.'); return }
     savedRef.current = false
     setSecondsLeft(secs)
     setTotalSeconds(secs)
@@ -179,12 +173,7 @@ export default function FlightPomodoroPage() {
   }
 
   function handleReset() {
-    setPhase('idle')
-    setFlight(null)
-    setInput('')
-    setError('')
-    setSecondsLeft(0)
-    setTotalSeconds(0)
+    handleAbandon()
     savedRef.current = false
   }
 
@@ -258,6 +247,23 @@ export default function FlightPomodoroPage() {
             >
               <Search size={13} />
               {phase === 'searching' ? 'looking...' : 'search'}
+            </button>
+            <button
+              onClick={handleRandom}
+              disabled={phase === 'searching'}
+              title="Pick a random flight"
+              style={{
+                padding: '0.65rem 0.75rem',
+                background: 'transparent',
+                color: phase === 'searching' ? 'var(--text-faint)' : 'var(--text-muted)',
+                border: '1px solid var(--border)',
+                borderRadius: '3px',
+                cursor: phase === 'searching' ? 'default' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <Shuffle size={13} />
             </button>
           </div>
           {error && (
@@ -351,7 +357,7 @@ export default function FlightPomodoroPage() {
               {[
                 { label: 'flight', value: flight.flight.iata },
                 { label: 'lands at', value: arrivalTime },
-                { label: 'liu miles', value: liuMiles > 0 ? `${liuMiles.toLocaleString()} mi` : '—' },
+                { label: 'liu miles', value: liuMiles > 0 ? `~${liuMiles.toLocaleString()} mi` : '—' },
               ].map(({ label, value }) => (
                 <div key={label}>
                   <div style={{
@@ -418,7 +424,6 @@ export default function FlightPomodoroPage() {
       {/* ── ACTIVE ── */}
       {phase === 'active' && flight && (
         <div>
-          {/* Flight label */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -434,7 +439,6 @@ export default function FlightPomodoroPage() {
             </span>
           </div>
 
-          {/* Big countdown */}
           <div style={{ marginBottom: '0.75rem' }}>
             <div style={{
               fontFamily: mono,
@@ -448,7 +452,6 @@ export default function FlightPomodoroPage() {
             </div>
           </div>
 
-          {/* Progress bar */}
           <div style={{
             height: '2px',
             background: 'var(--border)',
@@ -464,7 +467,6 @@ export default function FlightPomodoroPage() {
             }} />
           </div>
 
-          {/* Elapsed / remaining */}
           <div style={{
             display: 'flex',
             gap: '2rem',
@@ -475,7 +477,7 @@ export default function FlightPomodoroPage() {
           }}>
             <span>{formatDuration(totalSeconds - secondsLeft)} elapsed</span>
             <span>{formatDuration(secondsLeft)} remaining</span>
-            {liuMiles > 0 && <span>{liuMiles.toLocaleString()} liu miles</span>}
+            {liuMiles > 0 && <span>~{liuMiles.toLocaleString()} liu miles</span>}
           </div>
 
           <button
@@ -563,7 +565,7 @@ export default function FlightPomodoroPage() {
                     fontFamily: mono,
                     color: 'var(--text)',
                   }}>
-                    {liuMiles.toLocaleString()}
+                    ~{liuMiles.toLocaleString()}
                   </div>
                 </div>
               )}
