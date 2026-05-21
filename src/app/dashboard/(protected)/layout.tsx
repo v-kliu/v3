@@ -2,11 +2,11 @@ import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
-      <aside style={{ width: '200px', flexShrink: 0, position: 'sticky', top: 0, height: '100vh' }}>
+    <div className="dashboard-root">
+      <aside className="dashboard-aside">
         <DashboardSidebar />
       </aside>
-      <main style={{ flex: 1, padding: '2rem 2.5rem', overflowY: 'auto', display: 'flex', justifyContent: 'center' }}>
+      <main className="dashboard-main">
         {children}
       </main>
     </div>

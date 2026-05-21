@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Mic, Square, Save, Trash2, RotateCcw } from 'lucide-react'
+import { Mic, Square, Save, Trash2, RotateCcw, Pencil } from 'lucide-react'
 
 const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
 
@@ -11,9 +11,11 @@ interface Entry {
   title: string
   transcript: string
   duration_seconds: number
+  entry_type: 'voice' | 'manual'
 }
 
 type Phase = 'idle' | 'recording' | 'processing' | 'preview' | 'saving'
+type Tab = 'voice' | 'manual'
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60)
@@ -30,6 +32,7 @@ function timeAgo(iso: string): string {
 }
 
 export default function JournalPage() {
+  const [tab, setTab] = useState<Tab>('voice')
   const [phase, setPhase] = useState<Phase>('idle')
   const [elapsed, setElapsed] = useState(0)
   const [transcript, setTranscript] = useState('')
@@ -38,6 +41,11 @@ export default function JournalPage() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [loadingEntries, setLoadingEntries] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
+
+  // Manual tab state
+  const [manualText, setManualText] = useState('')
+  const [manualTitle, setManualTitle] = useState('')
+  const [manualSaving, setManualSaving] = useState(false)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
@@ -128,6 +136,7 @@ export default function JournalPage() {
           title: title.trim() || transcript.slice(0, 60),
           transcript,
           duration_seconds: elapsed,
+          entry_type: 'voice',
         }),
       })
       setPhase('idle')
@@ -149,6 +158,30 @@ export default function JournalPage() {
     setError('')
   }
 
+  async function saveManualEntry() {
+    if (!manualText.trim()) return
+    setManualSaving(true)
+    try {
+      await fetch('/api/journal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: manualTitle.trim() || manualText.trim().slice(0, 60),
+          transcript: manualText.trim(),
+          duration_seconds: 0,
+          entry_type: 'manual',
+        }),
+      })
+      setManualText('')
+      setManualTitle('')
+      loadEntries()
+    } catch {
+      /* silent */
+    } finally {
+      setManualSaving(false)
+    }
+  }
+
   const isActive = phase === 'recording'
   const isProcessing = phase === 'processing' || phase === 'saving'
 
@@ -156,86 +189,233 @@ export default function JournalPage() {
     <div style={{ maxWidth: '580px', width: '100%' }}>
 
       {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
+      <div style={{ marginBottom: '1.75rem' }}>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.3rem 0', letterSpacing: '-0.01em' }}>
-          voice journal
+          journal
         </h1>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-faint)', margin: 0, fontFamily: mono }}>
           speak freely. transcribed and stored.
         </p>
       </div>
 
-      {/* ── RECORDER ── */}
-      {(phase === 'idle' || phase === 'recording' || phase === 'processing') && (
-        <div style={{
-          padding: '2.5rem 2rem',
-          border: '1px solid var(--border)',
-          borderRadius: '4px',
-          background: 'var(--bg-alt)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '1.25rem',
-          marginBottom: '2rem',
-        }}>
-          {/* Record button */}
+      {/* ── TAB TOGGLE ── */}
+      <div style={{ display: 'flex', gap: '0', marginBottom: '1.75rem', borderBottom: '1px solid var(--border)' }}>
+        {(['voice', 'manual'] as Tab[]).map((t) => (
           <button
-            onClick={isActive ? stopRecording : startRecording}
-            disabled={isProcessing}
+            key={t}
+            onClick={() => { setTab(t); setError('') }}
             style={{
-              width: '72px',
-              height: '72px',
-              borderRadius: '50%',
-              border: `2px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
-              background: isActive ? 'var(--accent)' : 'transparent',
-              cursor: isProcessing ? 'default' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s',
-              opacity: isProcessing ? 0.5 : 1,
+              background: 'none',
+              border: 'none',
+              borderBottom: tab === t ? '2px solid var(--accent)' : '2px solid transparent',
+              marginBottom: '-1px',
+              padding: '0.5rem 1rem',
+              fontFamily: mono,
+              fontSize: '0.78rem',
+              color: tab === t ? 'var(--accent)' : 'var(--text-faint)',
+              cursor: 'pointer',
+              letterSpacing: '0.04em',
+              transition: 'color 0.15s',
             }}
           >
-            {isActive
-              ? <Square size={22} style={{ color: '#fff8f0' }} />
-              : <Mic size={22} style={{ color: isProcessing ? 'var(--text-faint)' : 'var(--text-muted)' }} />
-            }
+            {t}
           </button>
+        ))}
+      </div>
 
-          {/* Status text */}
-          <div style={{ textAlign: 'center' }}>
-            {phase === 'idle' && (
-              <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)', margin: 0 }}>
-                tap to record
-              </p>
-            )}
-            {phase === 'recording' && (
-              <div>
-                <p style={{ fontFamily: mono, fontSize: '1.4rem', fontWeight: 700, color: 'var(--accent)', margin: '0 0 0.2rem 0', letterSpacing: '-0.02em' }}>
-                  {formatDuration(elapsed)}
+      {/* ── VOICE TAB ── */}
+      {tab === 'voice' && (
+        <>
+          {/* RECORDER */}
+          {(phase === 'idle' || phase === 'recording' || phase === 'processing') && (
+            <div style={{
+              padding: '2.5rem 2rem',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              background: 'var(--bg-alt)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1.25rem',
+              marginBottom: '2rem',
+            }}>
+              <button
+                onClick={isActive ? stopRecording : startRecording}
+                disabled={isProcessing}
+                style={{
+                  width: '72px',
+                  height: '72px',
+                  borderRadius: '50%',
+                  border: `2px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
+                  background: isActive ? 'var(--accent)' : 'transparent',
+                  cursor: isProcessing ? 'default' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                  opacity: isProcessing ? 0.5 : 1,
+                  flexShrink: 0,
+                }}
+              >
+                {isActive
+                  ? <Square size={22} style={{ color: '#fff8f0' }} />
+                  : <Mic size={22} style={{ color: isProcessing ? 'var(--text-faint)' : 'var(--text-muted)' }} />
+                }
+              </button>
+
+              <div style={{ textAlign: 'center' }}>
+                {phase === 'idle' && (
+                  <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)', margin: 0 }}>
+                    tap to record
+                  </p>
+                )}
+                {phase === 'recording' && (
+                  <div>
+                    <p style={{ fontFamily: mono, fontSize: '1.4rem', fontWeight: 700, color: 'var(--accent)', margin: '0 0 0.2rem 0', letterSpacing: '-0.02em' }}>
+                      {formatDuration(elapsed)}
+                    </p>
+                    <p style={{ fontFamily: mono, fontSize: '0.72rem', color: 'var(--text-faint)', margin: 0 }}>
+                      recording — tap to stop
+                    </p>
+                  </div>
+                )}
+                {phase === 'processing' && (
+                  <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)', margin: 0 }}>
+                    transcribing...
+                  </p>
+                )}
+              </div>
+
+              {error && (
+                <p style={{ fontFamily: mono, fontSize: '0.75rem', color: 'var(--accent)', margin: 0, textAlign: 'center' }}>
+                  {error}
                 </p>
-                <p style={{ fontFamily: mono, fontSize: '0.72rem', color: 'var(--text-faint)', margin: 0 }}>
-                  recording — tap to stop
+              )}
+            </div>
+          )}
+
+          {/* PREVIEW */}
+          {(phase === 'preview' || phase === 'saving') && (
+            <div style={{ marginBottom: '2rem' }}>
+              <div style={{
+                padding: '1.5rem',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                background: 'var(--bg-alt)',
+                marginBottom: '0.75rem',
+              }}>
+                <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Mic size={11} style={{ color: 'var(--text-faint)' }} />
+                  <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-faint)' }}>
+                    {formatDuration(elapsed)} recording
+                  </span>
+                </div>
+
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={transcript.slice(0, 60) || 'entry title'}
+                  disabled={phase === 'saving'}
+                  style={{
+                    width: '100%',
+                    padding: '0 0 0.5rem 0',
+                    fontFamily: 'inherit',
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    color: 'var(--text)',
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: '1px solid var(--border)',
+                    outline: 'none',
+                    marginBottom: '1rem',
+                    boxSizing: 'border-box',
+                  }}
+                />
+
+                <p style={{
+                  fontFamily: mono,
+                  fontSize: '0.82rem',
+                  color: 'var(--text-muted)',
+                  lineHeight: 1.7,
+                  margin: 0,
+                  whiteSpace: 'pre-wrap',
+                }}>
+                  {transcript}
                 </p>
               </div>
-            )}
-            {phase === 'processing' && (
-              <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)', margin: 0 }}>
-                transcribing...
-              </p>
-            )}
-          </div>
 
-          {error && (
-            <p style={{ fontFamily: mono, fontSize: '0.75rem', color: 'var(--accent)', margin: 0, textAlign: 'center' }}>
-              {error}
-            </p>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button
+                  onClick={saveEntry}
+                  disabled={phase === 'saving'}
+                  style={{
+                    flex: 1,
+                    minWidth: '100px',
+                    padding: '0.7rem',
+                    background: 'var(--accent)',
+                    color: '#fff8f0',
+                    border: 'none',
+                    borderRadius: '3px',
+                    cursor: phase === 'saving' ? 'default' : 'pointer',
+                    fontFamily: mono,
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem',
+                    opacity: phase === 'saving' ? 0.6 : 1,
+                  }}
+                >
+                  <Save size={13} />
+                  {phase === 'saving' ? 'saving...' : 'save entry'}
+                </button>
+                <button
+                  onClick={discard}
+                  disabled={phase === 'saving'}
+                  title="Re-record"
+                  style={{
+                    padding: '0.7rem 0.9rem',
+                    background: 'transparent',
+                    color: 'var(--text-muted)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    fontFamily: mono,
+                    fontSize: '0.82rem',
+                  }}
+                >
+                  <RotateCcw size={13} />
+                  re-record
+                </button>
+                <button
+                  onClick={discard}
+                  disabled={phase === 'saving'}
+                  title="Discard"
+                  style={{
+                    padding: '0.7rem 0.75rem',
+                    background: 'transparent',
+                    color: 'var(--text-faint)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
           )}
-        </div>
+        </>
       )}
 
-      {/* ── PREVIEW ── */}
-      {(phase === 'preview' || phase === 'saving') && (
+      {/* ── MANUAL TAB ── */}
+      {tab === 'manual' && (
         <div style={{ marginBottom: '2rem' }}>
           <div style={{
             padding: '1.5rem',
@@ -244,20 +424,10 @@ export default function JournalPage() {
             background: 'var(--bg-alt)',
             marginBottom: '0.75rem',
           }}>
-            {/* Duration badge */}
-            <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Mic size={11} style={{ color: 'var(--text-faint)' }} />
-              <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-faint)' }}>
-                {formatDuration(elapsed)} recording
-              </span>
-            </div>
-
-            {/* Title input */}
             <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={transcript.slice(0, 60) || 'entry title'}
-              disabled={phase === 'saving'}
+              value={manualTitle}
+              onChange={(e) => setManualTitle(e.target.value)}
+              placeholder="title (optional)"
               style={{
                 width: '100%',
                 padding: '0 0 0.5rem 0',
@@ -273,84 +443,47 @@ export default function JournalPage() {
                 boxSizing: 'border-box',
               }}
             />
-
-            {/* Transcript */}
-            <p style={{
-              fontFamily: mono,
-              fontSize: '0.82rem',
-              color: 'var(--text-muted)',
-              lineHeight: 1.7,
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-            }}>
-              {transcript}
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              onClick={saveEntry}
-              disabled={phase === 'saving'}
+            <textarea
+              value={manualText}
+              onChange={(e) => setManualText(e.target.value)}
+              placeholder="write freely..."
+              rows={8}
               style={{
-                flex: 1,
-                padding: '0.7rem',
-                background: 'var(--accent)',
-                color: '#fff8f0',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: phase === 'saving' ? 'default' : 'pointer',
-                fontFamily: mono,
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.4rem',
-                opacity: phase === 'saving' ? 0.6 : 1,
-              }}
-            >
-              <Save size={13} />
-              {phase === 'saving' ? 'saving...' : 'save entry'}
-            </button>
-            <button
-              onClick={discard}
-              disabled={phase === 'saving'}
-              title="Re-record"
-              style={{
-                padding: '0.7rem 0.9rem',
-                background: 'transparent',
-                color: 'var(--text-muted)',
-                border: '1px solid var(--border)',
-                borderRadius: '3px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
+                width: '100%',
                 fontFamily: mono,
                 fontSize: '0.82rem',
-              }}
-            >
-              <RotateCcw size={13} />
-              re-record
-            </button>
-            <button
-              onClick={discard}
-              disabled={phase === 'saving'}
-              title="Discard"
-              style={{
-                padding: '0.7rem 0.75rem',
+                color: 'var(--text-muted)',
                 background: 'transparent',
-                color: 'var(--text-faint)',
-                border: '1px solid var(--border)',
-                borderRadius: '3px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
+                border: 'none',
+                outline: 'none',
+                resize: 'vertical',
+                lineHeight: 1.7,
+                boxSizing: 'border-box',
               }}
-            >
-              <Trash2 size={13} />
-            </button>
+            />
           </div>
+          <button
+            onClick={saveManualEntry}
+            disabled={manualSaving || !manualText.trim()}
+            style={{
+              padding: '0.7rem 1.5rem',
+              background: 'var(--accent)',
+              color: '#fff8f0',
+              border: 'none',
+              borderRadius: '3px',
+              cursor: manualSaving || !manualText.trim() ? 'default' : 'pointer',
+              fontFamily: mono,
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              opacity: manualSaving || !manualText.trim() ? 0.5 : 1,
+            }}
+          >
+            <Save size={13} />
+            {manualSaving ? 'saving...' : 'save entry'}
+          </button>
         </div>
       )}
 
@@ -389,15 +522,36 @@ export default function JournalPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: '1rem',
+                  gap: '0.75rem',
                   textAlign: 'left',
                 }}
               >
                 <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {entry.title}
                 </span>
-                <span style={{ fontFamily: mono, fontSize: '0.65rem', color: 'var(--text-faint)', flexShrink: 0 }}>
-                  {formatDuration(entry.duration_seconds)} · {timeAgo(entry.created_at)}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
+                  {/* entry type tag */}
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    fontFamily: mono,
+                    fontSize: '0.6rem',
+                    color: 'var(--text-faint)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '2px',
+                    padding: '0.1rem 0.35rem',
+                    letterSpacing: '0.03em',
+                  }}>
+                    {entry.entry_type === 'manual'
+                      ? <Pencil size={9} />
+                      : <Mic size={9} />
+                    }
+                    {entry.entry_type === 'manual' ? 'manual' : 'voice'}
+                  </span>
+                  <span style={{ fontFamily: mono, fontSize: '0.65rem', color: 'var(--text-faint)' }}>
+                    {entry.entry_type === 'voice' && `${formatDuration(entry.duration_seconds)} · `}{timeAgo(entry.created_at)}
+                  </span>
                 </span>
               </button>
 
