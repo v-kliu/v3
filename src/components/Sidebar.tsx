@@ -145,7 +145,7 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
             style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', minHeight: '32px' }}>
             <Linkedin size={15} />
           </a>
-          <a href="mailto:vkliu@uw.edu" aria-label="Email"
+          <a href="mailto:vkaihongliu@gmail.com" aria-label="Email"
             style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', minHeight: '32px' }}>
             <Mail size={15} />
           </a>
