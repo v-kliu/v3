@@ -64,6 +64,22 @@ export default function App() {
           <Projects />
           <Contact />
           <StatsForNerds />
+
+          {/* Mobile-only footer — sidebar handles this on desktop */}
+          <footer
+            className="lg:hidden"
+            style={{
+              textAlign: 'center',
+              padding: '1.5rem 1.25rem 2rem',
+              fontSize: '0.78rem',
+              color: 'var(--text-faint)',
+              letterSpacing: '0.01em',
+            }}
+          >
+            made with{' '}
+            <a href="/dashboard/login" style={{ color: 'inherit', textDecoration: 'none' }}>❤️</a>
+            {' '}by victor
+          </footer>
         </main>
       </div>
     </>
