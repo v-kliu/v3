@@ -12,9 +12,10 @@ interface Entry {
   transcript: string
   duration_seconds: number
   entry_type: 'voice' | 'manual'
+  rating: number | null
 }
 
-type Phase = 'idle' | 'recording' | 'processing' | 'preview' | 'saving'
+type Phase = 'idle' | 'recording' | 'processing' | 'analyzing' | 'preview' | 'saving'
 type Tab = 'voice' | 'manual'
 
 function formatDuration(seconds: number): string {
@@ -31,21 +32,24 @@ function timeAgo(iso: string): string {
   return `${Math.floor(diff / 86400)}d ago`
 }
 
+function ratingColor(r: number): string {
+  if (r >= 8) return '#5a8a5a'
+  if (r >= 5) return 'var(--text-muted)'
+  return '#8a5a5a'
+}
+
 export default function JournalPage() {
   const [tab, setTab] = useState<Tab>('voice')
   const [phase, setPhase] = useState<Phase>('idle')
   const [elapsed, setElapsed] = useState(0)
   const [transcript, setTranscript] = useState('')
-  const [title, setTitle] = useState('')
+  const [aiTitle, setAiTitle] = useState('')
+  const [aiRating, setAiRating] = useState<number | null>(null)
   const [error, setError] = useState('')
   const [entries, setEntries] = useState<Entry[]>([])
   const [loadingEntries, setLoadingEntries] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
-
-  // Manual tab state
   const [manualText, setManualText] = useState('')
-  const [manualTitle, setManualTitle] = useState('')
-  const [manualSaving, setManualSaving] = useState(false)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
@@ -63,6 +67,20 @@ export default function JournalPage() {
 
   useEffect(() => { loadEntries() }, [loadEntries])
 
+  async function analyze(text: string): Promise<{ title: string; rating: number | null }> {
+    try {
+      const res = await fetch('/api/journal/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript: text }),
+      })
+      const json = await res.json()
+      return { title: json.title ?? text.slice(0, 60), rating: json.rating ?? null }
+    } catch {
+      return { title: text.slice(0, 60), rating: null }
+    }
+  }
+
   async function startRecording() {
     setError('')
     try {
@@ -75,14 +93,12 @@ export default function JournalPage() {
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
       recorder.start(250)
       mediaRecorderRef.current = recorder
-
       durationRef.current = 0
       setElapsed(0)
       timerRef.current = setInterval(() => {
         durationRef.current += 1
         setElapsed(durationRef.current)
       }, 1000)
-
       setPhase('recording')
     } catch {
       setError('Microphone access denied. Allow microphone access and try again.')
@@ -92,7 +108,6 @@ export default function JournalPage() {
   async function stopRecording() {
     if (!mediaRecorderRef.current) return
     if (timerRef.current) clearInterval(timerRef.current)
-
     const recorder = mediaRecorderRef.current
     const duration = durationRef.current
 
@@ -100,7 +115,6 @@ export default function JournalPage() {
       recorder.onstop = () => resolve()
       recorder.stop()
     })
-
     recorder.stream.getTracks().forEach((t) => t.stop())
     setPhase('processing')
 
@@ -108,6 +122,7 @@ export default function JournalPage() {
     const form = new FormData()
     form.append('audio', blob)
 
+    let text = ''
     try {
       const res = await fetch('/api/transcribe', { method: 'POST', body: form })
       const json = await res.json()
@@ -116,33 +131,52 @@ export default function JournalPage() {
         setPhase('idle')
         return
       }
-      setTranscript(json.transcript)
-      setTitle('')
+      text = json.transcript
       setElapsed(duration)
-      setPhase('preview')
     } catch {
       setError('Transcription failed. Try again.')
       setPhase('idle')
+      return
     }
+
+    setPhase('analyzing')
+    const { title, rating } = await analyze(text)
+    setTranscript(text)
+    setAiTitle(title)
+    setAiRating(rating)
+    setPhase('preview')
   }
 
-  async function saveEntry() {
+  async function analyzeManual() {
+    if (!manualText.trim()) return
+    setPhase('analyzing')
+    const { title, rating } = await analyze(manualText.trim())
+    setTranscript(manualText.trim())
+    setAiTitle(title)
+    setAiRating(rating)
+    setPhase('preview')
+  }
+
+  async function saveEntry(entryType: Tab) {
     setPhase('saving')
     try {
       await fetch('/api/journal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: title.trim() || transcript.slice(0, 60),
+          title: aiTitle,
           transcript,
-          duration_seconds: elapsed,
-          entry_type: 'voice',
+          duration_seconds: entryType === 'voice' ? elapsed : 0,
+          entry_type: entryType,
+          rating: aiRating,
         }),
       })
       setPhase('idle')
       setTranscript('')
-      setTitle('')
+      setAiTitle('')
+      setAiRating(null)
       setElapsed(0)
+      if (entryType === 'manual') setManualText('')
       loadEntries()
     } catch {
       setError('Failed to save. Try again.')
@@ -153,37 +187,16 @@ export default function JournalPage() {
   function discard() {
     setPhase('idle')
     setTranscript('')
-    setTitle('')
+    setAiTitle('')
+    setAiRating(null)
     setElapsed(0)
     setError('')
   }
 
-  async function saveManualEntry() {
-    if (!manualText.trim()) return
-    setManualSaving(true)
-    try {
-      await fetch('/api/journal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: manualTitle.trim() || manualText.trim().slice(0, 60),
-          transcript: manualText.trim(),
-          duration_seconds: 0,
-          entry_type: 'manual',
-        }),
-      })
-      setManualText('')
-      setManualTitle('')
-      loadEntries()
-    } catch {
-      /* silent */
-    } finally {
-      setManualSaving(false)
-    }
-  }
-
   const isActive = phase === 'recording'
   const isProcessing = phase === 'processing' || phase === 'saving'
+  const isAnalyzing = phase === 'analyzing'
+  const inPreview = phase === 'preview' || phase === 'saving'
 
   return (
     <div style={{ maxWidth: '580px', width: '100%' }}>
@@ -198,12 +211,12 @@ export default function JournalPage() {
         </p>
       </div>
 
-      {/* ── TAB TOGGLE ── */}
-      <div style={{ display: 'flex', gap: '0', marginBottom: '1.75rem', borderBottom: '1px solid var(--border)' }}>
+      {/* Tab toggle */}
+      <div style={{ display: 'flex', marginBottom: '1.75rem', borderBottom: '1px solid var(--border)' }}>
         {(['voice', 'manual'] as Tab[]).map((t) => (
           <button
             key={t}
-            onClick={() => { setTab(t); setError('') }}
+            onClick={() => { setTab(t); setError(''); if (phase !== 'recording') { discard() } }}
             style={{
               background: 'none',
               border: 'none',
@@ -226,8 +239,8 @@ export default function JournalPage() {
       {/* ── VOICE TAB ── */}
       {tab === 'voice' && (
         <>
-          {/* RECORDER */}
-          {(phase === 'idle' || phase === 'recording' || phase === 'processing') && (
+          {/* Recorder */}
+          {(phase === 'idle' || phase === 'recording' || phase === 'processing' || phase === 'analyzing') && (
             <div style={{
               padding: '2.5rem 2rem',
               border: '1px solid var(--border)',
@@ -241,25 +254,21 @@ export default function JournalPage() {
             }}>
               <button
                 onClick={isActive ? stopRecording : startRecording}
-                disabled={isProcessing}
+                disabled={isProcessing || isAnalyzing}
                 style={{
-                  width: '72px',
-                  height: '72px',
-                  borderRadius: '50%',
+                  width: '72px', height: '72px', borderRadius: '50%',
                   border: `2px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
                   background: isActive ? 'var(--accent)' : 'transparent',
-                  cursor: isProcessing ? 'default' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  cursor: (isProcessing || isAnalyzing) ? 'default' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.2s',
-                  opacity: isProcessing ? 0.5 : 1,
+                  opacity: (isProcessing || isAnalyzing) ? 0.5 : 1,
                   flexShrink: 0,
                 }}
               >
                 {isActive
                   ? <Square size={22} style={{ color: '#fff8f0' }} />
-                  : <Mic size={22} style={{ color: isProcessing ? 'var(--text-faint)' : 'var(--text-muted)' }} />
+                  : <Mic size={22} style={{ color: (isProcessing || isAnalyzing) ? 'var(--text-faint)' : 'var(--text-muted)' }} />
                 }
               </button>
 
@@ -284,6 +293,11 @@ export default function JournalPage() {
                     transcribing...
                   </p>
                 )}
+                {phase === 'analyzing' && (
+                  <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)', margin: 0 }}>
+                    extracting title & rating...
+                  </p>
+                )}
               </div>
 
               {error && (
@@ -294,9 +308,29 @@ export default function JournalPage() {
             </div>
           )}
 
-          {/* PREVIEW */}
-          {(phase === 'preview' || phase === 'saving') && (
-            <div style={{ marginBottom: '2rem' }}>
+          {/* Preview */}
+          {inPreview && (
+            <PreviewCard
+              title={aiTitle}
+              rating={aiRating}
+              body={transcript}
+              duration={elapsed}
+              entryType="voice"
+              saving={phase === 'saving'}
+              onSave={() => saveEntry('voice')}
+              onReRecord={discard}
+              onDiscard={discard}
+            />
+          )}
+        </>
+      )}
+
+      {/* ── MANUAL TAB ── */}
+      {tab === 'manual' && (
+        <>
+          {/* Textarea */}
+          {(phase === 'idle' || phase === 'analyzing') && (
+            <div style={{ marginBottom: '0.75rem' }}>
               <div style={{
                 padding: '1.5rem',
                 border: '1px solid var(--border)',
@@ -304,191 +338,66 @@ export default function JournalPage() {
                 background: 'var(--bg-alt)',
                 marginBottom: '0.75rem',
               }}>
-                <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Mic size={11} style={{ color: 'var(--text-faint)' }} />
-                  <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-faint)' }}>
-                    {formatDuration(elapsed)} recording
-                  </span>
-                </div>
-
-                <input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder={transcript.slice(0, 60) || 'entry title'}
-                  disabled={phase === 'saving'}
+                <textarea
+                  value={manualText}
+                  onChange={(e) => setManualText(e.target.value)}
+                  placeholder="write freely..."
+                  rows={10}
+                  disabled={isAnalyzing}
                   style={{
                     width: '100%',
-                    padding: '0 0 0.5rem 0',
-                    fontFamily: 'inherit',
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    color: 'var(--text)',
-                    background: 'transparent',
-                    border: 'none',
-                    borderBottom: '1px solid var(--border)',
-                    outline: 'none',
-                    marginBottom: '1rem',
-                    boxSizing: 'border-box',
-                  }}
-                />
-
-                <p style={{
-                  fontFamily: mono,
-                  fontSize: '0.82rem',
-                  color: 'var(--text-muted)',
-                  lineHeight: 1.7,
-                  margin: 0,
-                  whiteSpace: 'pre-wrap',
-                }}>
-                  {transcript}
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <button
-                  onClick={saveEntry}
-                  disabled={phase === 'saving'}
-                  style={{
-                    flex: 1,
-                    minWidth: '100px',
-                    padding: '0.7rem',
-                    background: 'var(--accent)',
-                    color: '#fff8f0',
-                    border: 'none',
-                    borderRadius: '3px',
-                    cursor: phase === 'saving' ? 'default' : 'pointer',
-                    fontFamily: mono,
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.4rem',
-                    opacity: phase === 'saving' ? 0.6 : 1,
-                  }}
-                >
-                  <Save size={13} />
-                  {phase === 'saving' ? 'saving...' : 'save entry'}
-                </button>
-                <button
-                  onClick={discard}
-                  disabled={phase === 'saving'}
-                  title="Re-record"
-                  style={{
-                    padding: '0.7rem 0.9rem',
-                    background: 'transparent',
-                    color: 'var(--text-muted)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
                     fontFamily: mono,
                     fontSize: '0.82rem',
-                  }}
-                >
-                  <RotateCcw size={13} />
-                  re-record
-                </button>
-                <button
-                  onClick={discard}
-                  disabled={phase === 'saving'}
-                  title="Discard"
-                  style={{
-                    padding: '0.7rem 0.75rem',
+                    color: 'var(--text-muted)',
                     background: 'transparent',
-                    color: 'var(--text-faint)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
+                    border: 'none',
+                    outline: 'none',
+                    resize: 'vertical',
+                    lineHeight: 1.7,
+                    boxSizing: 'border-box',
+                    opacity: isAnalyzing ? 0.5 : 1,
                   }}
-                >
-                  <Trash2 size={13} />
-                </button>
+                />
               </div>
+              <button
+                onClick={analyzeManual}
+                disabled={isAnalyzing || !manualText.trim()}
+                style={{
+                  padding: '0.7rem 1.5rem',
+                  background: 'var(--accent)',
+                  color: '#fff8f0',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: (isAnalyzing || !manualText.trim()) ? 'default' : 'pointer',
+                  fontFamily: mono,
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  opacity: (isAnalyzing || !manualText.trim()) ? 0.5 : 1,
+                }}
+              >
+                {isAnalyzing ? 'analyzing...' : 'preview →'}
+              </button>
             </div>
+          )}
+
+          {/* Preview */}
+          {inPreview && (
+            <PreviewCard
+              title={aiTitle}
+              rating={aiRating}
+              body={transcript}
+              entryType="manual"
+              saving={phase === 'saving'}
+              onSave={() => saveEntry('manual')}
+              onReRecord={discard}
+              onDiscard={discard}
+            />
           )}
         </>
       )}
 
-      {/* ── MANUAL TAB ── */}
-      {tab === 'manual' && (
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{
-            padding: '1.5rem',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            background: 'var(--bg-alt)',
-            marginBottom: '0.75rem',
-          }}>
-            <input
-              value={manualTitle}
-              onChange={(e) => setManualTitle(e.target.value)}
-              placeholder="title (optional)"
-              style={{
-                width: '100%',
-                padding: '0 0 0.5rem 0',
-                fontFamily: 'inherit',
-                fontSize: '1rem',
-                fontWeight: 600,
-                color: 'var(--text)',
-                background: 'transparent',
-                border: 'none',
-                borderBottom: '1px solid var(--border)',
-                outline: 'none',
-                marginBottom: '1rem',
-                boxSizing: 'border-box',
-              }}
-            />
-            <textarea
-              value={manualText}
-              onChange={(e) => setManualText(e.target.value)}
-              placeholder="write freely..."
-              rows={8}
-              style={{
-                width: '100%',
-                fontFamily: mono,
-                fontSize: '0.82rem',
-                color: 'var(--text-muted)',
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                resize: 'vertical',
-                lineHeight: 1.7,
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-          <button
-            onClick={saveManualEntry}
-            disabled={manualSaving || !manualText.trim()}
-            style={{
-              padding: '0.7rem 1.5rem',
-              background: 'var(--accent)',
-              color: '#fff8f0',
-              border: 'none',
-              borderRadius: '3px',
-              cursor: manualSaving || !manualText.trim() ? 'default' : 'pointer',
-              fontFamily: mono,
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              opacity: manualSaving || !manualText.trim() ? 0.5 : 1,
-            }}
-          >
-            <Save size={13} />
-            {manualSaving ? 'saving...' : 'save entry'}
-          </button>
-        </div>
-      )}
-
-      {/* ── PAST ENTRIES ── */}
-      <div>
+      {/* Past entries */}
+      <div style={{ marginTop: inPreview ? '2rem' : 0 }}>
         <p style={{ fontFamily: mono, fontSize: '0.68rem', color: 'var(--text-faint)', letterSpacing: '0.06em', textTransform: 'uppercase', margin: '0 0 0.75rem 0' }}>
           past entries
         </p>
@@ -496,57 +405,38 @@ export default function JournalPage() {
         {loadingEntries && (
           <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)' }}>loading...</p>
         )}
-
         {!loadingEntries && entries.length === 0 && (
           <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)' }}>no entries yet.</p>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           {entries.map((entry) => (
-            <div
-              key={entry.id}
-              style={{
-                border: '1px solid var(--border)',
-                borderRadius: '3px',
-                overflow: 'hidden',
-              }}
-            >
+            <div key={entry.id} style={{ border: '1px solid var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
               <button
                 onClick={() => setExpanded(expanded === entry.id ? null : entry.id)}
                 style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
+                  width: '100%', padding: '0.75rem 1rem',
                   background: expanded === entry.id ? 'var(--bg-alt)' : 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '0.75rem',
-                  textAlign: 'left',
+                  border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  gap: '0.75rem', textAlign: 'left',
                 }}
               >
                 <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {entry.title}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
-                  {/* entry type tag */}
+                  {entry.rating !== null && (
+                    <span style={{ fontFamily: mono, fontSize: '0.68rem', fontWeight: 600, color: ratingColor(entry.rating!) }}>
+                      {entry.rating}/10
+                    </span>
+                  )}
                   <span style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    fontFamily: mono,
-                    fontSize: '0.6rem',
-                    color: 'var(--text-faint)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '2px',
-                    padding: '0.1rem 0.35rem',
-                    letterSpacing: '0.03em',
+                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                    fontFamily: mono, fontSize: '0.6rem', color: 'var(--text-faint)',
+                    border: '1px solid var(--border)', borderRadius: '2px', padding: '0.1rem 0.35rem',
                   }}>
-                    {entry.entry_type === 'manual'
-                      ? <Pencil size={9} />
-                      : <Mic size={9} />
-                    }
+                    {entry.entry_type === 'manual' ? <Pencil size={9} /> : <Mic size={9} />}
                     {entry.entry_type === 'manual' ? 'manual' : 'voice'}
                   </span>
                   <span style={{ fontFamily: mono, fontSize: '0.65rem', color: 'var(--text-faint)' }}>
@@ -558,12 +448,8 @@ export default function JournalPage() {
               {expanded === entry.id && (
                 <div style={{ padding: '0 1rem 1rem', borderTop: '1px solid var(--border)' }}>
                   <p style={{
-                    fontFamily: mono,
-                    fontSize: '0.8rem',
-                    color: 'var(--text-muted)',
-                    lineHeight: 1.7,
-                    margin: '0.75rem 0 0 0',
-                    whiteSpace: 'pre-wrap',
+                    fontFamily: mono, fontSize: '0.8rem', color: 'var(--text-muted)',
+                    lineHeight: 1.7, margin: '0.75rem 0 0 0', whiteSpace: 'pre-wrap',
                   }}>
                     {entry.transcript}
                   </p>
@@ -572,6 +458,111 @@ export default function JournalPage() {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  )
+}
+
+interface PreviewCardProps {
+  title: string
+  rating: number | null
+  body: string
+  duration?: number
+  entryType: Tab
+  saving: boolean
+  onSave: () => void
+  onReRecord: () => void
+  onDiscard: () => void
+}
+
+function PreviewCard({ title, rating, body, duration, entryType, saving, onSave, onReRecord, onDiscard }: PreviewCardProps) {
+  return (
+    <div style={{ marginBottom: '2rem' }}>
+      <div style={{
+        padding: '1.5rem', border: '1px solid var(--border)',
+        borderRadius: '4px', background: 'var(--bg-alt)', marginBottom: '0.75rem',
+      }}>
+        {/* Meta row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+          {entryType === 'voice' && duration !== undefined && (
+            <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-faint)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <Mic size={10} />
+              {formatDuration(duration)} recording
+            </span>
+          )}
+          {rating !== null && (
+            <span style={{
+              fontFamily: mono, fontSize: '0.75rem', fontWeight: 700,
+              color: ratingColor(rating),
+              border: `1px solid ${ratingColor(rating)}`,
+              borderRadius: '3px', padding: '0.1rem 0.5rem',
+            }}>
+              {rating} / 10
+            </span>
+          )}
+        </div>
+
+        {/* AI title */}
+        <p style={{
+          fontSize: '1rem', fontWeight: 600, color: 'var(--text)',
+          margin: '0 0 0.75rem 0', letterSpacing: '-0.01em',
+        }}>
+          {title}
+        </p>
+
+        {/* Transcript */}
+        <p style={{
+          fontFamily: mono, fontSize: '0.82rem', color: 'var(--text-muted)',
+          lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap',
+        }}>
+          {body}
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={onSave}
+          disabled={saving}
+          style={{
+            flex: 1, minWidth: '100px', padding: '0.7rem',
+            background: 'var(--accent)', color: '#fff8f0',
+            border: 'none', borderRadius: '3px',
+            cursor: saving ? 'default' : 'pointer',
+            fontFamily: mono, fontSize: '0.85rem', fontWeight: 600,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+            opacity: saving ? 0.6 : 1,
+          }}
+        >
+          <Save size={13} />
+          {saving ? 'saving...' : 'save entry'}
+        </button>
+        <button
+          onClick={onReRecord}
+          disabled={saving}
+          style={{
+            padding: '0.7rem 0.9rem', background: 'transparent',
+            color: 'var(--text-muted)', border: '1px solid var(--border)',
+            borderRadius: '3px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            fontFamily: mono, fontSize: '0.82rem',
+          }}
+        >
+          <RotateCcw size={13} />
+          {entryType === 'voice' ? 're-record' : 're-write'}
+        </button>
+        <button
+          onClick={onDiscard}
+          disabled={saving}
+          title="Discard"
+          style={{
+            padding: '0.7rem 0.75rem', background: 'transparent',
+            color: 'var(--text-faint)', border: '1px solid var(--border)',
+            borderRadius: '3px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center',
+          }}
+        >
+          <Trash2 size={13} />
+        </button>
       </div>
     </div>
   )
