@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Mic, Square, Save, Trash2, RotateCcw, Pencil } from 'lucide-react'
+import { Mic, Square, Save, Trash2, RotateCcw, Pencil, RefreshCw } from 'lucide-react'
 
 const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
 
@@ -15,7 +15,18 @@ interface Entry {
   rating: number | null
 }
 
-type Phase = 'idle' | 'recording' | 'processing' | 'analyzing' | 'preview' | 'saving'
+interface JobResult {
+  id: string
+  status: 'pending' | 'processing' | 'done' | 'failed'
+  transcript: string | null
+  title: string | null
+  rating: number | null
+  error: string | null
+  duration_seconds: number
+  retry_count: number
+}
+
+type Phase = 'idle' | 'recording' | 'uploading' | 'processing' | 'analyzing' | 'preview' | 'saving' | 'failed'
 type Tab = 'voice' | 'manual'
 
 function formatDuration(seconds: number): string {
@@ -50,11 +61,14 @@ export default function JournalPage() {
   const [loadingEntries, setLoadingEntries] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [manualText, setManualText] = useState('')
+  const [jobId, setJobId] = useState<string | null>(null)
+  const [jobRetryCount, setJobRetryCount] = useState(0)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const durationRef = useRef(0)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const loadEntries = useCallback(async () => {
     try {
@@ -66,6 +80,46 @@ export default function JournalPage() {
   }, [])
 
   useEffect(() => { loadEntries() }, [loadEntries])
+
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => { stopPolling() }
+  }, [])
+
+  function stopPolling() {
+    if (pollRef.current) {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+  }
+
+  function startPolling(id: string) {
+    stopPolling()
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/journal/job/${id}`)
+        if (!res.ok) return
+        const job: JobResult = await res.json()
+
+        if (job.status === 'done') {
+          stopPolling()
+          setTranscript(job.transcript ?? '')
+          setAiTitle(job.title ?? job.transcript?.slice(0, 60) ?? '')
+          setAiRating(job.rating ?? null)
+          setPhase('preview')
+        } else if (job.status === 'failed') {
+          stopPolling()
+          setJobRetryCount(job.retry_count)
+          setError(
+            job.retry_count >= 3
+              ? 'Transcription failed after 3 attempts. Discard and try a new recording.'
+              : 'Transcription failed.'
+          )
+          setPhase('failed')
+        }
+      } catch { /* keep polling on network hiccup */ }
+    }, 3000)
+  }
 
   async function analyze(text: string): Promise<{ title: string; rating: number | null }> {
     try {
@@ -116,35 +170,48 @@ export default function JournalPage() {
       recorder.stop()
     })
     recorder.stream.getTracks().forEach((t) => t.stop())
-    setPhase('processing')
+    setPhase('uploading')
 
     const blob = new Blob(chunksRef.current, { type: recorder.mimeType })
     const form = new FormData()
     form.append('audio', blob)
+    form.append('duration', String(duration))
 
-    let text = ''
     try {
-      const res = await fetch('/api/transcribe', { method: 'POST', body: form })
+      const res = await fetch('/api/journal/upload', { method: 'POST', body: form })
       const json = await res.json()
       if (!res.ok || json.error) {
-        setError(json.error || 'Transcription failed.')
+        setError(json.error || 'Upload failed.')
         setPhase('idle')
         return
       }
-      text = json.transcript
+      setJobId(json.jobId)
       setElapsed(duration)
+      setPhase('processing')
+      startPolling(json.jobId)
     } catch {
-      setError('Transcription failed. Try again.')
+      setError('Upload failed. Try again.')
       setPhase('idle')
-      return
     }
+  }
 
-    setPhase('analyzing')
-    const { title, rating } = await analyze(text)
-    setTranscript(text)
-    setAiTitle(title)
-    setAiRating(rating)
-    setPhase('preview')
+  async function retryJob() {
+    if (!jobId) return
+    setError('')
+    setPhase('processing')
+
+    try {
+      const res = await fetch(`/api/journal/job/${jobId}/retry`, { method: 'POST' })
+      if (res.ok) {
+        startPolling(jobId)
+      } else {
+        setError('Retry failed.')
+        setPhase('failed')
+      }
+    } catch {
+      setError('Retry failed.')
+      setPhase('failed')
+    }
   }
 
   async function analyzeManual() {
@@ -176,6 +243,7 @@ export default function JournalPage() {
       setAiTitle('')
       setAiRating(null)
       setElapsed(0)
+      setJobId(null)
       if (entryType === 'manual') setManualText('')
       loadEntries()
     } catch {
@@ -185,18 +253,21 @@ export default function JournalPage() {
   }
 
   function discard() {
+    stopPolling()
     setPhase('idle')
     setTranscript('')
     setAiTitle('')
     setAiRating(null)
     setElapsed(0)
     setError('')
+    setJobId(null)
+    setJobRetryCount(0)
   }
 
   const isActive = phase === 'recording'
-  const isProcessing = phase === 'processing' || phase === 'saving'
-  const isAnalyzing = phase === 'analyzing'
+  const isBusy = phase === 'uploading' || phase === 'processing' || phase === 'saving' || phase === 'analyzing'
   const inPreview = phase === 'preview' || phase === 'saving'
+  const showRecorder = phase === 'idle' || phase === 'recording' || phase === 'uploading' || phase === 'processing' || phase === 'failed'
 
   return (
     <div style={{ maxWidth: '580px', width: '100%' }}>
@@ -240,10 +311,10 @@ export default function JournalPage() {
       {tab === 'voice' && (
         <>
           {/* Recorder */}
-          {(phase === 'idle' || phase === 'recording' || phase === 'processing' || phase === 'analyzing') && (
+          {showRecorder && (
             <div style={{
               padding: '2.5rem 2rem',
-              border: '1px solid var(--border)',
+              border: `1px solid ${phase === 'failed' ? '#8a5a5a' : 'var(--border)'}`,
               borderRadius: '4px',
               background: 'var(--bg-alt)',
               display: 'flex',
@@ -254,21 +325,21 @@ export default function JournalPage() {
             }}>
               <button
                 onClick={isActive ? stopRecording : startRecording}
-                disabled={isProcessing || isAnalyzing}
+                disabled={isBusy || phase === 'failed'}
                 style={{
                   width: '72px', height: '72px', borderRadius: '50%',
                   border: `2px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
                   background: isActive ? 'var(--accent)' : 'transparent',
-                  cursor: (isProcessing || isAnalyzing) ? 'default' : 'pointer',
+                  cursor: (isBusy || phase === 'failed') ? 'default' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.2s',
-                  opacity: (isProcessing || isAnalyzing) ? 0.5 : 1,
+                  opacity: (isBusy || phase === 'failed') ? 0.4 : 1,
                   flexShrink: 0,
                 }}
               >
                 {isActive
                   ? <Square size={22} style={{ color: '#fff8f0' }} />
-                  : <Mic size={22} style={{ color: (isProcessing || isAnalyzing) ? 'var(--text-faint)' : 'var(--text-muted)' }} />
+                  : <Mic size={22} style={{ color: isBusy ? 'var(--text-faint)' : 'var(--text-muted)' }} />
                 }
               </button>
 
@@ -288,22 +359,75 @@ export default function JournalPage() {
                     </p>
                   </div>
                 )}
-                {phase === 'processing' && (
+                {phase === 'uploading' && (
                   <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)', margin: 0 }}>
-                    transcribing...
+                    uploading audio...
                   </p>
                 )}
-                {phase === 'analyzing' && (
-                  <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)', margin: 0 }}>
-                    extracting title & rating...
+                {phase === 'processing' && (
+                  <div>
+                    <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)', margin: '0 0 0.2rem 0' }}>
+                      transcribing... {elapsed > 0 && `(${formatDuration(elapsed)})`}
+                    </p>
+                    <p style={{ fontFamily: mono, fontSize: '0.66rem', color: 'var(--text-faint)', margin: 0, opacity: 0.6 }}>
+                      longer recordings may take a moment
+                    </p>
+                  </div>
+                )}
+                {phase === 'failed' && (
+                  <p style={{ fontFamily: mono, fontSize: '0.75rem', color: '#c87a7a', margin: 0, textAlign: 'center' }}>
+                    {error}
                   </p>
                 )}
               </div>
 
-              {error && (
+              {/* Error for non-failed phases */}
+              {error && phase !== 'failed' && (
                 <p style={{ fontFamily: mono, fontSize: '0.75rem', color: 'var(--accent)', margin: 0, textAlign: 'center' }}>
                   {error}
                 </p>
+              )}
+
+              {/* Retry / Discard buttons for failed state */}
+              {phase === 'failed' && (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {jobRetryCount < 3 && (
+                    <button
+                      onClick={retryJob}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: 'transparent',
+                        color: 'var(--text-muted)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontFamily: mono,
+                        fontSize: '0.78rem',
+                        display: 'flex', alignItems: 'center', gap: '0.35rem',
+                      }}
+                    >
+                      <RefreshCw size={11} />
+                      retry
+                    </button>
+                  )}
+                  <button
+                    onClick={discard}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: 'transparent',
+                      color: 'var(--text-faint)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '3px',
+                      cursor: 'pointer',
+                      fontFamily: mono,
+                      fontSize: '0.78rem',
+                      display: 'flex', alignItems: 'center', gap: '0.35rem',
+                    }}
+                  >
+                    <Trash2 size={11} />
+                    discard
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -328,7 +452,6 @@ export default function JournalPage() {
       {/* ── MANUAL TAB ── */}
       {tab === 'manual' && (
         <>
-          {/* Textarea */}
           {(phase === 'idle' || phase === 'analyzing') && (
             <div style={{ marginBottom: '0.75rem' }}>
               <div style={{
@@ -343,7 +466,7 @@ export default function JournalPage() {
                   onChange={(e) => setManualText(e.target.value)}
                   placeholder="write freely..."
                   rows={10}
-                  disabled={isAnalyzing}
+                  disabled={phase === 'analyzing'}
                   style={{
                     width: '100%',
                     fontFamily: mono,
@@ -355,32 +478,31 @@ export default function JournalPage() {
                     resize: 'vertical',
                     lineHeight: 1.7,
                     boxSizing: 'border-box',
-                    opacity: isAnalyzing ? 0.5 : 1,
+                    opacity: phase === 'analyzing' ? 0.5 : 1,
                   }}
                 />
               </div>
               <button
                 onClick={analyzeManual}
-                disabled={isAnalyzing || !manualText.trim()}
+                disabled={phase === 'analyzing' || !manualText.trim()}
                 style={{
                   padding: '0.7rem 1.5rem',
                   background: 'var(--accent)',
                   color: '#fff8f0',
                   border: 'none',
                   borderRadius: '3px',
-                  cursor: (isAnalyzing || !manualText.trim()) ? 'default' : 'pointer',
+                  cursor: (phase === 'analyzing' || !manualText.trim()) ? 'default' : 'pointer',
                   fontFamily: mono,
                   fontSize: '0.85rem',
                   fontWeight: 600,
-                  opacity: (isAnalyzing || !manualText.trim()) ? 0.5 : 1,
+                  opacity: (phase === 'analyzing' || !manualText.trim()) ? 0.5 : 1,
                 }}
               >
-                {isAnalyzing ? 'analyzing...' : 'preview →'}
+                {phase === 'analyzing' ? 'analyzing...' : 'preview →'}
               </button>
             </div>
           )}
 
-          {/* Preview */}
           {inPreview && (
             <PreviewCard
               title={aiTitle}
@@ -482,7 +604,6 @@ function PreviewCard({ title, rating, body, duration, entryType, saving, onSave,
         padding: '1.5rem', border: '1px solid var(--border)',
         borderRadius: '4px', background: 'var(--bg-alt)', marginBottom: '0.75rem',
       }}>
-        {/* Meta row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
           {entryType === 'voice' && duration !== undefined && (
             <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-faint)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -502,7 +623,6 @@ function PreviewCard({ title, rating, body, duration, entryType, saving, onSave,
           )}
         </div>
 
-        {/* AI title */}
         <p style={{
           fontSize: '1rem', fontWeight: 600, color: 'var(--text)',
           margin: '0 0 0.75rem 0', letterSpacing: '-0.01em',
@@ -510,7 +630,6 @@ function PreviewCard({ title, rating, body, duration, entryType, saving, onSave,
           {title}
         </p>
 
-        {/* Transcript */}
         <p style={{
           fontFamily: mono, fontSize: '0.82rem', color: 'var(--text-muted)',
           lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap',
