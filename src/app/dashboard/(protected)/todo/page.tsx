@@ -15,10 +15,12 @@ export default function TodoPage() {
   const [loaded, setLoaded] = useState(false)
   const [editingTabId, setEditingTabId] = useState<number | null>(null)
   const [editingName, setEditingName] = useState('')
+  const [stale, setStale] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const channelRef = useRef<BroadcastChannel | null>(null)
 
-  useEffect(() => {
-    fetch('/api/todo')
+  function loadAll(selectTabId?: number) {
+    return fetch('/api/todo')
       .then(r => r.json())
       .then((data: Array<Tab & { content: string }>) => {
         if (!Array.isArray(data) || data.length === 0) { setLoaded(true); return }
@@ -27,10 +29,19 @@ export default function TodoPage() {
         data.forEach(t => { contentMap[t.id] = t.content ?? '' })
         setTabs(tabList)
         setContents(contentMap)
-        setActiveTabId(tabList[0].id)
+        setActiveTabId(selectTabId ?? tabList[0].id)
         setLoaded(true)
+        setStale(false)
       })
       .catch(() => setLoaded(true))
+  }
+
+  useEffect(() => {
+    loadAll()
+    const bc = new BroadcastChannel('todo-sync')
+    channelRef.current = bc
+    bc.onmessage = () => setStale(true)
+    return () => bc.close()
   }, [])
 
   const save = useCallback(async (tabId: number, value: string) => {
@@ -41,6 +52,7 @@ export default function TodoPage() {
         body: JSON.stringify({ id: tabId, content: value }),
       })
       setStatus('saved')
+      channelRef.current?.postMessage({ savedAt: Date.now() })
     } catch {
       setStatus('saved')
     }
@@ -213,14 +225,30 @@ export default function TodoPage() {
         </div>
       )}
 
-      {/* Save status */}
+      {/* Save status / stale banner */}
       <div style={{
         display: 'flex',
         justifyContent: 'flex-end',
         marginBottom: '0.5rem',
         minHeight: '1.2rem',
       }}>
-        {loaded && (
+        {loaded && (stale ? (
+          <button
+            onClick={() => loadAll(activeTabId ?? undefined)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: mono,
+              fontSize: '0.68rem',
+              color: 'var(--accent)',
+              letterSpacing: '0.03em',
+              padding: 0,
+            }}
+          >
+            ↻ updated in another tab — click to sync
+          </button>
+        ) : (
           <span style={{
             fontFamily: mono,
             fontSize: '0.68rem',
@@ -230,7 +258,7 @@ export default function TodoPage() {
           }}>
             {status === 'saving' ? 'saving...' : 'saved'}
           </span>
-        )}
+        ))}
       </div>
 
       <textarea
