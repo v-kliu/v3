@@ -25,28 +25,13 @@ export default function About() {
           color: 'var(--text-muted)',
           maxWidth: '560px',
           marginTop: 0,
-          marginBottom: '1.25rem',
+          marginBottom: 0,
         }}
       >
         I was born and raised in Reno, NV, where I became fascinated with tech through the flashy
         slot machines my parents programmed for work. I moved to
         Seattle to study Computer Science and Business at the University of Washington, and
-        post-grad I'm an incoming Software Engineer at Google.
-      </p>
-
-      <p
-        style={{
-          fontSize: '1rem',
-          lineHeight: 1.7,
-          color: 'var(--text-muted)',
-          maxWidth: '560px',
-          marginTop: 0,
-          marginBottom: 0,
-        }}
-      >
-        I like to push myself to grow by seeking discomfort in new environments and taking on new challenges. 
-        I am currently side questing and building Soarin, an EdTech platform
-        that helps students turn their college applications into professional resumes.
+        post-grad I'm a full-time Software Development Engineer at Amazon.
       </p>
     </section>
   )

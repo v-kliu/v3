@@ -32,7 +32,7 @@ export default function Hero() {
             i like to build.
           </p>
           <p style={{ fontSize: '0.92rem', color: 'var(--text-faint)', lineHeight: 1.5, marginBottom: '0.2rem', marginTop: 0 }}>
-            cs + business alum @ uw. incoming swe @ google.
+            cs + business alum @ uw. sde @ amazon.
           </p>
           <p style={{ fontSize: '0.92rem', color: 'var(--text-faint)', lineHeight: 1.5, marginTop: 0, marginBottom: 0 }}>
             born in nevada. based in seattle/sf.

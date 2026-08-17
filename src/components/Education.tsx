@@ -16,6 +16,15 @@ interface EducationEntry {
 
 const entries: EducationEntry[] = [
   {
+    id: 'pku',
+    institution: 'Peking University',
+    degree: 'Summer Institute, Computer Science',
+    period: 'Jul 2026 - Jul 2026',
+    location: 'Beijing, CN',
+    description: 'Awarded a full-ride scholarship to attend a summer program at PKU\'s School of Computer Science, covering pioneering topics taught by PKU faculty alongside tours to leading Chinese tech companies Huawei and Xiaomi.',
+    logo: '/images/pku_logo.jpg',
+  },
+  {
     id: 'uw',
     institution: 'University of Washington',
     degree: 'B.S. Computer Science, Minor in Business Administration',
@@ -29,7 +38,7 @@ const entries: EducationEntry[] = [
     institution: 'National University of Singapore',
     degree: 'Study Abroad',
     period: 'Aug 2025 - Dec 2025',
-    location: 'Singapore',
+    location: 'Singapore, SG',
     description: 'Completed a university exchange at NUS to explore Asia\'s entrepreneurial ecosystem and gain a global perspective while taking computing curriculum.',
     logo: '/images/nus_logo.jpg',
   },

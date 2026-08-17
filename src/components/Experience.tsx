@@ -16,16 +16,25 @@ interface ExperienceEntry {
 
 const jobEntries: ExperienceEntry[] = [
   {
-    id: 'google',
-    period: 'Aug 2026 -',
-    role: 'Incoming Software Engineer',
-    organization: 'Google',
-    location: '',
-    description: 'Incoming Software Engineer at Google.',
-    logo: '/images/google.png',
+    id: 'aws-fulltime',
+    period: 'Jul 2026 - Present',
+    role: 'Software Development Engineer',
+    organization: 'Amazon',
+    location: 'Seattle, WA',
+    description: 'Full-time SDE working within AWS Identity & Access Management.',
+    logo: '/images/AWS.jpg',
   },
   {
-    id: 'aws',
+    id: 'harper',
+    period: 'Apr 2026 - May 2026',
+    role: 'Contracted Forward Deployed Engineer',
+    organization: 'Harper',
+    location: 'San Francisco, CA',
+    description: 'Architected a data migration service for marketing purposes. Full-time offer received.',
+    logo: '/images/harperinsure_logo.jpg',
+  },
+  {
+    id: 'aws-intern',
     period: 'May 2025 - Aug 2025',
     role: 'Software Development Engineer Intern',
     organization: 'Amazon',
