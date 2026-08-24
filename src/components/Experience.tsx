@@ -26,7 +26,7 @@ const jobEntries: ExperienceEntry[] = [
   },
   {
     id: 'harper',
-    period: 'Apr 2026 - May 2026',
+    period: 'Apr 2026 - Jun 2026',
     role: 'Contracted Forward Deployed Engineer',
     organization: 'Harper',
     location: 'San Francisco, CA',
