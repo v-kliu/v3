@@ -36,6 +36,8 @@ export const config = {
     '/dashboard/:path*',
     '/api/todo',
     '/api/todo/:path*',
+    '/api/ascend',
+    '/api/ascend/:path*',
     '/api/journal',
     '/api/journal/:path*',
     '/api/pomodoro',
