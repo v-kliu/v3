@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 const redis = Redis.fromEnv()
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SECRET_KEY!
 )
 
 export async function POST(request: Request) {

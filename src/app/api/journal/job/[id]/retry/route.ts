@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SECRET_KEY!
 )
 
 export async function POST(
@@ -23,7 +23,7 @@ export async function POST(
   fetch(`${process.env.SUPABASE_URL}/functions/v1/process-journal-job`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+      Authorization: `Bearer ${process.env.SUPABASE_SECRET_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ jobId: id }),
