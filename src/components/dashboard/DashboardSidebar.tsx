@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Plane, Mic, LogOut, StickyNote, TrendingUp } from 'lucide-react'
+import { Plane, Mic, LogOut, StickyNote, TrendingUp, Flame } from 'lucide-react'
 
 const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
 
@@ -11,6 +11,7 @@ const navItems = [
   { href: '/dashboard/journal', label: 'journal', icon: Mic },
   { href: '/dashboard/todo', label: 'todo', icon: StickyNote },
   { href: '/dashboard/ascend', label: '向上', icon: TrendingUp },
+  { href: '/dashboard/grit', label: 'grit', icon: Flame },
 ]
 
 export default function DashboardSidebar() {

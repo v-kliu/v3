@@ -1,58 +1,50 @@
 # Victor Liu Personal Website
 
-## Project
-Personal portfolio site. Split-panel layout: fixed left sidebar (40%), scrollable right content (60%).
-Stack: React, TypeScript, Tailwind CSS, Framer Motion. Deployed on Vercel.
+Next.js App Router site with a password-gated personal dashboard.
+Stack, scripts, and layout are all derivable from `package.json` and `src/` — read those.
 
-## Structure
-- src/App.tsx — root, composes layout
-- src/components/ — one file per section or UI element
-- src/SpaceBackground.tsx — animated star/meteor canvas background
-- src/index.css — global styles, font imports
+## Gotchas
 
-## Sections
-About, Experience, Education, Projects
-
-## Visual Theme — "Deep Space"
-- Background: #0B0B1A
-- Primary accent: Cyan #00D9FF — highlights, active states, links, borders
-- Text hierarchy: #8892b0 (default) → #a8b2d1 (light) → #ccd6f6 (lightest) → white (headings)
-- Fonts: Inter/Calibre (sans), SF Mono/Fira Code (mono for tech tags)
-
-## Layout Rules
-- Left sidebar: fixed, never scrolls, contains headshot, name, subtitle, nav, socials
-- Right panel: scrollable, sections stack vertically with generous spacing
-- Mobile: sidebar becomes off-canvas drawer via hamburger — right panel becomes full width
-- Single page, no routing — smooth scroll navigation via Intersection Observer
+- **`src/middleware.ts` is the live middleware, not the root `middleware.ts`.** The root file
+  is a stale duplicate with an older matcher. Next.js prefers `src/` when it exists, so edits
+  to the root file do nothing. New protected API routes must be added to the `matcher` in
+  `src/middleware.ts` or they are publicly reachable.
+- **`SUPABASE_SECRET_KEY` holds a `sb_secret_` key, which bypasses RLS entirely.** It is
+  server-side only. Never prefix it with `NEXT_PUBLIC_`, never reach for it in a client
+  component, and never use it in code that ships to the browser.
+- **Every table has RLS enabled with zero policies.** That is deliberate: the anon/publishable
+  key can touch nothing, and the app reads and writes with the secret key from route handlers.
+  Do not "fix" a table by adding a permissive anon policy — that makes it world-writable.
+  `journal_jobs` is the one exception, with 3 policies of its own.
+- `src/App.tsx` is the marketing page body, imported by `src/app/page.tsx`. The real root
+  layout is `src/app/layout.tsx`.
 
 ## Conventions
-- TypeScript throughout — no `any` types
-- Tailwind utility classes only, no inline styles
-- Framer Motion for all animations — match existing patterns before adding new ones
-- Preserve SpaceBackground.tsx exactly — do not modify star/meteor/cursor effects
-- Monospace font (font-mono) for all tech stack tags
 
-## Design Principles
-- Minimal chrome — content is the focus, not decoration
-- Hierarchy through color — cyan = interactive/important, slate = supporting, white = headings
-- Generous whitespace — sections breathe, nothing feels cramped
-- Subtle depth only — glow and shadows serve hierarchy, not aesthetics
-- No AI-slop patterns — no gradient blobs, no bento boxes, no generic 3-column icon grids
+- TypeScript throughout — no `any`.
+- Dashboard pages are styled with **inline styles plus CSS variables**, not Tailwind utilities.
+  Tailwind is installed and used on the marketing page; match whichever the file already uses.
+- Theme lives in `:root` in `src/app/globals.css` — paper `--bg: #E8DEC8`, oxblood
+  `--accent: #8B0000`. Always reference the variables, never hardcode the hex values.
+- Monospace (`SFMono-Regular, Consolas, …`) for dashboard UI text; this is declared per-file
+  as a `mono` constant.
 
-## Commands
-- npm start — local dev server (runs on http://localhost:5173)
-- npm run build — production build
+## Design principles
 
-## Build Requirement
-Every coding session must end with a passing build. After any changes:
-1. Run `npm run build`
-2. Fix all errors before considering the task complete
-3. Do not stop until `npm run build` passes with zero errors
-This is non-negotiable — a broken build is an incomplete task.
+- Minimal chrome — content is the focus, not decoration.
+- Hierarchy through color: accent = interactive/important, muted = supporting.
+- Generous whitespace — sections breathe.
+- No AI-slop patterns — no gradient blobs, no bento boxes, no generic 3-column icon grids.
 
-## Git Workflow
-After every completed task where the build passes:
-1. Stage all changes with `git add -a`
-2. Write a concise commit message describing what changed
-3. Commit and push to the current branch
-Do not commit if the build is failing.
+## Build requirement
+
+Every coding session ends with a passing `npm run build`. Fix all errors before considering
+the task complete. A broken build is an incomplete task.
+
+Note: `npm run build` overwrites `.next` and will kill a running `npm run dev`. Restart dev
+after building.
+
+## Git workflow
+
+After every completed task where the build passes: stage all changes, write a concise commit
+message, commit and push to the current branch. Do not commit if the build is failing.
