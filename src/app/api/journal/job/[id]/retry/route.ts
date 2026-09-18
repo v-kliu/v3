@@ -13,7 +13,7 @@ export async function POST(
   const { id } = await params
 
   const { error } = await supabase
-    .from('journal_jobs')
+    .from('vkliu_journal_jobs')
     .update({ status: 'pending', error: null })
     .eq('id', id)
     .eq('status', 'failed')

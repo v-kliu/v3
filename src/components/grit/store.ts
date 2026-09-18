@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-// Local-only for now (localStorage). Shapes mirror supabase/grit.sql so the
-// swap to route handlers only touches this file.
+// Client state for the grit tab. Updates are optimistic and persisted through
+// /api/grit (tables vkliu_grit_*, see supabase/grit.sql).
 
 export type Habit = {
   id: string
@@ -25,7 +25,8 @@ type GritData = {
   days: Record<string, DayEntry>    // day → rating + journal
 }
 
-const KEY = 'grit:v1'
+// Where the page kept data before Supabase; imported once, then cleared.
+const LEGACY_KEY = 'grit:v1'
 
 export const PALETTE = [
   '#E4572E', // vermilion
@@ -104,85 +105,131 @@ function seed(): GritData {
   }
 }
 
+export type SyncStatus = 'saved' | 'saving' | 'error'
+
+async function send(method: 'PUT' | 'DELETE', body?: object, query = '') {
+  const res = await fetch(`/api/grit${query}`, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  if (!res.ok) throw new Error(`grit ${method} failed: ${res.status}`)
+}
+
 export function useGrit() {
   const [data, setData] = useState<GritData>({ habits: [], checks: {}, days: {} })
   const [loaded, setLoaded] = useState(false)
+  const [status, setStatus] = useState<SyncStatus>('saved')
+  const ref = useRef(data)
+  const inflight = useRef(0)
+  const started = useRef(false)
+
+  function commit(next: GritData) {
+    ref.current = next
+    setData(next)
+  }
+
+  // Optimistic: state is already updated; this just persists and reports.
+  function persist(method: 'PUT' | 'DELETE', body?: object, query?: string) {
+    inflight.current++
+    setStatus('saving')
+    send(method, body, query)
+      .then(() => { if (--inflight.current === 0) setStatus('saved') })
+      .catch(() => { inflight.current--; setStatus('error') })
+  }
 
   useEffect(() => {
-    let initial: GritData | null = null
-    try {
-      const raw = localStorage.getItem(KEY)
-      if (raw) initial = JSON.parse(raw) as GritData
-    } catch { /* storage blocked or corrupt — fall through to seed */ }
-    setData(initial ? { ...initial, days: initial.days ?? {} } : seed())
-    setLoaded(true)
+    // Strict mode runs effects twice in dev; a second run would seed/import twice.
+    if (started.current) return
+    started.current = true
+    fetch('/api/grit')
+      .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<GritData> })
+      .then(async remote => {
+        if (remote.habits.length) {
+          commit({ ...remote, habits: uniqueColors(remote.habits) })
+          return
+        }
+        // Empty database: move anything saved in this browser up, else start from defaults.
+        let local: GritData | null = null
+        try {
+          const raw = localStorage.getItem(LEGACY_KEY)
+          if (raw) local = JSON.parse(raw) as GritData
+        } catch { /* storage blocked or corrupt */ }
+        const initial = local
+          ? { ...local, habits: uniqueColors(local.habits), days: local.days ?? {} }
+          : seed()
+        commit(initial)
+        await send('PUT', { type: 'import', ...initial })
+        try { localStorage.removeItem(LEGACY_KEY) } catch { /* ignore */ }
+      })
+      .catch(() => setStatus('error'))
+      .finally(() => setLoaded(true))
   }, [])
-
-  useEffect(() => {
-    if (!loaded) return
-    try { localStorage.setItem(KEY, JSON.stringify(data)) } catch { /* ignore */ }
-  }, [data, loaded])
 
   const toggle = useCallback((day: string, habitId: string) => {
-    setData(prev => {
-      const done = prev.checks[day] ?? []
-      const next = done.includes(habitId) ? done.filter(id => id !== habitId) : [...done, habitId]
-      return { ...prev, checks: { ...prev.checks, [day]: next } }
-    })
+    const prev = ref.current
+    const done = prev.checks[day] ?? []
+    const isDone = done.includes(habitId)
+    const next = isDone ? done.filter(id => id !== habitId) : [...done, habitId]
+    commit({ ...prev, checks: { ...prev.checks, [day]: next } })
+    persist('PUT', { type: 'check', habitId, day, done: !isDone })
   }, [])
 
-  const addHabit = useCallback((name: string, color: string, startDate: string) => {
-    setData(prev => {
-      const position = prev.habits.reduce((max, h) => Math.max(max, h.position), -1) + 1
-      const taken = prev.habits.map(h => h.color)
-      const unique = taken.includes(color) ? nextColor(taken) : color
-      const habit: Habit = { id: newId(), name, color: unique, startDate, endDate: null, position }
-      return { ...prev, habits: [...prev.habits, habit] }
-    })
+  const addHabit = useCallback((name: string, startDate: string) => {
+    const prev = ref.current
+    const position = prev.habits.reduce((max, h) => Math.max(max, h.position), -1) + 1
+    const color = nextColor(prev.habits.map(h => h.color))
+    const habit: Habit = { id: newId(), name, color, startDate, endDate: null, position }
+    commit({ ...prev, habits: [...prev.habits, habit] })
+    persist('PUT', { type: 'habit', habit })
   }, [])
 
-  // Recoloring onto a color another habit already has swaps the two, so colors stay unique.
-  const updateHabit = useCallback((id: string, patch: Partial<Pick<Habit, 'name' | 'color'>>) => {
-    setData(prev => {
-      const self = prev.habits.find(h => h.id === id)
-      if (!self) return prev
-      return {
-        ...prev,
-        habits: prev.habits.map(h => {
-          if (h.id === id) return { ...h, ...patch }
-          if (patch.color && h.color === patch.color) return { ...h, color: self.color }
-          return h
-        }),
-      }
-    })
+  const updateHabit = useCallback((id: string, patch: Partial<Pick<Habit, 'name'>>) => {
+    const prev = ref.current
+    commit({ ...prev, habits: prev.habits.map(h => h.id === id ? { ...h, ...patch } : h) })
+    if (patch.name) persist('PUT', { type: 'rename', id, name: patch.name })
   }, [])
 
   const setDay = useCallback((day: string, patch: Partial<DayEntry>) => {
-    setData(prev => {
-      const current = prev.days[day] ?? { rating: null, note: '' }
-      return { ...prev, days: { ...prev.days, [day]: { ...current, ...patch } } }
-    })
+    const prev = ref.current
+    const entry = { ...(prev.days[day] ?? { rating: null, note: '' }), ...patch }
+    commit({ ...prev, days: { ...prev.days, [day]: entry } })
+    persist('PUT', { type: 'day', day, entry })
   }, [])
 
   // Stop showing a habit from `day` onward; history before it is kept.
   const stopHabit = useCallback((id: string, day: string) => {
-    setData(prev => {
-      const habit = prev.habits.find(h => h.id === id)
-      if (!habit) return prev
-      if (day <= habit.startDate) return removeHabit(prev, id)
+    const prev = ref.current
+    const habit = prev.habits.find(h => h.id === id)
+    if (!habit) return
+    if (day <= habit.startDate) {
+      commit(removeHabit(prev, id))
+    } else {
       const endDate = addDays(day, -1)
       const checks = Object.fromEntries(
         Object.entries(prev.checks).map(([d, ids]) => [d, d > endDate ? ids.filter(x => x !== id) : ids])
       )
-      return { ...prev, checks, habits: prev.habits.map(h => h.id === id ? { ...h, endDate } : h) }
-    })
+      commit({ ...prev, checks, habits: prev.habits.map(h => h.id === id ? { ...h, endDate } : h) })
+    }
+    persist('PUT', { type: 'stop', id, day })
   }, [])
 
   const deleteHabit = useCallback((id: string) => {
-    setData(prev => removeHabit(prev, id))
+    commit(removeHabit(ref.current, id))
+    persist('DELETE', undefined, `?id=${encodeURIComponent(id)}`)
   }, [])
 
-  return { ...data, loaded, toggle, addHabit, updateHabit, setDay, stopHabit, deleteHabit }
+  return { ...data, loaded, status, toggle, addHabit, updateHabit, setDay, stopHabit, deleteHabit }
+}
+
+// Colors are assigned automatically; repair any duplicates left from older data.
+function uniqueColors(habits: Habit[]): Habit[] {
+  const taken: string[] = []
+  return [...habits].sort((a, b) => a.position - b.position).map(h => {
+    const color = taken.includes(h.color) ? nextColor([...taken, ...habits.map(x => x.color)]) : h.color
+    taken.push(color)
+    return { ...h, color }
+  })
 }
 
 function removeHabit(data: GritData, id: string): GritData {

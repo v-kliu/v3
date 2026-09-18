@@ -12,7 +12,7 @@ export async function GET(
 ) {
   const { id } = await params
   const { data, error } = await supabase
-    .from('journal_jobs')
+    .from('vkliu_journal_jobs')
     .select('id, status, transcript, title, rating, error, duration_seconds, retry_count')
     .eq('id', id)
     .single()

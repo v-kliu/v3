@@ -8,7 +8,7 @@ const supabase = createClient(
 
 export async function GET() {
   const { data, error } = await supabase
-    .from('journal_entries')
+    .from('vkliu_journal_entries')
     .select('id, created_at, title, transcript, duration_seconds, entry_type, rating')
     .order('created_at', { ascending: false })
     .limit(50)
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   }
   const { title, transcript, duration_seconds, entry_type, rating } = body
 
-  const { error } = await supabase.from('journal_entries').insert({
+  const { error } = await supabase.from('vkliu_journal_entries').insert({
     title: title || 'untitled',
     transcript,
     duration_seconds,

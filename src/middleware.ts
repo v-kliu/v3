@@ -43,5 +43,6 @@ export const config = {
     '/api/pomodoro',
     '/api/flight',
     '/api/transcribe',
+    '/api/grit',
   ],
 }

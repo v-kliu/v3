@@ -381,7 +381,7 @@ export default function AscendPage() {
 
       {loaded && tracks.length === 0 && (
         <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)' }}>
-          no tracks yet — run the growth_content migration, then hit +
+          no tracks yet — run the vkliu_growth_content migration, then hit +
         </p>
       )}
     </div>

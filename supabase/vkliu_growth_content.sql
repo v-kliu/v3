@@ -1,15 +1,15 @@
 -- 向上 / ascend — already applied to project chyueowpeovvlwmkfawp.
--- Kept here as the record of the schema. Mirrors public.todo_content exactly.
+-- Kept here as the record of the schema. Mirrors public.vkliu_todo_content exactly.
 --
--- Security model, matching todo_content: RLS is ENABLED with NO policies, so
+-- Security model, matching vkliu_todo_content: RLS is ENABLED with NO policies, so
 -- the anon/publishable key cannot read or write this table at all. The Next.js
--- route handlers talk to it with the sb_secret_ key (held in SUPABASE_ANON_KEY,
+-- route handlers talk to it with the sb_secret_ key (held in SUPABASE_SECRET_KEY,
 -- server-side only), which bypasses RLS. Access is gated in src/middleware.ts.
 --
 -- Do NOT add a permissive anon policy here — that would make every track
 -- publicly readable and writable with the publishable key.
 
-create table if not exists public.growth_content (
+create table if not exists public.vkliu_growth_content (
   id          serial primary key,
   name        text        not null default 'track',
   icon        text        not null default 'sparkles',
@@ -19,12 +19,12 @@ create table if not exists public.growth_content (
 );
 
 create index if not exists growth_content_position_idx
-  on public.growth_content ("position");
+  on public.vkliu_growth_content ("position");
 
-alter table public.growth_content enable row level security;
+alter table public.vkliu_growth_content enable row level security;
 
 -- Starter tracks. Only seeds when the table is empty, so re-running is safe.
-insert into public.growth_content (name, icon, steps, "position")
+insert into public.vkliu_growth_content (name, icon, steps, "position")
 select * from (values
   ('diet', 'utensils', '[
     {"id":"d1","title":"cut liquid calories","note":"no soda, no juice, black coffee","status":"done"},
@@ -57,4 +57,4 @@ select * from (values
     {"id":"g5","title":"1/2/3/4 plates","note":"","status":"todo"}
   ]'::jsonb, 4)
 ) as v(name, icon, steps, "position")
-where not exists (select 1 from public.growth_content);
+where not exists (select 1 from public.vkliu_growth_content);

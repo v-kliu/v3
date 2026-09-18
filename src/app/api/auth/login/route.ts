@@ -60,12 +60,12 @@ export async function POST(request: Request) {
     } else {
       loginAttempts.set(ip, { count: 1, resetAt: now + WINDOW_MS })
     }
-    supabase.from('login_logs').insert({ ip, user_agent: userAgent, success: false })
+    supabase.from('vkliu_login_logs').insert({ ip, user_agent: userAgent, success: false })
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
   }
 
   loginAttempts.delete(ip)
-  supabase.from('login_logs').insert({ ip, user_agent: userAgent, success: true })
+  supabase.from('vkliu_login_logs').insert({ ip, user_agent: userAgent, success: true })
 
   const token = await signToken()
   const response = NextResponse.json({ ok: true })

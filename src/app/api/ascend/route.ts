@@ -6,7 +6,7 @@ const supabase = createClient(
   process.env.SUPABASE_SECRET_KEY!
 )
 
-const TABLE = 'growth_content'
+const TABLE = 'vkliu_growth_content'
 
 export async function GET() {
   const { data, error } = await supabase

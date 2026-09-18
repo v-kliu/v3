@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const ip = forwarded?.split(',')[0] ?? 'unknown'
     const is_admin = ip === process.env.ADMIN_IP || ip === process.env.ADMIN_IP_MOBILE
 
-    const { error } = await supabase.from('visits').insert({
+    const { error } = await supabase.from('vkliu_visits').insert({
       country, city, region, device, latitude, longitude, is_admin, ip,
     })
 

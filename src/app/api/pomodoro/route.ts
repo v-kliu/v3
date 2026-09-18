@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   const body = await request.json()
   const { flight_iata, origin_iata, destination_iata, duration_seconds, liu_miles, completed } = body
 
-  const { error } = await supabase.from('pomodoro_sessions').insert({
+  const { error } = await supabase.from('vkliu_pomodoro_sessions').insert({
     flight_iata,
     origin_iata,
     destination_iata,

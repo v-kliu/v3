@@ -8,7 +8,7 @@ const supabase = createClient(
 
 export async function GET() {
   const { data, error } = await supabase
-    .from('visits')
+    .from('vkliu_visits')
     .select('ip, latitude, longitude')
     .not('latitude', 'is', null)
     .not('longitude', 'is', null)

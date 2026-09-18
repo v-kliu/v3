@@ -15,7 +15,9 @@ Stack, scripts, and layout are all derivable from `package.json` and `src/` — 
 - **Every table has RLS enabled with zero policies.** That is deliberate: the anon/publishable
   key can touch nothing, and the app reads and writes with the secret key from route handlers.
   Do not "fix" a table by adding a permissive anon policy — that makes it world-writable.
-  `journal_jobs` is the one exception, with 3 policies of its own.
+  `vkliu_journal_jobs` is the one exception, with 3 policies of its own.
+- **Every table in this site is prefixed `vkliu_`.** The Supabase project is shared with other
+  side projects, so the prefix is how this site's tables are told apart. New tables must use it.
 - `src/App.tsx` is the marketing page body, imported by `src/app/page.tsx`. The real root
   layout is `src/app/layout.tsx`.
 

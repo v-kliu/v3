@@ -81,6 +81,10 @@ export default function GritPage() {
 
   const activeHabits = habitsOn(grit.habits, today)
 
+  // The page is prerendered at build time; "today" and stored data only exist in
+  // the browser, so render a placeholder until the client has loaded them.
+  if (!grit.loaded) return <div className="w-full max-w-[980px]" />
+
   return (
     <LazyMotion features={domAnimation} strict>
       <MotionConfig reducedMotion="user">
@@ -88,7 +92,12 @@ export default function GritPage() {
           {/* Header */}
           <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="m-0 text-[1.85rem] font-medium leading-none tracking-[0.14em]">grit</h1>
+              <div className="flex items-baseline gap-3">
+                <h1 className="m-0 text-[1.85rem] font-medium leading-none tracking-[0.14em]">grit</h1>
+                <span className={cn('font-mono text-[0.6rem]', grit.status === 'error' ? 'text-[var(--accent)]' : 'text-[var(--text-faint)]')}>
+                  {grit.status === 'error' ? 'not saved — check connection' : grit.status === 'saving' ? 'saving…' : ''}
+                </span>
+              </div>
               <div className="mt-2.5 flex items-center gap-1.5">
                 {activeHabits.map(h => (
                   <span key={h.id} className="h-1.5 w-5 rounded-full" style={{ background: h.color }} title={h.name} />
@@ -193,9 +202,8 @@ export default function GritPage() {
               takenColors={grit.habits.map(h => h.color)}
               onDay={patch => grit.setDay(selected, patch)}
               onToggle={id => grit.toggle(selected, id)}
-              onAdd={(name, color) => grit.addHabit(name, color, selected)}
+              onAdd={name => grit.addHabit(name, selected)}
               onRename={(id, name) => grit.updateHabit(id, { name })}
-              onRecolor={(id, color) => grit.updateHabit(id, { color })}
               onStop={id => grit.stopHabit(id, selected)}
               onDelete={grit.deleteHabit}
             />
@@ -227,14 +235,13 @@ type PanelProps = {
   takenColors: string[]
   onDay: (patch: Partial<DayEntry>) => void
   onToggle: (id: string) => void
-  onAdd: (name: string, color: string) => void
+  onAdd: (name: string) => void
   onRename: (id: string, name: string) => void
-  onRecolor: (id: string, color: string) => void
   onStop: (id: string) => void
   onDelete: (id: string) => void
 }
 
-function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onDay, onToggle, onAdd, onRename, onRecolor, onStop, onDelete }: PanelProps) {
+function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onDay, onToggle, onAdd, onRename, onStop, onDelete }: PanelProps) {
   const future = day > today
   const count = habits.filter(h => done.has(h.id)).length
   const pct = habits.length ? Math.round((count / habits.length) * 100) : 0
@@ -242,7 +249,6 @@ function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onD
 
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState('')
-  const [color, setColor] = useState(() => nextColor(takenColors))
   const [renaming, setRenaming] = useState<string | null>(null)
   const [renameDraft, setRenameDraft] = useState('')
   const [shown, setShown] = useState(false)
@@ -262,10 +268,9 @@ function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onD
   function submit() {
     const v = name.trim()
     if (!v) return
-    onAdd(v, color)
+    onAdd(v)
     setName('')
     setAdding(false)
-    setColor(nextColor([...takenColors, color]))
   }
 
   return (
@@ -356,17 +361,6 @@ function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onD
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <div className="flex gap-1.5 px-2 py-1.5">
-                        {PALETTE.map(c => (
-                          <button
-                            key={c}
-                            onClick={() => onRecolor(h.id, c)}
-                            className={cn('h-4 w-4 rounded-full transition-transform hover:scale-110', c === h.color && 'ring-2 ring-offset-1 ring-offset-[var(--bg)]')}
-                            style={{ background: c, ['--tw-ring-color' as string]: c }}
-                            aria-label={`color ${c}`}
-                          />
-                        ))}
-                      </div>
                       <DropdownMenuItem onSelect={() => { setRenaming(h.id); setRenameDraft(h.name) }}>rename</DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => onStop(h.id)}>stop from this day on</DropdownMenuItem>
                       <DropdownMenuItem className="text-[var(--accent)]" onSelect={() => onDelete(h.id)}>delete everywhere</DropdownMenuItem>
@@ -402,26 +396,10 @@ function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onD
                 <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => setAdding(false)} aria-label="cancel"><X size={14} /></Button>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <div className="flex gap-2">
-                  {(PALETTE.includes(color) ? PALETTE : [...PALETTE, color]).map(c => {
-                    const taken = takenColors.includes(c)
-                    return (
-                      <button
-                        type="button"
-                        key={c}
-                        disabled={taken}
-                        onClick={() => setColor(c)}
-                        className={cn(
-                          'h-5 w-5 rounded-full transition-transform',
-                          c === color ? 'scale-110 ring-2 ring-offset-2 ring-offset-[var(--bg-raised)]' : 'hover:scale-110',
-                          taken && 'scale-50 cursor-not-allowed opacity-40 hover:scale-50'
-                        )}
-                        style={{ background: c, ['--tw-ring-color' as string]: c }}
-                        aria-label={taken ? `color ${c} (in use)` : `color ${c}`}
-                      />
-                    )
-                  })}
-                </div>
+                <span className="flex items-center gap-1.5 font-mono text-[0.6rem] text-[var(--text-faint)]">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: nextColor(takenColors) }} />
+                  color picked for you
+                </span>
                 <span className="shrink-0 font-mono text-[0.6rem] text-[var(--text-faint)]">
                   from {parseDay(day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toLowerCase()} on
                 </span>

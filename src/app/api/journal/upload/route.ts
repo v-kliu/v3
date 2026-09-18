@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   }
 
   const { data: job, error: jobError } = await supabase
-    .from('journal_jobs')
+    .from('vkliu_journal_jobs')
     .insert({ audio_path: audioPath, duration_seconds: duration, status: 'pending' })
     .select('id')
     .single()
