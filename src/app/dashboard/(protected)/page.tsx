@@ -1,9 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { Plane, Search, Shuffle } from 'lucide-react'
-
-const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
+import { useState, useEffect, useRef, useId } from 'react'
+import { AnimatePresence, m, useReducedMotion } from 'motion/react'
+import { Plane, Search, Shuffle, ArrowRight } from 'lucide-react'
+import { PALETTE } from '@/components/grit/store'
+import { inkOf, tint } from '@/components/dashboard/theme'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 
 const RANDOM_FLIGHTS = [
   'AA100', 'AA1', 'UA1', 'UA400', 'DL1', 'DL400',
@@ -284,252 +288,375 @@ export default function FlightPomodoroPage() {
   const progress = totalSeconds > 0 ? (totalSeconds - secondsLeft) / totalSeconds : 0
 
   return (
-    <div style={{ maxWidth: '580px', width: '100%' }}>
+    <div className="w-full max-w-[780px] pb-16 text-[var(--text)]">
 
       {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{
-          fontSize: '1.4rem', fontWeight: 700, color: 'var(--text)',
-          margin: '0 0 0.3rem 0', letterSpacing: '-0.01em',
-        }}>
-          flight pomodoro
-        </h1>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '1.5rem', flexWrap: 'wrap' }}>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-faint)', margin: 0, fontFamily: mono }}>
+      <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="m-0 text-[1.85rem] font-medium leading-none tracking-[0.14em]">flight pomodoro</h1>
+          <p className="m-0 mt-2.5 font-mono text-[0.68rem] tracking-[0.08em] text-[var(--text-faint)]">
             a real flight becomes your focus session.
           </p>
-          <span style={{ fontSize: '0.75rem', fontFamily: mono, color: 'var(--text-faint)' }}>
-            <span style={{ color: 'var(--text-muted)' }}>{totalMiles.toLocaleString()}</span>
-            {' '}total liu miles
-          </span>
         </div>
-      </div>
-
-      {/* ── IDLE / SEARCHING ── */}
-      {(phase === 'idle' || phase === 'searching') && (
-        <div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="flight number — e.g. DL310, aa 100"
-              disabled={phase === 'searching'}
-              autoFocus
-              style={{
-                flex: 1, padding: '0.65rem 0.9rem', fontFamily: mono,
-                fontSize: '0.88rem', background: 'var(--bg-alt)',
-                border: '1px solid var(--border)', borderRadius: '3px',
-                color: 'var(--text)', outline: 'none',
-              }}
-            />
-            <button
-              onClick={handleSearch}
-              disabled={phase === 'searching'}
-              style={{
-                padding: '0.65rem 1rem',
-                background: phase === 'searching' ? 'var(--bg-alt)' : 'var(--accent)',
-                color: phase === 'searching' ? 'var(--text-faint)' : '#fff8f0',
-                border: '1px solid var(--border)', borderRadius: '3px',
-                cursor: phase === 'searching' ? 'default' : 'pointer',
-                fontFamily: mono, fontSize: '0.85rem',
-                display: 'flex', alignItems: 'center', gap: '0.4rem',
-              }}
-            >
-              <Search size={13} />
-              {phase === 'searching' ? 'looking...' : 'search'}
-            </button>
-            <button
-              onClick={handleRandom}
-              disabled={phase === 'searching'}
-              title="Pick a random flight"
-              style={{
-                padding: '0.65rem 0.75rem', background: 'transparent',
-                color: phase === 'searching' ? 'var(--text-faint)' : 'var(--text-muted)',
-                border: '1px solid var(--border)', borderRadius: '3px',
-                cursor: phase === 'searching' ? 'default' : 'pointer',
-                display: 'flex', alignItems: 'center',
-              }}
-            >
-              <Shuffle size={13} />
-            </button>
-          </div>
-          {error && (
-            <p style={{
-              marginTop: '0.75rem', fontSize: '0.78rem',
-              color: 'var(--accent)', fontFamily: mono, margin: '0.75rem 0 0 0',
-            }}>
-              {error}
-            </p>
-          )}
+        <div className="flex font-mono">
+          <Stat label="total liu miles" value={totalMiles.toLocaleString()} color={SKY} icon={<Plane size={13} />} />
         </div>
-      )}
+      </header>
 
-      {/* ── PREVIEW ── */}
-      {phase === 'preview' && flight && (
-        <div>
-          <div style={{
-            padding: '1.5rem', border: '1px solid var(--border)',
-            borderRadius: '4px', background: 'var(--bg-alt)', marginBottom: '0.75rem',
-          }}>
-            {/* Route */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '2rem', fontWeight: 700, fontFamily: mono, color: 'var(--text)', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {flight.departure.iata}
+      <AnimatePresence mode="wait" initial={false}>
+
+        {/* ── IDLE / SEARCHING ── */}
+        {(phase === 'idle' || phase === 'searching') && (
+          <m.div key="search" {...FADE}>
+            <Card>
+              <div className="px-6 pt-7 md:px-9 md:pt-9">
+                <FlightArc ambient />
+              </div>
+              <div className="px-6 pb-7 pt-2 md:px-9 md:pb-9">
+                <p className="m-0 mb-3 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-[var(--text-faint)]">
+                  pick a flight that is in the air
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    placeholder="flight number — e.g. DL310, aa 100"
+                    disabled={phase === 'searching'}
+                    autoFocus
+                    className="h-11 bg-white/40 font-mono"
+                  />
+                  <Button
+                    onClick={handleSearch}
+                    disabled={phase === 'searching'}
+                    className="h-11 px-4 font-mono text-white hover:brightness-95"
+                    style={{ background: SKY }}
+                  >
+                    <Search size={13} />
+                    {phase === 'searching' ? 'looking...' : 'search'}
+                  </Button>
+                  <Button
+                    onClick={handleRandom}
+                    disabled={phase === 'searching'}
+                    variant="outline"
+                    className="h-11 w-11 px-0 text-[var(--text-muted)]"
+                    title="Pick a random flight"
+                    aria-label="random flight"
+                  >
+                    <Shuffle size={14} />
+                  </Button>
                 </div>
-                <div style={{ fontSize: '0.65rem', color: 'var(--text-faint)', marginTop: '0.3rem', maxWidth: '90px' }}>
-                  {flight.departure.airport}
+                <AnimatePresence initial={false}>
+                  {error && (
+                    <m.p
+                      key="err"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="m-0 mt-3 overflow-hidden font-mono text-xs text-[var(--accent)]"
+                    >
+                      {error}
+                    </m.p>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Card>
+          </m.div>
+        )}
+
+        {/* ── PREVIEW ── */}
+        {phase === 'preview' && flight && (
+          <m.div key="preview" {...FADE}>
+            <Card>
+              <div className="p-6 md:p-9">
+                <div className="mb-2 flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.12em] text-[var(--text-faint)]">
+                  <span>{flight.airline?.name ?? 'flight'}</span>
+                  <span style={{ color: inkOf(SKY) }}>{flight.flight.iata}</span>
+                </div>
+                <FlightArc />
+                <div className="mt-1 flex items-start justify-between gap-6">
+                  <Airport code={flight.departure.iata} name={flight.departure.airport} color={DEP} />
+                  <Airport code={flight.arrival.iata} name={flight.arrival.airport} color={ARR} align="right" />
+                </div>
+
+                <div className="mt-7 grid grid-cols-2 gap-3 border-t border-dashed border-[var(--border)] pt-6 sm:grid-cols-3">
+                  <Chip label="flight" value={flight.flight.iata} color={SKY} />
+                  <Chip label="lands at" value={arrivalTime} color={ARR} />
+                  <Chip label="liu miles" value={liuMiles > 0 ? `~${liuMiles.toLocaleString()} mi` : '—'} color={DEP} />
                 </div>
               </div>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-                <Plane size={13} style={{ color: 'var(--text-faint)', flexShrink: 0 }} />
-                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '2rem', fontWeight: 700, fontFamily: mono, color: 'var(--text)', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {flight.arrival.iata}
-                </div>
-                <div style={{ fontSize: '0.65rem', color: 'var(--text-faint)', marginTop: '0.3rem', maxWidth: '90px' }}>
-                  {flight.arrival.airport}
-                </div>
-              </div>
-            </div>
+            </Card>
 
-            {/* Stats */}
-            <div style={{
-              display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem',
-              paddingTop: '1rem', borderTop: '1px solid var(--border)',
-            }}>
-              {[
-                { label: 'flight', value: flight.flight.iata },
-                { label: 'lands at', value: arrivalTime },
-                { label: 'liu miles', value: liuMiles > 0 ? `~${liuMiles.toLocaleString()} mi` : '—' },
-              ].map(({ label, value }) => (
-                <div key={label}>
-                  <div style={{ fontSize: '0.62rem', fontFamily: mono, color: 'var(--text-faint)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                    {label}
-                  </div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text)', fontFamily: mono }}>
-                    {value}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {error && (
-            <p style={{ fontSize: '0.78rem', color: 'var(--accent)', fontFamily: mono, margin: '0 0 0.75rem 0' }}>
-              {error}
-            </p>
-          )}
-
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              onClick={handleLockIn}
-              style={{
-                flex: 1, padding: '0.7rem', background: 'var(--accent)',
-                color: '#fff8f0', border: 'none', borderRadius: '3px',
-                cursor: 'pointer', fontFamily: mono, fontSize: '0.88rem',
-                fontWeight: 600, letterSpacing: '0.02em',
-              }}
-            >
-              lock in →
-            </button>
-            <button
-              onClick={() => { setPhase('idle'); setFlight(null); setError('') }}
-              style={{
-                padding: '0.7rem 1rem', background: 'transparent',
-                color: 'var(--text-muted)', border: '1px solid var(--border)',
-                borderRadius: '3px', cursor: 'pointer', fontFamily: mono, fontSize: '0.85rem',
-              }}
-            >
-              back
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── ACTIVE ── */}
-      {phase === 'active' && flight && (
-        <div>
-          <div style={{
-            padding: '2rem', border: '1px solid var(--border)',
-            borderRadius: '4px', background: 'var(--bg-alt)', marginBottom: '1.25rem',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.5rem', fontFamily: mono, fontSize: '0.8rem', color: 'var(--text-faint)' }}>
-              <Plane size={11} />
-              <span>{flight.departure.iata} → {flight.arrival.iata} · {flight.flight.iata} · lands {arrivalTime}</span>
-            </div>
-
-            <div style={{ fontFamily: mono, fontSize: '4.5rem', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '0.75rem' }}>
-              {formatCountdown(secondsLeft)}
-            </div>
-
-            <div style={{ height: '2px', background: 'var(--border)', borderRadius: '1px', overflow: 'hidden', marginBottom: '1rem' }}>
-              <div style={{ height: '100%', width: `${progress * 100}%`, background: 'var(--accent)', transition: 'width 1s linear' }} />
-            </div>
-
-            <div style={{ display: 'flex', gap: '2rem', fontFamily: mono, fontSize: '0.75rem', color: 'var(--text-faint)' }}>
-              <span>{formatDuration(totalSeconds - secondsLeft)} elapsed</span>
-              <span>{formatDuration(secondsLeft)} remaining</span>
-              {liuMiles > 0 && <span>~{liuMiles.toLocaleString()} liu miles</span>}
-            </div>
-          </div>
-
-          <button
-            onClick={handleAbandon}
-            style={{
-              padding: '0.45rem 0.85rem', background: 'transparent',
-              color: 'var(--text-faint)', border: '1px solid var(--border)',
-              borderRadius: '3px', cursor: 'pointer', fontFamily: mono, fontSize: '0.75rem',
-            }}
-          >
-            abandon session
-          </button>
-        </div>
-      )}
-
-      {/* ── COMPLETE ── */}
-      {phase === 'complete' && (
-        <div>
-          <div style={{ padding: '2rem', border: '1px solid var(--border)', borderRadius: '4px', background: 'var(--bg-alt)', marginBottom: '1rem' }}>
-            <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.4rem 0' }}>
-              the plane has landed.
-            </p>
-            {flight && (
-              <p style={{ fontSize: '0.8rem', fontFamily: mono, color: 'var(--text-faint)', margin: '0 0 1.5rem 0' }}>
-                {flight.departure.iata} → {flight.arrival.iata} · {flight.flight.iata}
-              </p>
-            )}
-            <div style={{ display: 'flex', gap: '2.5rem' }}>
-              <div>
-                <div style={{ fontSize: '0.6rem', fontFamily: mono, color: 'var(--text-faint)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>focused for</div>
-                <div style={{ fontSize: '1rem', fontWeight: 700, fontFamily: mono, color: 'var(--text)' }}>{formatDuration(totalSeconds)}</div>
-              </div>
-              {liuMiles > 0 && (
-                <div>
-                  <div style={{ fontSize: '0.6rem', fontFamily: mono, color: 'var(--text-faint)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>liu miles</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 700, fontFamily: mono, color: 'var(--text)' }}>~{liuMiles.toLocaleString()}</div>
-                </div>
+            <AnimatePresence initial={false}>
+              {error && (
+                <m.p
+                  key="err"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="m-0 mt-3 overflow-hidden font-mono text-xs text-[var(--accent)]"
+                >
+                  {error}
+                </m.p>
               )}
-              <div>
-                <div style={{ fontSize: '0.6rem', fontFamily: mono, color: 'var(--text-faint)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>total miles</div>
-                <div style={{ fontSize: '1rem', fontWeight: 700, fontFamily: mono, color: 'var(--text)' }}>{totalMiles.toLocaleString()}</div>
-              </div>
+            </AnimatePresence>
+
+            <div className="mt-4 flex gap-2">
+              <Button
+                onClick={handleLockIn}
+                className="h-11 flex-1 font-mono text-[0.88rem] font-semibold text-white hover:brightness-95"
+                style={{ background: SKY }}
+              >
+                lock in <ArrowRight size={14} />
+              </Button>
+              <Button
+                variant="outline"
+                className="h-11 px-5 font-mono text-[var(--text-muted)]"
+                onClick={() => { setPhase('idle'); setFlight(null); setError('') }}
+              >
+                back
+              </Button>
             </div>
-          </div>
-          <button
-            onClick={handleReset}
-            style={{
-              padding: '0.6rem 1.25rem', background: 'transparent',
-              color: 'var(--text-muted)', border: '1px solid var(--border)',
-              borderRadius: '3px', cursor: 'pointer', fontFamily: mono, fontSize: '0.82rem',
-            }}
-          >
-            new session
-          </button>
+          </m.div>
+        )}
+
+        {/* ── ACTIVE ── */}
+        {phase === 'active' && flight && (
+          <m.div key="active" {...FADE}>
+            <Card>
+              <div className="p-6 md:p-9">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2 font-mono text-[0.7rem] text-[var(--text-faint)]">
+                  <span className="flex items-center gap-2 rounded-full px-2.5 py-1" style={{ background: tint(SKY, 14), color: inkOf(SKY) }}>
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ background: SKY }} />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ background: SKY }} />
+                    </span>
+                    in flight
+                  </span>
+                  <span>{flight.departure.iata} → {flight.arrival.iata} · {flight.flight.iata} · lands {arrivalTime}</span>
+                </div>
+
+                <FlightArc progress={progress} />
+
+                <div className="mt-2 flex items-end justify-between gap-4">
+                  <div
+                    className="font-mono text-[clamp(2.8rem,10vw,4.75rem)] font-medium leading-none tabular-nums tracking-[-0.04em]"
+                    style={{ color: inkOf(SKY) }}
+                  >
+                    {formatCountdown(secondsLeft)}
+                  </div>
+                  <div className="pb-1 text-right font-mono text-sm tabular-nums" style={{ color: inkOf(SKY) }}>
+                    {Math.round(progress * 100)}%
+                  </div>
+                </div>
+
+                <div className="mt-7 grid grid-cols-2 gap-3 border-t border-dashed border-[var(--border)] pt-6 sm:grid-cols-3">
+                  <Chip label="elapsed" value={formatDuration(totalSeconds - secondsLeft)} color={DEP} />
+                  <Chip label="remaining" value={formatDuration(secondsLeft)} color={ARR} />
+                  {liuMiles > 0 && <Chip label="liu miles" value={`~${liuMiles.toLocaleString()}`} color={SKY} />}
+                </div>
+              </div>
+            </Card>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-4 font-mono text-[var(--text-faint)]"
+              onClick={handleAbandon}
+            >
+              abandon session
+            </Button>
+          </m.div>
+        )}
+
+        {/* ── COMPLETE ── */}
+        {phase === 'complete' && (
+          <m.div key="complete" {...FADE}>
+            <Card>
+              <div className="p-6 md:p-9">
+                <p className="m-0 text-xl font-medium tracking-[0.02em]">the plane has landed.</p>
+                {flight && (
+                  <p className="m-0 mt-1.5 font-mono text-xs text-[var(--text-faint)]">
+                    {flight.departure.iata} → {flight.arrival.iata} · {flight.flight.iata}
+                  </p>
+                )}
+                <div className="mt-3">
+                  <FlightArc progress={1} celebrate />
+                </div>
+                <div className="mt-6 grid grid-cols-2 gap-3 border-t border-dashed border-[var(--border)] pt-6 sm:grid-cols-3">
+                  <Chip label="focused for" value={formatDuration(totalSeconds)} color={ARR} />
+                  {liuMiles > 0 && <Chip label="liu miles" value={`~${liuMiles.toLocaleString()}`} color={DEP} />}
+                  <Chip label="total miles" value={totalMiles.toLocaleString()} color={SKY} />
+                </div>
+              </div>
+            </Card>
+            <Button variant="outline" className="mt-4 h-10 px-5 font-mono text-[var(--text-muted)]" onClick={handleReset}>
+              new session
+            </Button>
+          </m.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+/* ─────────────────────────── presentation ─────────────────────────── */
+
+const SKY = PALETTE[4]   // cobalt — the flight itself
+const DEP = PALETTE[1]   // marigold — where you left
+const ARR = PALETTE[3]   // teal — where you land
+
+const FADE = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -6 },
+  transition: { duration: 0.22 },
+}
+
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] shadow-[0_1px_0_rgba(255,255,255,0.5)_inset,0_18px_40px_-28px_rgba(60,40,10,0.35)]">
+      <div className="h-[3px] w-full" style={{ background: `linear-gradient(90deg, ${DEP}, ${SKY}, ${ARR})` }} />
+      {children}
+    </div>
+  )
+}
+
+function Stat({ label, value, color, icon }: { label: string; value: string | number; color: string; icon?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-start sm:items-end">
+      <span className="flex items-center gap-1 text-xl font-medium tabular-nums leading-none" style={{ color }}>
+        {icon}{value}
+      </span>
+      <span className="mt-1.5 text-[0.6rem] uppercase tracking-[0.12em] text-[var(--text-faint)]">{label}</span>
+    </div>
+  )
+}
+
+function Chip({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div className="rounded-lg border-l-[3px] bg-white/30 py-1.5 pl-3 pr-2" style={{ borderColor: color }}>
+      <div className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-[var(--text-faint)]">{label}</div>
+      <div className="mt-0.5 font-mono text-[0.95rem] font-semibold tabular-nums" style={{ color: inkOf(color) }}>{value}</div>
+    </div>
+  )
+}
+
+function Airport({ code, name, color, align = 'left' }: { code: string; name: string; color: string; align?: 'left' | 'right' }) {
+  return (
+    <div className={cn('min-w-0', align === 'right' && 'text-right')}>
+      <div className="font-mono text-[2rem] font-medium leading-none tracking-[-0.03em]" style={{ color: inkOf(color) }}>{code}</div>
+      <div className="mt-1.5 text-[0.7rem] leading-snug text-[var(--text-faint)]">{name}</div>
+    </div>
+  )
+}
+
+// The flight as a drawn arc: origin on the left, destination on the right, the
+// plane sits at `progress` along it. `ambient` loops a plane along it instead
+// (idle screen); `celebrate` bursts confetti at the destination.
+const W = 640
+const H = 150
+const P0 = { x: 28, y: 126 }
+const P1 = { x: 320, y: -30 }
+const P2 = { x: 612, y: 126 }
+const ARC = `M ${P0.x} ${P0.y} Q ${P1.x} ${P1.y} ${P2.x} ${P2.y}`
+const PLANE_PATH = 'M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z'
+
+function pointOn(t: number) {
+  const u = 1 - t
+  const x = u * u * P0.x + 2 * u * t * P1.x + t * t * P2.x
+  const y = u * u * P0.y + 2 * u * t * P1.y + t * t * P2.y
+  const dx = 2 * u * (P1.x - P0.x) + 2 * t * (P2.x - P1.x)
+  const dy = 2 * u * (P1.y - P0.y) + 2 * t * (P2.y - P1.y)
+  return { x, y, angle: (Math.atan2(dy, dx) * 180) / Math.PI }
+}
+
+function PlaneGlyph() {
+  // The icon's nose points up-right, so it is turned 45° to face along the path.
+  return (
+    <g transform="rotate(45)">
+      <path
+        d={PLANE_PATH}
+        transform="translate(-16.8 -16.8) scale(1.4)"
+        fill={SKY}
+        stroke={inkOf(SKY)}
+        strokeWidth={1.1}
+        strokeLinejoin="round"
+      />
+    </g>
+  )
+}
+
+function FlightArc({ progress = 0, ambient = false, celebrate = false }: { progress?: number; ambient?: boolean; celebrate?: boolean }) {
+  const reduce = useReducedMotion()
+  const gid = useId().replace(/:/g, '')
+  const clamped = Math.min(Math.max(progress, 0), 1)
+  const p = pointOn(clamped)
+
+  return (
+    <div className="relative">
+      <svg viewBox={`0 0 ${W} ${H}`} className="block w-full overflow-visible" aria-hidden>
+        <defs>
+          <linearGradient id={gid} gradientUnits="userSpaceOnUse" x1={P0.x} y1={0} x2={P2.x} y2={0}>
+            <stop offset="0" stopColor={DEP} />
+            <stop offset="0.5" stopColor={SKY} />
+            <stop offset="1" stopColor={ARR} />
+          </linearGradient>
+        </defs>
+
+        <path d={ARC} fill="none" stroke="var(--border)" strokeWidth={2} strokeDasharray="2 7" strokeLinecap="round" />
+        {!ambient && (
+          <path
+            d={ARC}
+            fill="none"
+            stroke={`url(#${gid})`}
+            strokeWidth={3.5}
+            strokeLinecap="round"
+            pathLength={1}
+            strokeDasharray="1"
+            strokeDashoffset={1 - clamped}
+            style={{ transition: 'stroke-dashoffset 1s linear' }}
+          />
+        )}
+
+        <circle cx={P0.x} cy={P0.y} r={7} fill={DEP} />
+        <circle cx={P0.x} cy={P0.y} r={13} fill="none" stroke={DEP} strokeOpacity={0.3} />
+        <circle cx={P2.x} cy={P2.y} r={7} fill={ARR} />
+        <circle cx={P2.x} cy={P2.y} r={13} fill="none" stroke={ARR} strokeOpacity={0.3} />
+
+        {ambient ? (
+          <g>
+            <g style={{ opacity: reduce ? 0 : 1 }}>
+              <PlaneGlyph />
+            </g>
+            {!reduce && <animateMotion path={ARC} dur="9s" repeatCount="indefinite" rotate="auto" />}
+          </g>
+        ) : (
+          <g style={{ transform: `translate(${p.x}px, ${p.y}px) rotate(${p.angle}deg)`, transition: 'transform 1s linear' }}>
+            <PlaneGlyph />
+          </g>
+        )}
+      </svg>
+
+      {celebrate && !reduce && (
+        <div
+          className="pointer-events-none absolute"
+          style={{ left: `${(P2.x / W) * 100}%`, top: `${(P2.y / H) * 100}%` }}
+        >
+          {[...PALETTE, ...PALETTE].map((c, i) => {
+            const a = (i / 14) * Math.PI * 2
+            const r = 46 + (i % 3) * 16
+            return (
+              <m.span
+                key={i}
+                className="absolute h-1.5 w-1.5 rounded-full"
+                style={{ background: c, left: -3, top: -3 }}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                animate={{ x: Math.cos(a) * r, y: Math.sin(a) * r - 10, opacity: 0, scale: 0.4 }}
+                transition={{ duration: 1, ease: 'easeOut', delay: 0.1 }}
+              />
+            )
+          })}
         </div>
       )}
     </div>

@@ -1,11 +1,14 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { AnimatePresence, m } from 'motion/react'
 import {
   Utensils, Droplets, Scale, BookOpen, Dumbbell, Moon, Brain, Wallet,
   Sparkles, Heart, Footprints, Sun, Shirt, GlassWater, Pencil, Check,
   ArrowUp, ArrowDown, Plus,
 } from 'lucide-react'
+import { colorForId } from '@/components/dashboard/theme'
+import { useTabTint } from '@/components/dashboard/useTabTint'
 
 const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
 
@@ -73,6 +76,10 @@ export default function AscendPage() {
   }, [])
 
   const active = tracks.find(t => t.id === activeId) ?? null
+  const trackColor = active ? colorForId(active.id) : null
+
+  // Switching tracks re-tints the whole page, like switching rooms.
+  useTabTint(trackColor)
 
   function mutateSteps(fn: (steps: Step[]) => Step[]) {
     if (!active) return
@@ -168,13 +175,30 @@ export default function AscendPage() {
 
   const steps = active?.steps ?? []
   const doneCount = steps.filter(s => s.status === 'done').length
+  const pct = steps.length ? Math.round((doneCount / steps.length) * 100) : 0
+  const allSteps = tracks.reduce((n, t) => n + t.steps.length, 0)
+  const allDone = tracks.reduce((n, t) => n + t.steps.filter(s => s.status === 'done').length, 0)
 
   return (
-    <div className="ascend-page">
+    <div className="ascend-page" style={trackColor ? ({ '--track': trackColor } as React.CSSProperties) : undefined}>
 
       <header className="ascend-header">
-        <h1>向上</h1>
-        <p>upward — one rung at a time</p>
+        <div>
+          <h1>向上</h1>
+          <p>upward — one rung at a time</p>
+        </div>
+        {loaded && tracks.length > 0 && (
+          <div className="ascend-stats">
+            <div className="ascend-stat">
+              <span className="ascend-stat-value" style={{ color: 'var(--track)' }}>{pct}%</span>
+              <span className="ascend-stat-label">this track</span>
+            </div>
+            <div className="ascend-stat">
+              <span className="ascend-stat-value">{allDone}<span className="ascend-stat-dim">/{allSteps}</span></span>
+              <span className="ascend-stat-label">all steps</span>
+            </div>
+          </div>
+        )}
       </header>
 
       {loaded && (
@@ -192,8 +216,16 @@ export default function AscendPage() {
                   else { setActiveId(track.id); setEditingTrackId(null); setPickerOpen(false) }
                 }}
                 className={`ascend-track${isActive ? ' is-active' : ''}`}
+                style={{ '--c': colorForId(track.id) } as React.CSSProperties}
               >
-                <Icon size={13} strokeWidth={1.75} />
+                {isActive && (
+                  <m.span
+                    layoutId="ascend-track-pill"
+                    className="ascend-track-pill"
+                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <Icon size={13} strokeWidth={1.75} className="ascend-track-icon" />
                 {editingTrackId === track.id ? (
                   <input
                     autoFocus
@@ -209,7 +241,7 @@ export default function AscendPage() {
                     style={{ width: `${Math.max(trackName.length, 3)}ch` }}
                   />
                 ) : (
-                  <span>{track.name}</span>
+                  <span className="ascend-track-name">{track.name}</span>
                 )}
                 {total > 0 && <span className="ascend-track-count">{done}/{total}</span>}
                 {isActive && tracks.length > 1 && (
@@ -251,132 +283,150 @@ export default function AscendPage() {
         </div>
       )}
 
-      {pickerOpen && active && (
-        <div className="ascend-picker">
-          {ICON_KEYS.map(key => {
-            const I = ICONS[key]
-            return (
-              <button
-                key={key}
-                onClick={() => setIcon(key)}
-                className={`ascend-picker-btn${active.icon === key ? ' is-active' : ''}`}
-                title={key}
-              >
-                <I size={14} strokeWidth={1.75} />
-              </button>
-            )
-          })}
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {pickerOpen && active && (
+          <m.div
+            key="picker"
+            className="ascend-picker"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+          >
+            {ICON_KEYS.map(key => {
+              const I = ICONS[key]
+              return (
+                <button
+                  key={key}
+                  onClick={() => setIcon(key)}
+                  className={`ascend-picker-btn${active.icon === key ? ' is-active' : ''}`}
+                  title={key}
+                >
+                  <I size={14} strokeWidth={1.75} />
+                </button>
+              )
+            })}
+          </m.div>
+        )}
+      </AnimatePresence>
 
       {active && (
-        <ol className="ascend-rail">
-          {steps.map((step, i) => {
-            const isLast = i === steps.length - 1
-            const isHovered = hovered === step.id
-            return (
-              <li
-                key={step.id}
-                className={`ascend-step is-${step.status}`}
-                onMouseEnter={() => setHovered(step.id)}
-                onMouseLeave={() => setHovered(null)}
-              >
-                <div className="ascend-node-col">
-                  <button
-                    onClick={() => cycleStatus(step.id)}
-                    className="ascend-node"
-                    title={step.status}
-                    aria-label={`${step.title} — ${step.status}`}
+        <div className="ascend-card">
+          <ol key={active.id} className="ascend-rail">
+            <AnimatePresence>
+              {steps.map((step, i) => {
+                const isLast = i === steps.length - 1
+                const isHovered = hovered === step.id
+                return (
+                  <m.li
+                    key={step.id}
+                    layout="position"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -12 }}
+                    transition={{ duration: 0.22, delay: Math.min(i, 7) * 0.03 }}
+                    className={`ascend-step is-${step.status}`}
+                    onMouseEnter={() => setHovered(step.id)}
+                    onMouseLeave={() => setHovered(null)}
                   >
-                    {step.status === 'done' && <Check size={9} strokeWidth={3.5} />}
-                  </button>
-                  {!isLast && <span className="ascend-connector" />}
-                </div>
-
-                <div className="ascend-body">
-                  <div className="ascend-title-row">
-                    {editing?.stepId === step.id && editing.field === 'title' ? (
-                      <input
-                        autoFocus
-                        value={draft}
-                        onChange={e => setDraft(e.target.value)}
-                        onBlur={commitEdit}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') { e.preventDefault(); commitEdit() }
-                          if (e.key === 'Escape') setEditing(null)
-                        }}
-                        className="ascend-edit ascend-edit-title"
-                      />
-                    ) : (
-                      <span
-                        className="ascend-title"
-                        onClick={() => { setEditing({ stepId: step.id, field: 'title' }); setDraft(step.title) }}
+                    <div className="ascend-node-col">
+                      <button
+                        onClick={() => cycleStatus(step.id)}
+                        className="ascend-node"
+                        title={step.status}
+                        aria-label={`${step.title} — ${step.status}`}
                       >
-                        {step.title}
-                      </span>
-                    )}
-
-                    <span className="ascend-actions" style={{ opacity: isHovered ? 1 : 0 }}>
-                      <button onClick={() => move(step.id, -1)} disabled={i === 0} title="move up">
-                        <ArrowUp size={11} strokeWidth={2} />
+                        {step.status === 'done' && <Check size={9} strokeWidth={3.5} />}
                       </button>
-                      <button onClick={() => move(step.id, 1)} disabled={isLast} title="move down">
-                        <ArrowDown size={11} strokeWidth={2} />
-                      </button>
-                      <button onClick={() => mutateSteps(s => s.filter(x => x.id !== step.id))} title="remove">
-                        ×
-                      </button>
-                    </span>
-                  </div>
+                      {!isLast && <span className="ascend-connector" />}
+                    </div>
 
-                  {editing?.stepId === step.id && editing.field === 'note' ? (
-                    <input
-                      autoFocus
-                      value={draft}
-                      onChange={e => setDraft(e.target.value)}
-                      onBlur={commitEdit}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') { e.preventDefault(); commitEdit() }
-                        if (e.key === 'Escape') setEditing(null)
-                      }}
-                      placeholder="a detail…"
-                      className="ascend-edit ascend-edit-note"
-                    />
-                  ) : step.note ? (
-                    <p
-                      className="ascend-note"
-                      onClick={() => { setEditing({ stepId: step.id, field: 'note' }); setDraft(step.note) }}
-                    >
-                      {step.note}
-                    </p>
-                  ) : (
-                    <button
-                      className="ascend-note-add"
-                      style={{ opacity: isHovered ? 1 : 0 }}
-                      onClick={() => { setEditing({ stepId: step.id, field: 'note' }); setDraft('') }}
-                    >
-                      + note
-                    </button>
-                  )}
-                </div>
-              </li>
-            )
-          })}
+                    <div className="ascend-body">
+                      <div className="ascend-title-row">
+                        {editing?.stepId === step.id && editing.field === 'title' ? (
+                          <input
+                            autoFocus
+                            value={draft}
+                            onChange={e => setDraft(e.target.value)}
+                            onBlur={commitEdit}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') { e.preventDefault(); commitEdit() }
+                              if (e.key === 'Escape') setEditing(null)
+                            }}
+                            className="ascend-edit ascend-edit-title"
+                          />
+                        ) : (
+                          <span
+                            className="ascend-title"
+                            onClick={() => { setEditing({ stepId: step.id, field: 'title' }); setDraft(step.title) }}
+                          >
+                            {step.title}
+                          </span>
+                        )}
 
-          <li className="ascend-step ascend-composer">
-            <div className="ascend-node-col">
-              <span className="ascend-node-ghost" />
-            </div>
-            <input
-              value={composing}
-              onChange={e => setComposing(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addStep() } }}
-              onBlur={addStep}
-              placeholder="next step…"
-              className="ascend-compose-input"
-            />
-          </li>
-        </ol>
+                        <span className="ascend-actions" style={{ opacity: isHovered ? 1 : 0 }}>
+                          <button onClick={() => move(step.id, -1)} disabled={i === 0} title="move up">
+                            <ArrowUp size={11} strokeWidth={2} />
+                          </button>
+                          <button onClick={() => move(step.id, 1)} disabled={isLast} title="move down">
+                            <ArrowDown size={11} strokeWidth={2} />
+                          </button>
+                          <button onClick={() => mutateSteps(s => s.filter(x => x.id !== step.id))} title="remove">
+                            ×
+                          </button>
+                        </span>
+                      </div>
+
+                      {editing?.stepId === step.id && editing.field === 'note' ? (
+                        <input
+                          autoFocus
+                          value={draft}
+                          onChange={e => setDraft(e.target.value)}
+                          onBlur={commitEdit}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') { e.preventDefault(); commitEdit() }
+                            if (e.key === 'Escape') setEditing(null)
+                          }}
+                          placeholder="a detail…"
+                          className="ascend-edit ascend-edit-note"
+                        />
+                      ) : step.note ? (
+                        <p
+                          className="ascend-note"
+                          onClick={() => { setEditing({ stepId: step.id, field: 'note' }); setDraft(step.note) }}
+                        >
+                          {step.note}
+                        </p>
+                      ) : (
+                        <button
+                          className="ascend-note-add"
+                          style={{ opacity: isHovered ? 1 : 0 }}
+                          onClick={() => { setEditing({ stepId: step.id, field: 'note' }); setDraft('') }}
+                        >
+                          + note
+                        </button>
+                      )}
+                    </div>
+                  </m.li>
+                )
+              })}
+            </AnimatePresence>
+
+            <li className="ascend-step ascend-composer">
+              <div className="ascend-node-col">
+                <span className="ascend-node-ghost" />
+              </div>
+              <input
+                value={composing}
+                onChange={e => setComposing(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addStep() } }}
+                onBlur={addStep}
+                placeholder="next step…"
+                className="ascend-compose-input"
+              />
+            </li>
+          </ol>
+        </div>
       )}
 
       {loaded && tracks.length === 0 && (

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getTodoTabs } from '@/lib/todo-data'
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -7,13 +8,11 @@ const supabase = createClient(
 )
 
 export async function GET() {
-  const { data, error } = await supabase
-    .from('vkliu_todo_content')
-    .select('id, name, content, position')
-    .order('position', { ascending: true })
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data ?? [])
+  try {
+    return NextResponse.json(await getTodoTabs())
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'failed' }, { status: 500 })
+  }
 }
 
 export async function PUT(request: Request) {

@@ -1,7 +1,34 @@
+/* Animatable per-tab color, set inline on .dashboard-root by DashboardFrame. */
+@property --tab {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
 .dashboard-root {
+  --tab-ink: color-mix(in srgb, var(--tab) 68%, #000);
+  position: relative;
   display: flex;
   min-height: 100vh;
   background-color: var(--bg);
+  transition: --tab 0.5s ease;
+}
+
+/* Soft wash of the tab's color from the top of the page, plus a thin top rule. */
+.dashboard-root[data-wash='on'] {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--tab) 15%, transparent) 0%, transparent 420px);
+  background-repeat: no-repeat;
+}
+.dashboard-root[data-wash='on']::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--tab);
+  z-index: 20;
+  pointer-events: none;
 }
 
 .dashboard-aside {
@@ -14,10 +41,65 @@
 
 .dashboard-main {
   flex: 1;
+  min-width: 0;
   padding: 2rem 2.5rem;
   overflow-y: auto;
   display: flex;
+}
+
+/* Pages size themselves (max-width) and are centered here. */
+.dashboard-page {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   justify-content: center;
+}
+
+/* Sidebar nav */
+.nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s, background-color 0.15s;
+}
+.nav-link:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--c) 10%, transparent);
+  text-decoration: none;
+}
+.nav-link[aria-current='page'] {
+  color: var(--text);
+  font-weight: 600;
+  background: transparent;
+}
+.nav-link > * { position: relative; z-index: 1; }
+.nav-link .nav-icon {
+  color: var(--c);
+  transition: transform 0.2s;
+}
+.nav-link:hover .nav-icon { transform: translateY(-1px) scale(1.15); }
+.nav-pill {
+  position: absolute;
+  inset: 0;
+  z-index: 0 !important;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--c) 17%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 38%, transparent);
+}
+
+.sidebar-dots { display: inline-flex; gap: 3px; }
+.sidebar-dots i {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
 }
 
 @media (max-width: 768px) {
@@ -104,9 +186,32 @@
   }
 }
 
-/* Todo textarea mobile */
+/* Todo page: the notebook fills the viewport below the header + tab bar. */
+.todo-textarea {
+  min-height: calc(100vh - 330px);
+}
 @media (max-width: 768px) {
   .todo-textarea {
-    min-height: calc(100vh - 48px - 80px) !important;
+    min-height: calc(100vh - 48px - 290px);
+    padding-left: 1.1rem !important;
+    padding-right: 1.1rem !important;
   }
+  .sidebar-dots { display: none; }
+}
+
+/* Phone top bar: everything must fit ~360px, so inactive tabs are icon-only. */
+@media (max-width: 768px) {
+  .sidebar-inner {
+    gap: 0.5rem;
+    padding: 0 0.75rem;
+  }
+  .sidebar-nav {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .sidebar-nav::-webkit-scrollbar { display: none; }
+  .nav-link { padding: 0.4rem 0.55rem; }
+  .nav-link:not([aria-current='page']) .nav-label { display: none; }
+  .logout-label { display: none; }
 }

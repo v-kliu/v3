@@ -1,9 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Mic, Square, Save, Trash2, RotateCcw, Pencil, RefreshCw } from 'lucide-react'
+import { AnimatePresence, m } from 'motion/react'
+import { Mic, Square, Save, Trash2, RotateCcw, Pencil, RefreshCw, ArrowRight, ChevronDown } from 'lucide-react'
+import { PALETTE, ratingColor } from '@/components/grit/store'
+import { TAB_COLORS, inkOf, tint } from '@/components/dashboard/theme'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
-const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
 
 interface Entry {
   id: string
@@ -41,12 +45,6 @@ function timeAgo(iso: string): string {
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
   return `${Math.floor(diff / 86400)}d ago`
-}
-
-function ratingColor(r: number): string {
-  if (r >= 8) return '#5a8a5a'
-  if (r >= 5) return 'var(--text-muted)'
-  return '#8a5a5a'
 }
 
 export default function JournalPage() {
@@ -269,318 +267,321 @@ export default function JournalPage() {
   const inPreview = phase === 'preview' || phase === 'saving'
   const showRecorder = phase === 'idle' || phase === 'recording' || phase === 'uploading' || phase === 'processing' || phase === 'failed'
 
+  const rated = entries.filter(e => e.rating !== null)
+  const avg = rated.length ? rated.reduce((a, e) => a + (e.rating ?? 0), 0) / rated.length : null
+  const voiceMins = Math.round(entries.reduce((a, e) => a + (e.entry_type === 'voice' ? e.duration_seconds : 0), 0) / 60)
+
   return (
-    <div style={{ maxWidth: '580px', width: '100%' }}>
+    <div className="w-full max-w-[1120px] pb-16 text-[var(--text)]">
 
       {/* Header */}
-      <div style={{ marginBottom: '1.75rem' }}>
-        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.3rem 0', letterSpacing: '-0.01em' }}>
-          journal
-        </h1>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-faint)', margin: 0, fontFamily: mono }}>
-          speak freely. transcribed and stored.
-        </p>
-      </div>
-
-      {/* Tab toggle */}
-      <div style={{ display: 'flex', marginBottom: '1.75rem', borderBottom: '1px solid var(--border)' }}>
-        {(['voice', 'manual'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => { setTab(t); setError(''); if (phase !== 'recording') { discard() } }}
-            style={{
-              background: 'none',
-              border: 'none',
-              borderBottom: tab === t ? '2px solid var(--accent)' : '2px solid transparent',
-              marginBottom: '-1px',
-              padding: '0.5rem 1rem',
-              fontFamily: mono,
-              fontSize: '0.78rem',
-              color: tab === t ? 'var(--accent)' : 'var(--text-faint)',
-              cursor: 'pointer',
-              letterSpacing: '0.04em',
-              transition: 'color 0.15s',
-            }}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
-
-      {/* ── VOICE TAB ── */}
-      {tab === 'voice' && (
-        <>
-          {/* Recorder */}
-          {showRecorder && (
-            <div style={{
-              padding: '2.5rem 2rem',
-              border: `1px solid ${phase === 'failed' ? '#8a5a5a' : 'var(--border)'}`,
-              borderRadius: '4px',
-              background: 'var(--bg-alt)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '1.25rem',
-              marginBottom: '2rem',
-            }}>
-              <button
-                onClick={isActive ? stopRecording : startRecording}
-                disabled={isBusy || phase === 'failed'}
-                style={{
-                  width: '72px', height: '72px', borderRadius: '50%',
-                  border: `2px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
-                  background: isActive ? 'var(--accent)' : 'transparent',
-                  cursor: (isBusy || phase === 'failed') ? 'default' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.2s',
-                  opacity: (isBusy || phase === 'failed') ? 0.4 : 1,
-                  flexShrink: 0,
-                }}
-              >
-                {isActive
-                  ? <Square size={22} style={{ color: '#fff8f0' }} />
-                  : <Mic size={22} style={{ color: isBusy ? 'var(--text-faint)' : 'var(--text-muted)' }} />
-                }
-              </button>
-
-              <div style={{ textAlign: 'center' }}>
-                {phase === 'idle' && (
-                  <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)', margin: 0 }}>
-                    tap to record
-                  </p>
-                )}
-                {phase === 'recording' && (
-                  <div>
-                    <p style={{ fontFamily: mono, fontSize: '1.4rem', fontWeight: 700, color: 'var(--accent)', margin: '0 0 0.2rem 0', letterSpacing: '-0.02em' }}>
-                      {formatDuration(elapsed)}
-                    </p>
-                    <p style={{ fontFamily: mono, fontSize: '0.72rem', color: 'var(--text-faint)', margin: 0 }}>
-                      recording — tap to stop
-                    </p>
-                  </div>
-                )}
-                {phase === 'uploading' && (
-                  <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)', margin: 0 }}>
-                    uploading audio...
-                  </p>
-                )}
-                {phase === 'processing' && (
-                  <div>
-                    <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)', margin: '0 0 0.2rem 0' }}>
-                      transcribing... {elapsed > 0 && `(${formatDuration(elapsed)})`}
-                    </p>
-                    <p style={{ fontFamily: mono, fontSize: '0.66rem', color: 'var(--text-faint)', margin: 0, opacity: 0.6 }}>
-                      longer recordings may take a moment
-                    </p>
-                  </div>
-                )}
-                {phase === 'failed' && (
-                  <p style={{ fontFamily: mono, fontSize: '0.75rem', color: '#c87a7a', margin: 0, textAlign: 'center' }}>
-                    {error}
-                  </p>
-                )}
-              </div>
-
-              {/* Error for non-failed phases */}
-              {error && phase !== 'failed' && (
-                <p style={{ fontFamily: mono, fontSize: '0.75rem', color: 'var(--accent)', margin: 0, textAlign: 'center' }}>
-                  {error}
-                </p>
-              )}
-
-              {/* Retry / Discard buttons for failed state */}
-              {phase === 'failed' && (
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {jobRetryCount < 3 && (
-                    <button
-                      onClick={retryJob}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        background: 'transparent',
-                        color: 'var(--text-muted)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '3px',
-                        cursor: 'pointer',
-                        fontFamily: mono,
-                        fontSize: '0.78rem',
-                        display: 'flex', alignItems: 'center', gap: '0.35rem',
-                      }}
-                    >
-                      <RefreshCw size={11} />
-                      retry
-                    </button>
-                  )}
-                  <button
-                    onClick={discard}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      background: 'transparent',
-                      color: 'var(--text-faint)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      fontFamily: mono,
-                      fontSize: '0.78rem',
-                      display: 'flex', alignItems: 'center', gap: '0.35rem',
-                    }}
-                  >
-                    <Trash2 size={11} />
-                    discard
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Preview */}
-          {inPreview && (
-            <PreviewCard
-              title={aiTitle}
-              rating={aiRating}
-              body={transcript}
-              duration={elapsed}
-              entryType="voice"
-              saving={phase === 'saving'}
-              onSave={() => saveEntry('voice')}
-              onReRecord={discard}
-              onDiscard={discard}
-            />
-          )}
-        </>
-      )}
-
-      {/* ── MANUAL TAB ── */}
-      {tab === 'manual' && (
-        <>
-          {(phase === 'idle' || phase === 'analyzing') && (
-            <div style={{ marginBottom: '0.75rem' }}>
-              <div style={{
-                padding: '1.5rem',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                background: 'var(--bg-alt)',
-                marginBottom: '0.75rem',
-              }}>
-                <textarea
-                  value={manualText}
-                  onChange={(e) => setManualText(e.target.value)}
-                  placeholder="write freely..."
-                  rows={10}
-                  disabled={phase === 'analyzing'}
-                  style={{
-                    width: '100%',
-                    fontFamily: mono,
-                    fontSize: '0.82rem',
-                    color: 'var(--text-muted)',
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    resize: 'vertical',
-                    lineHeight: 1.7,
-                    boxSizing: 'border-box',
-                    opacity: phase === 'analyzing' ? 0.5 : 1,
-                  }}
-                />
-              </div>
-              <button
-                onClick={analyzeManual}
-                disabled={phase === 'analyzing' || !manualText.trim()}
-                style={{
-                  padding: '0.7rem 1.5rem',
-                  background: 'var(--accent)',
-                  color: '#fff8f0',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: (phase === 'analyzing' || !manualText.trim()) ? 'default' : 'pointer',
-                  fontFamily: mono,
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  opacity: (phase === 'analyzing' || !manualText.trim()) ? 0.5 : 1,
-                }}
-              >
-                {phase === 'analyzing' ? 'analyzing...' : 'preview →'}
-              </button>
-            </div>
-          )}
-
-          {inPreview && (
-            <PreviewCard
-              title={aiTitle}
-              rating={aiRating}
-              body={transcript}
-              entryType="manual"
-              saving={phase === 'saving'}
-              onSave={() => saveEntry('manual')}
-              onReRecord={discard}
-              onDiscard={discard}
-            />
-          )}
-        </>
-      )}
-
-      {/* Past entries */}
-      <div style={{ marginTop: inPreview ? '2rem' : 0 }}>
-        <p style={{ fontFamily: mono, fontSize: '0.68rem', color: 'var(--text-faint)', letterSpacing: '0.06em', textTransform: 'uppercase', margin: '0 0 0.75rem 0' }}>
-          past entries
-        </p>
-
-        {loadingEntries && (
-          <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)' }}>loading...</p>
-        )}
-        {!loadingEntries && entries.length === 0 && (
-          <p style={{ fontFamily: mono, fontSize: '0.78rem', color: 'var(--text-faint)' }}>no entries yet.</p>
-        )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-          {entries.map((entry) => (
-            <div key={entry.id} style={{ border: '1px solid var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
-              <button
-                onClick={() => setExpanded(expanded === entry.id ? null : entry.id)}
-                style={{
-                  width: '100%', padding: '0.75rem 1rem',
-                  background: expanded === entry.id ? 'var(--bg-alt)' : 'transparent',
-                  border: 'none', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  gap: '0.75rem', textAlign: 'left',
-                }}
-              >
-                <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {entry.title}
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
-                  {entry.rating !== null && (
-                    <span style={{ fontFamily: mono, fontSize: '0.68rem', fontWeight: 600, color: ratingColor(entry.rating!) }}>
-                      {entry.rating}/10
-                    </span>
-                  )}
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                    fontFamily: mono, fontSize: '0.6rem', color: 'var(--text-faint)',
-                    border: '1px solid var(--border)', borderRadius: '2px', padding: '0.1rem 0.35rem',
-                  }}>
-                    {entry.entry_type === 'manual' ? <Pencil size={9} /> : <Mic size={9} />}
-                    {entry.entry_type === 'manual' ? 'manual' : 'voice'}
-                  </span>
-                  <span style={{ fontFamily: mono, fontSize: '0.65rem', color: 'var(--text-faint)' }}>
-                    {entry.entry_type === 'voice' && `${formatDuration(entry.duration_seconds)} · `}{timeAgo(entry.created_at)}
-                  </span>
-                </span>
-              </button>
-
-              {expanded === entry.id && (
-                <div style={{ padding: '0 1rem 1rem', borderTop: '1px solid var(--border)' }}>
-                  <p style={{
-                    fontFamily: mono, fontSize: '0.8rem', color: 'var(--text-muted)',
-                    lineHeight: 1.7, margin: '0.75rem 0 0 0', whiteSpace: 'pre-wrap',
-                  }}>
-                    {entry.transcript}
-                  </p>
-                </div>
-              )}
-            </div>
-          ))}
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="m-0 text-[1.85rem] font-medium leading-none tracking-[0.14em]">journal</h1>
+          <p className="m-0 mt-2.5 font-mono text-[0.68rem] tracking-[0.08em] text-[var(--text-faint)]">
+            speak freely. transcribed and stored.
+          </p>
         </div>
+        <div className="flex flex-wrap gap-x-6 gap-y-3 font-mono">
+          <Stat label="entries" value={entries.length} color={ACCENT} />
+          <Stat label="avg day" value={avg === null ? '–' : avg.toFixed(1)} color={avg === null ? 'var(--text-faint)' : ratingColor(Math.round(avg))} />
+          <Stat label="min recorded" value={voiceMins} color={PALETTE[3]} />
+        </div>
+      </header>
+
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10">
+
+        {/* ── Capture ── */}
+        <section className="lg:sticky lg:top-6">
+          {/* Mode toggle */}
+          <div className="mb-4 inline-flex rounded-full bg-[var(--bg-alt)] p-1" role="tablist">
+            {(['voice', 'manual'] as Tab[]).map((t) => (
+              <button
+                key={t}
+                role="tab"
+                aria-selected={tab === t}
+                onClick={() => { setTab(t); setError(''); if (phase !== 'recording') { discard() } }}
+                className={cn(
+                  'relative flex items-center gap-1.5 rounded-full px-4 py-1.5 font-mono text-[0.78rem] tracking-[0.04em] transition-colors',
+                  tab === t ? '' : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'
+                )}
+                style={tab === t ? { color: inkOf(ACCENT) } : undefined}
+              >
+                {tab === t && (
+                  <m.span
+                    layoutId="journal-mode"
+                    className="absolute inset-0 rounded-full bg-[var(--bg-raised)]"
+                    style={{ boxShadow: `inset 0 0 0 1px ${tint(ACCENT, 40)}, 0 1px 3px rgba(60,40,10,0.12)` }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <span className="relative flex items-center gap-1.5">
+                  {t === 'voice' ? <Mic size={12} /> : <Pencil size={12} />}
+                  {t}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <AnimatePresence mode="wait" initial={false}>
+
+            {/* Recorder */}
+            {tab === 'voice' && showRecorder && (
+              <m.div key="recorder" {...FADE}>
+                <Card tone={phase === 'failed' ? 'error' : isActive ? 'live' : 'idle'}>
+                  <div className="flex flex-col items-center gap-5 px-6 py-10">
+                    <div className="relative grid h-[104px] w-[104px] place-items-center">
+                      {isActive && [0, 1].map(i => (
+                        <m.span
+                          key={i}
+                          className="absolute inset-2 rounded-full"
+                          style={{ background: ACCENT }}
+                          initial={{ scale: 1, opacity: 0.3 }}
+                          animate={{ scale: 1.7, opacity: 0 }}
+                          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut', delay: i * 0.9 }}
+                        />
+                      ))}
+                      {(phase === 'uploading' || phase === 'processing') && (
+                        <span
+                          className="absolute inset-0 animate-spin rounded-full border-2 border-transparent"
+                          style={{ borderTopColor: ACCENT, borderRightColor: tint(ACCENT, 35) }}
+                        />
+                      )}
+                      <m.button
+                        onClick={isActive ? stopRecording : startRecording}
+                        disabled={isBusy || phase === 'failed'}
+                        whileHover={isBusy || phase === 'failed' ? undefined : { scale: 1.05 }}
+                        whileTap={isBusy || phase === 'failed' ? undefined : { scale: 0.95 }}
+                        aria-label={isActive ? 'stop recording' : 'start recording'}
+                        className="relative grid h-[84px] w-[84px] place-items-center rounded-full border-2 transition-[background-color,border-color,opacity] duration-200 disabled:cursor-default disabled:opacity-45"
+                        style={{
+                          borderColor: ACCENT,
+                          background: isActive ? ACCENT : tint(ACCENT, 10),
+                          color: isActive ? '#fff8f0' : inkOf(ACCENT),
+                        }}
+                      >
+                        {isActive ? <Square size={24} fill="currentColor" /> : <Mic size={26} />}
+                      </m.button>
+                    </div>
+
+                    <div className="min-h-[3.2rem] text-center font-mono">
+                      {phase === 'idle' && (
+                        <p className="m-0 text-[0.78rem] text-[var(--text-faint)]">tap to record</p>
+                      )}
+                      {phase === 'recording' && (
+                        <div>
+                          <p className="m-0 mb-1 text-[1.9rem] font-medium leading-none tabular-nums tracking-[-0.02em]" style={{ color: inkOf(ACCENT) }}>
+                            {formatDuration(elapsed)}
+                          </p>
+                          <p className="m-0 flex items-center justify-center gap-1.5 text-[0.7rem] text-[var(--text-faint)]">
+                            <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: ACCENT }} />
+                            recording — tap to stop
+                          </p>
+                        </div>
+                      )}
+                      {phase === 'uploading' && (
+                        <p className="m-0 animate-pulse text-[0.78rem] text-[var(--text-muted)]">uploading audio...</p>
+                      )}
+                      {phase === 'processing' && (
+                        <div>
+                          <p className="m-0 mb-1 animate-pulse text-[0.78rem] text-[var(--text-muted)]">
+                            transcribing... {elapsed > 0 && `(${formatDuration(elapsed)})`}
+                          </p>
+                          <p className="m-0 text-[0.66rem] text-[var(--text-faint)]">longer recordings may take a moment</p>
+                        </div>
+                      )}
+                      {phase === 'failed' && (
+                        <p className="m-0 max-w-[26ch] text-[0.75rem] text-[var(--accent)]">{error}</p>
+                      )}
+                    </div>
+
+                    {/* Error for non-failed phases */}
+                    {error && phase !== 'failed' && (
+                      <p className="m-0 text-center font-mono text-xs text-[var(--accent)]">{error}</p>
+                    )}
+
+                    {phase === 'failed' && (
+                      <div className="flex gap-2">
+                        {jobRetryCount < 3 && (
+                          <Button variant="outline" size="sm" className="font-mono text-[var(--text-muted)]" onClick={retryJob}>
+                            <RefreshCw size={11} /> retry
+                          </Button>
+                        )}
+                        <Button variant="outline" size="sm" className="font-mono text-[var(--text-faint)]" onClick={discard}>
+                          <Trash2 size={11} /> discard
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </m.div>
+            )}
+
+            {/* Manual entry */}
+            {tab === 'manual' && (phase === 'idle' || phase === 'analyzing') && (
+              <m.div key="manual" {...FADE}>
+                <Card tone="idle">
+                  <textarea
+                    value={manualText}
+                    onChange={(e) => setManualText(e.target.value)}
+                    placeholder="write freely..."
+                    rows={12}
+                    disabled={phase === 'analyzing'}
+                    className="block w-full resize-y border-0 bg-transparent px-6 py-5 font-mono text-[0.84rem] leading-[1.75] text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] disabled:opacity-50"
+                    style={{ caretColor: ACCENT }}
+                  />
+                  <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] px-6 py-3">
+                    <span className="font-mono text-[0.66rem] tabular-nums text-[var(--text-faint)]">
+                      {manualText.trim() ? `${manualText.trim().split(/\s+/).length} words` : ''}
+                    </span>
+                    <Button
+                      onClick={analyzeManual}
+                      disabled={phase === 'analyzing' || !manualText.trim()}
+                      className="font-mono text-white hover:brightness-95"
+                      style={{ background: ACCENT }}
+                    >
+                      {phase === 'analyzing' ? 'analyzing...' : <>preview <ArrowRight size={13} /></>}
+                    </Button>
+                  </div>
+                </Card>
+              </m.div>
+            )}
+
+            {/* Preview */}
+            {inPreview && (
+              <m.div key="preview" {...FADE}>
+                <PreviewCard
+                  title={aiTitle}
+                  rating={aiRating}
+                  body={transcript}
+                  duration={tab === 'voice' ? elapsed : undefined}
+                  entryType={tab}
+                  saving={phase === 'saving'}
+                  onSave={() => saveEntry(tab)}
+                  onReRecord={discard}
+                  onDiscard={discard}
+                />
+              </m.div>
+            )}
+          </AnimatePresence>
+        </section>
+
+        {/* ── Past entries ── */}
+        <section>
+          <div className="mb-4 flex items-baseline justify-between">
+            <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-[var(--text-faint)]">past entries</span>
+            {entries.length > 0 && (
+              <span className="font-mono text-[0.62rem] tabular-nums text-[var(--text-faint)]">{entries.length}</span>
+            )}
+          </div>
+
+          {loadingEntries && (
+            <div className="flex flex-col gap-2" aria-label="loading">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="h-[52px] animate-pulse rounded-xl bg-[var(--bg-alt)]" style={{ animationDelay: `${i * 120}ms` }} />
+              ))}
+            </div>
+          )}
+          {!loadingEntries && entries.length === 0 && (
+            <p className="m-0 font-mono text-[0.78rem] text-[var(--text-faint)]">no entries yet.</p>
+          )}
+
+          <div className="flex flex-col gap-2">
+            {entries.map((entry, i) => {
+              const open = expanded === entry.id
+              const band = entry.rating !== null ? ratingColor(entry.rating) : 'var(--border)'
+              return (
+                <m.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.22, delay: Math.min(i, 8) * 0.035 }}
+                  className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] transition-shadow"
+                  style={{ borderLeft: `4px solid ${band}`, boxShadow: open ? '0 10px 24px -18px rgba(60,40,10,0.4)' : undefined }}
+                >
+                  <button
+                    onClick={() => setExpanded(open ? null : entry.id)}
+                    aria-expanded={open}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--bg-alt)]/60"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-[0.88rem] font-medium">{entry.title}</span>
+                    <span className="flex shrink-0 items-center gap-2">
+                      {entry.rating !== null && (
+                        <span
+                          className="rounded-full px-2 py-0.5 font-mono text-[0.66rem] font-semibold tabular-nums"
+                          style={{ background: tint(band, 16), color: inkOf(band) }}
+                        >
+                          {entry.rating}/10
+                        </span>
+                      )}
+                      <span className="hidden items-center gap-1 rounded-full border border-[var(--border)] px-1.5 py-0.5 font-mono text-[0.6rem] text-[var(--text-faint)] sm:inline-flex">
+                        {entry.entry_type === 'manual' ? <Pencil size={9} /> : <Mic size={9} />}
+                        {entry.entry_type === 'manual' ? 'manual' : 'voice'}
+                      </span>
+                      <span className="font-mono text-[0.65rem] text-[var(--text-faint)]">
+                        {entry.entry_type === 'voice' && `${formatDuration(entry.duration_seconds)} · `}{timeAgo(entry.created_at)}
+                      </span>
+                      <ChevronDown size={13} className={cn('text-[var(--text-faint)] transition-transform duration-200', open && 'rotate-180')} />
+                    </span>
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {open && (
+                      <m.div
+                        key="body"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.22 }}
+                        className="overflow-hidden"
+                      >
+                        <p className="m-0 border-t border-[var(--border)] px-4 pb-4 pt-3 font-mono text-[0.8rem] leading-[1.75] text-[var(--text-muted)] whitespace-pre-wrap">
+                          {entry.transcript}
+                        </p>
+                      </m.div>
+                    )}
+                  </AnimatePresence>
+                </m.div>
+              )
+            })}
+          </div>
+        </section>
       </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────── presentation ─────────────────────────── */
+
+const ACCENT = TAB_COLORS.journal
+
+const FADE = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -6 },
+  transition: { duration: 0.2 },
+}
+
+function Card({ children, tone = 'idle' }: { children: React.ReactNode; tone?: 'idle' | 'live' | 'error' }) {
+  return (
+    <div
+      className="overflow-hidden rounded-xl border bg-[var(--bg-raised)] shadow-[0_1px_0_rgba(255,255,255,0.5)_inset,0_18px_40px_-28px_rgba(60,40,10,0.35)] transition-colors duration-300"
+      style={{
+        borderColor: tone === 'live' ? ACCENT : tone === 'error' ? 'var(--accent)' : 'var(--border)',
+        backgroundImage: tone === 'live' ? `linear-gradient(180deg, ${tint(ACCENT, 9)}, transparent 70%)` : undefined,
+      }}
+    >
+      <div className="h-[3px] w-full" style={{ background: tone === 'error' ? 'var(--accent)' : ACCENT }} />
+      {children}
+    </div>
+  )
+}
+
+function Stat({ label, value, color }: { label: string; value: string | number; color: string }) {
+  return (
+    <div className="flex flex-col items-end">
+      <span className="text-xl font-medium tabular-nums leading-none" style={{ color }}>{value}</span>
+      <span className="mt-1.5 text-[0.6rem] uppercase tracking-[0.12em] text-[var(--text-faint)]">{label}</span>
     </div>
   )
 }
@@ -598,90 +599,53 @@ interface PreviewCardProps {
 }
 
 function PreviewCard({ title, rating, body, duration, entryType, saving, onSave, onReRecord, onDiscard }: PreviewCardProps) {
+  const rc = rating !== null ? ratingColor(rating) : null
   return (
-    <div style={{ marginBottom: '2rem' }}>
-      <div style={{
-        padding: '1.5rem', border: '1px solid var(--border)',
-        borderRadius: '4px', background: 'var(--bg-alt)', marginBottom: '0.75rem',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-          {entryType === 'voice' && duration !== undefined && (
-            <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-faint)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              <Mic size={10} />
-              {formatDuration(duration)} recording
-            </span>
-          )}
-          {rating !== null && (
-            <span style={{
-              fontFamily: mono, fontSize: '0.75rem', fontWeight: 700,
-              color: ratingColor(rating),
-              border: `1px solid ${ratingColor(rating)}`,
-              borderRadius: '3px', padding: '0.1rem 0.5rem',
-            }}>
-              {rating} / 10
-            </span>
-          )}
+    <div>
+      <Card>
+        <div className="p-6">
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            {entryType === 'voice' && duration !== undefined && (
+              <span className="flex items-center gap-1.5 font-mono text-[0.7rem] text-[var(--text-faint)]">
+                <Mic size={11} />
+                {formatDuration(duration)} recording
+              </span>
+            )}
+            {rc && rating !== null && (
+              <span
+                className="rounded-full px-2.5 py-0.5 font-mono text-[0.75rem] font-semibold tabular-nums"
+                style={{ background: tint(rc, 16), color: inkOf(rc), boxShadow: `inset 0 0 0 1px ${tint(rc, 45)}` }}
+              >
+                {rating} / 10
+              </span>
+            )}
+          </div>
+
+          <p className="m-0 mb-3 text-[1.05rem] font-medium leading-snug tracking-[-0.01em]">{title}</p>
+
+          <p className="m-0 max-h-[46vh] overflow-y-auto whitespace-pre-wrap font-mono text-[0.82rem] leading-[1.75] text-[var(--text-muted)]">
+            {body}
+          </p>
         </div>
+      </Card>
 
-        <p style={{
-          fontSize: '1rem', fontWeight: 600, color: 'var(--text)',
-          margin: '0 0 0.75rem 0', letterSpacing: '-0.01em',
-        }}>
-          {title}
-        </p>
-
-        <p style={{
-          fontFamily: mono, fontSize: '0.82rem', color: 'var(--text-muted)',
-          lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap',
-        }}>
-          {body}
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <button
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
           onClick={onSave}
           disabled={saving}
-          style={{
-            flex: 1, minWidth: '100px', padding: '0.7rem',
-            background: 'var(--accent)', color: '#fff8f0',
-            border: 'none', borderRadius: '3px',
-            cursor: saving ? 'default' : 'pointer',
-            fontFamily: mono, fontSize: '0.85rem', fontWeight: 600,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
-            opacity: saving ? 0.6 : 1,
-          }}
+          className="h-11 min-w-[110px] flex-1 font-mono font-semibold text-white hover:brightness-95"
+          style={{ background: ACCENT }}
         >
           <Save size={13} />
           {saving ? 'saving...' : 'save entry'}
-        </button>
-        <button
-          onClick={onReRecord}
-          disabled={saving}
-          style={{
-            padding: '0.7rem 0.9rem', background: 'transparent',
-            color: 'var(--text-muted)', border: '1px solid var(--border)',
-            borderRadius: '3px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: '0.4rem',
-            fontFamily: mono, fontSize: '0.82rem',
-          }}
-        >
+        </Button>
+        <Button variant="outline" className="h-11 font-mono text-[var(--text-muted)]" onClick={onReRecord} disabled={saving}>
           <RotateCcw size={13} />
           {entryType === 'voice' ? 're-record' : 're-write'}
-        </button>
-        <button
-          onClick={onDiscard}
-          disabled={saving}
-          title="Discard"
-          style={{
-            padding: '0.7rem 0.75rem', background: 'transparent',
-            color: 'var(--text-faint)', border: '1px solid var(--border)',
-            borderRadius: '3px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center',
-          }}
-        >
+        </Button>
+        <Button variant="outline" className="h-11 w-11 px-0 text-[var(--text-faint)]" onClick={onDiscard} disabled={saving} title="Discard" aria-label="discard">
           <Trash2 size={13} />
-        </button>
+        </Button>
       </div>
     </div>
   )
