@@ -1,20 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { AnimatePresence, m } from 'motion/react'
-import { Plus, RefreshCw, X } from 'lucide-react'
-import { colorForId, inkOf, tint } from '@/components/dashboard/theme'
-import { useTabTint } from '@/components/dashboard/useTabTint'
-import { cn } from '@/lib/utils'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
-const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
+const mono = 'Consolas, "Lucida Console", "Courier New", monospace'
 
 type Tab = { id: number; name: string; position: number }
 type SaveStatus = 'saved' | 'saving'
 
-// One ruled line of the textarea: 0.9rem font × 1.8 line-height. The paper lines
-// in the background are drawn at this pitch so text sits on them.
-const LINE = '1.62rem'
+// Whole-pixel font and line height so the ruled lines stay locked to the text on
+// phones (fractional rem sizes round differently for text vs. backgrounds).
+const FONT = 14
+const LINE = 24
 
 export type TodoInitial = Array<Tab & { content: string }>
 
@@ -31,6 +27,7 @@ export default function TodoClient({ initial }: { initial: TodoInitial }) {
   const [editingTabId, setEditingTabId] = useState<number | null>(null)
   const [editingName, setEditingName] = useState('')
   const [stale, setStale] = useState(false)
+  const [caret, setCaret] = useState({ ln: 1, col: 1, selLines: 0 })
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const channelRef = useRef<BroadcastChannel | null>(null)
 
@@ -130,47 +127,27 @@ export default function TodoClient({ initial }: { initial: TodoInitial }) {
   }
 
   const activeContent = activeTabId !== null ? (contents[activeTabId] ?? '') : ''
-  const color = activeTabId !== null ? colorForId(activeTabId) : 'var(--text-faint)'
-  useTabTint(activeTabId !== null ? color : null)
-  const { lines, words } = useMemo(() => {
-    const trimmed = activeContent.trim()
-    return {
-      lines: activeContent ? activeContent.split('\n').length : 0,
-      words: trimmed ? trimmed.split(/\s+/).length : 0,
-    }
-  }, [activeContent])
+  const chars = activeContent.length
+  const lineCount = activeContent ? activeContent.split(/\r?\n/).length : 0
+
+  function updateCaret(e: React.SyntheticEvent<HTMLTextAreaElement>) {
+    const t = e.currentTarget
+    const before = t.value.slice(0, t.selectionStart)
+    const ln = before.split('\n').length
+    const selected = t.value.slice(t.selectionStart, t.selectionEnd)
+    setCaret({ ln, col: before.length - before.lastIndexOf('\n'), selLines: selected ? selected.split('\n').length : 0 })
+  }
+
+  const btn: React.CSSProperties = { font: 'inherit', background: 'none', border: 0, padding: '0 6px', cursor: 'pointer', color: 'inherit' }
 
   return (
-    <div className="flex w-full max-w-[1320px] flex-col pb-10 text-[var(--text)]">
-
-      {/* Header */}
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="m-0 text-[1.85rem] font-medium leading-none tracking-[0.14em]">todo</h1>
-          <div className="mt-2.5 flex items-center gap-1.5" aria-hidden>
-            {tabs.map(t => (
-              <span
-                key={t.id}
-                className={cn('h-1.5 rounded-full transition-[width,opacity] duration-300', t.id === activeTabId ? 'w-8' : 'w-4 opacity-50')}
-                style={{ background: colorForId(t.id) }}
-              />
-            ))}
-          </div>
-        </div>
-        {loaded && (
-          <div className="flex gap-x-6 font-mono">
-            <Stat label="lines" value={lines} color={color} />
-            <Stat label="words" value={words} color={color} />
-          </div>
-        )}
-      </header>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1320, fontFamily: mono, fontSize: 13, color: '#000' }}>
 
       {/* Tabs */}
       {loaded && (
-        <div className="mb-4 flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist">
+        <div role="tablist" style={{ display: 'flex', alignItems: 'flex-end', background: '#e6e6e6', border: '1px solid #bdbdbd', borderBottom: 0, overflowX: 'auto' }}>
           {tabs.map(tab => {
             const isActive = tab.id === activeTabId
-            const c = colorForId(tab.id)
             return (
               <div
                 key={tab.id}
@@ -179,22 +156,12 @@ export default function TodoClient({ initial }: { initial: TodoInitial }) {
                 tabIndex={0}
                 onClick={() => handleTabClick(tab.id)}
                 onKeyDown={e => { if (e.key === 'Enter' && editingTabId !== tab.id) handleTabClick(tab.id) }}
-                className={cn(
-                  'group relative flex shrink-0 cursor-pointer select-none items-center gap-2 rounded-full py-1.5 pl-3.5 pr-2.5 font-mono text-[0.78rem] tracking-[0.02em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--text)]/20',
-                  !isActive && 'text-[var(--text-muted)] hover:bg-[var(--bg-alt)]'
-                )}
-                style={isActive ? { color: inkOf(c) } : undefined}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'default', userSelect: 'none',
+                  padding: '5px 8px 5px 12px', borderRight: '1px solid #bdbdbd',
+                  background: isActive ? '#fff' : 'transparent', color: isActive ? '#000' : '#444',
+                }}
               >
-                {isActive && (
-                  <m.span
-                    layoutId="todo-tab"
-                    className="absolute inset-0 rounded-full"
-                    style={{ background: tint(c, 17), boxShadow: `inset 0 0 0 1px ${tint(c, 42)}` }}
-                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                  />
-                )}
-                <span className="relative h-2 w-2 shrink-0 rounded-full" style={{ background: c }} />
-
                 {editingTabId === tab.id ? (
                   <input
                     autoFocus
@@ -206,105 +173,54 @@ export default function TodoClient({ initial }: { initial: TodoInitial }) {
                       if (e.key === 'Escape') setEditingTabId(null)
                     }}
                     onClick={e => e.stopPropagation()}
-                    className="relative border-0 border-b bg-transparent p-0 text-inherit outline-none"
-                    style={{ fontFamily: mono, borderColor: c, width: `${Math.max(editingName.length, 4)}ch` }}
+                    style={{ font: 'inherit', border: '1px solid #888', background: '#fff', padding: 0, outline: 'none', width: `${Math.max(editingName.length, 4)}ch` }}
                   />
                 ) : (
-                  <span className="relative">{tab.name}</span>
+                  <span>{tab.name}</span>
                 )}
-
                 {tabs.length > 1 && (
-                  <button
-                    onClick={e => handleDeleteTab(tab.id, e)}
-                    aria-label={`delete ${tab.name}`}
-                    className={cn(
-                      'relative grid h-4 w-4 place-items-center rounded-full transition-[opacity,background-color,color] hover:bg-[var(--accent)]/15 hover:text-[var(--accent)]',
-                      isActive ? 'opacity-60' : 'opacity-0 group-hover:opacity-50 [@media(hover:none)]:hidden'
-                    )}
-                  >
-                    <X size={10} />
-                  </button>
+                  <button onClick={e => handleDeleteTab(tab.id, e)} aria-label={`delete ${tab.name}`} style={{ ...btn, padding: '0 4px' }}>×</button>
                 )}
               </div>
             )
           })}
-
-          <button
-            onClick={handleAddTab}
-            aria-label="new tab"
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-dashed border-[var(--border)] text-[var(--text-faint)] transition-colors hover:border-[var(--tab)] hover:text-[var(--tab-ink)]"
-          >
-            <Plus size={13} />
-          </button>
+          <button onClick={handleAddTab} aria-label="new tab" style={{ ...btn, padding: '5px 12px', fontSize: 16 }}>+</button>
         </div>
       )}
 
-      {/* Page */}
-      <section
-        className="flex flex-1 flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] shadow-[0_1px_0_rgba(255,255,255,0.5)_inset,0_18px_40px_-28px_rgba(60,40,10,0.35)]"
-      >
-        <div className="h-[3px] w-full transition-colors duration-300" style={{ background: color }} />
+      {loaded && stale && (
+        <button onClick={() => loadAll(activeTabId ?? undefined)} style={{ ...btn, textAlign: 'left', padding: '4px 8px', background: '#fffbe0', border: '1px solid #bdbdbd', borderBottom: 0 }}>
+          updated in another tab - click to reload
+        </button>
+      )}
 
-        <AnimatePresence initial={false}>
-          {loaded && stale && (
-            <m.div
-              key="stale"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <button
-                onClick={() => loadAll(activeTabId ?? undefined)}
-                className="flex w-full items-center gap-2 px-6 py-2 text-left font-mono text-[0.72rem] tracking-[0.03em]"
-                style={{ background: tint(color, 14), color: inkOf(color) }}
-              >
-                <RefreshCw size={12} /> updated in another tab — click to sync
-              </button>
-            </m.div>
-          )}
-        </AnimatePresence>
+      <textarea
+        key={activeTabId ?? 'none'}
+        value={activeContent}
+        onChange={handleChange}
+        onSelect={updateCaret}
+        onKeyUp={updateCaret}
+        onClick={updateCaret}
+        placeholder=""
+        spellCheck={false}
+        className="todo-textarea"
+        style={{
+          width: '100%', flex: 1, resize: 'none', outline: 'none', borderRadius: 0,
+          border: '1px solid #bdbdbd', background: '#fff', color: '#000',
+          fontFamily: mono, fontSize: FONT, lineHeight: `${LINE}px`, padding: `${LINE / 2}px 10px`,
+          WebkitTextSizeAdjust: '100%', textSizeAdjust: '100%', boxSizing: 'border-box',
+          backgroundAttachment: 'local', backgroundOrigin: 'padding-box',
+          backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${LINE - 1}px, #ececec ${LINE - 1}px, #ececec ${LINE}px)`,
+          backgroundPosition: `0 ${LINE / 2}px`,
+        }}
+      />
 
-        <textarea
-          key={activeTabId ?? 'none'}
-          value={activeContent}
-          onChange={handleChange}
-          placeholder={loaded ? 'start typing...' : ''}
-          spellCheck
-          className="todo-textarea w-full flex-1 resize-none border-0 bg-transparent outline-none placeholder:text-[var(--text-faint)]"
-          style={{
-            fontFamily: mono,
-            fontSize: '0.9rem',
-            lineHeight: 1.8,
-            color: 'var(--text)',
-            caretColor: color,
-            padding: `${LINE} 2rem`,
-            backgroundAttachment: 'local',
-            backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent calc(${LINE} - 1px), ${tint(color, 16)} calc(${LINE} - 1px), ${tint(color, 16)} ${LINE})`,
-          }}
-        />
-
-        <footer className="flex items-center justify-between gap-4 border-t border-[var(--border)] px-6 py-2.5 font-mono text-[0.66rem] text-[var(--text-faint)]">
-          <span className="tabular-nums">{lines} {lines === 1 ? 'line' : 'lines'} · {words} {words === 1 ? 'word' : 'words'}</span>
-          <span className="flex items-center gap-1.5" style={{ color: status === 'saving' ? 'var(--text-muted)' : undefined }}>
-            <span
-              className={cn('h-1.5 w-1.5 rounded-full transition-colors', status === 'saving' && 'animate-pulse')}
-              style={{ background: status === 'saving' ? color : 'var(--border)' }}
-            />
-            {status === 'saving' ? 'saving...' : 'saved'}
-          </span>
-        </footer>
-      </section>
-    </div>
-  )
-}
-
-function Stat({ label, value, color }: { label: string; value: string | number; color: string }) {
-  return (
-    <div className="flex flex-col items-end">
-      <span className="text-xl font-medium tabular-nums leading-none transition-colors duration-300" style={{ color }}>{value}</span>
-      <span className="mt-1.5 text-[0.6rem] uppercase tracking-[0.12em] text-[var(--text-faint)]">{label}</span>
+      <footer style={{ display: 'flex', gap: 24, padding: '3px 10px', background: '#f0f0f0', border: '1px solid #bdbdbd', borderTop: 0, fontSize: 12, color: '#222' }}>
+        <span>Ln {caret.ln}, Col {caret.col}</span>
+        <span>{caret.selLines > 0 ? `${caret.selLines} of ${lineCount}` : lineCount} {lineCount === 1 ? 'line' : 'lines'}</span>
+        <span>{chars} characters</span>
+        <span style={{ marginLeft: 'auto' }}>{status === 'saving' ? 'Saving...' : 'Saved'}</span>
+      </footer>
     </div>
   )
 }

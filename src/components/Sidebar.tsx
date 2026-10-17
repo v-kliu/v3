@@ -158,7 +158,7 @@ export default function Sidebar({ activeSection, onNavClick }: SidebarProps) {
           letterSpacing: '0.01em',
         }}>
           made with{' '}
-          <Link href="/dashboard/login" style={{ color: 'inherit', textDecoration: 'none' }}>❤️</Link>
+          ❤️
           {' '}by victor
         </p>
       </div>

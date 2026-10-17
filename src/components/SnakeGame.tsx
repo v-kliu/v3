@@ -97,6 +97,7 @@ export default function SnakeGame() {
   const isDead    = useRef(false)
   const lastTick  = useRef(0)
   const rafId     = useRef(0)
+  const appleLink = useRef<HTMLAnchorElement>(null)
 
   useEffect(() => {
     const n = parseInt(localStorage.getItem('vh-snake') || '0', 10)
@@ -200,6 +201,8 @@ export default function SnakeGame() {
       const f  = food.current
       const fx = (f.x + 0.5) * CELL
       const fy = (f.y + 0.5) * CELL
+      // Hidden login link rides on the apple (36px hit area, centred on the cell)
+      if (appleLink.current) appleLink.current.style.transform = `translate(${fx - 18}px, ${fy - 18}px)`
       ctx.fillStyle = 'rgba(195, 38, 38, 0.35)'
       ctx.beginPath(); ctx.arc(fx, fy + 1, CELL / 2 - 3, 0, Math.PI * 2); ctx.fill()
       ctx.strokeStyle = 'rgba(38, 115, 20, 0.38)'; ctx.lineWidth = 1.5
@@ -266,6 +269,14 @@ export default function SnakeGame() {
       <canvas
         ref={canvasRef}
         style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}
+      />
+
+      <a
+        ref={appleLink}
+        href="/dashboard/login"
+        aria-label="eve"
+        tabIndex={-1}
+        style={{ position: 'fixed', top: 0, left: 0, width: 36, height: 36, zIndex: 5, opacity: 0, cursor: 'default' }}
       />
 
       {/* Bottom-right: toggle + score/best grouped together */}

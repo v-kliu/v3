@@ -188,13 +188,13 @@
 
 /* Todo page: the notebook fills the viewport below the header + tab bar. */
 .todo-textarea {
-  min-height: calc(100vh - 330px);
+  min-height: calc(100vh - 160px);
 }
 @media (max-width: 768px) {
   .todo-textarea {
-    min-height: calc(100vh - 48px - 290px);
-    padding-left: 1.1rem !important;
-    padding-right: 1.1rem !important;
+    min-height: calc(100vh - 48px - 140px);
+    padding-left: 8px !important;
+    padding-right: 8px !important;
   }
   .sidebar-dots { display: none; }
 }
