@@ -1,17 +1,18 @@
 import { NextResponse } from 'next/server'
-import { timingSafeEqual } from 'crypto'
+import { createHash, timingSafeEqual } from 'crypto'
 import { signToken, COOKIE_NAME, COOKIE_MAX_AGE } from '@/lib/auth'
 import { createClient } from '@supabase/supabase-js'
+import { Redis } from '@upstash/redis'
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SECRET_KEY!
 )
 
-// in-memory rate limiter: ip → { count, resetAt }
-const loginAttempts = new Map<string, { count: number; resetAt: number }>()
+// Shared across serverless instances (an in-memory map resets per instance and is trivially bypassed)
+const redis = Redis.fromEnv()
 const MAX_ATTEMPTS = 5
-const WINDOW_MS = 15 * 60 * 1000 // 15 minutes
+const WINDOW_S = 15 * 60 // 15 minutes
 
 function getIp(request: Request): string {
   return request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
@@ -20,52 +21,38 @@ function getIp(request: Request): string {
 export async function POST(request: Request) {
   const ip = getIp(request)
   const userAgent = request.headers.get('user-agent') ?? 'unknown'
-  const now = Date.now()
+  const key = `login-fail:${ip}`
 
-  // check rate limit
-  const record = loginAttempts.get(ip)
-  if (record) {
-    if (now >= record.resetAt) {
-      loginAttempts.delete(ip)
-    } else if (record.count >= MAX_ATTEMPTS) {
-      return NextResponse.json(
-        { error: 'Too many attempts. Try again in 15 minutes.' },
-        { status: 429 }
-      )
-    }
+  const attempts = (await redis.get<number>(key)) ?? 0
+  if (attempts >= MAX_ATTEMPTS) {
+    return NextResponse.json(
+      { error: 'Too many attempts. Try again in 15 minutes.' },
+      { status: 429 }
+    )
   }
 
-  const { password } = await request.json() as { password?: string }
+  const body = await request.json().catch(() => null) as { password?: unknown } | null
+  const password = typeof body?.password === 'string' ? body.password : ''
 
-  if (!password) {
+  if (!password || password.length > 256) {
     return NextResponse.json({ error: 'Password required' }, { status: 400 })
   }
 
-  const expected = process.env.ADMIN_PASSWORD!
-  let match = false
-  try {
-    match =
-      timingSafeEqual(
-        Buffer.from(password.padEnd(expected.length)),
-        Buffer.from(expected.padEnd(password.length))
-      ) && password.length === expected.length
-  } catch {
-    match = false
-  }
+  const expected = process.env.ADMIN_PASSWORD
+  if (!expected) return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+  // hash both sides so the comparison is fixed-length and constant-time
+  const sha = (v: string) => createHash('sha256').update(v).digest()
+  const match = timingSafeEqual(sha(password), sha(expected))
 
   if (!match) {
-    const rec = loginAttempts.get(ip)
-    if (rec && now < rec.resetAt) {
-      loginAttempts.set(ip, { ...rec, count: rec.count + 1 })
-    } else {
-      loginAttempts.set(ip, { count: 1, resetAt: now + WINDOW_MS })
-    }
-    supabase.from('vkliu_login_logs').insert({ ip, user_agent: userAgent, success: false })
+    const count = await redis.incr(key)
+    if (count === 1) await redis.expire(key, WINDOW_S)
+    await supabase.from('vkliu_login_logs').insert({ ip, user_agent: userAgent, success: false })
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
   }
 
-  loginAttempts.delete(ip)
-  supabase.from('vkliu_login_logs').insert({ ip, user_agent: userAgent, success: true })
+  await redis.del(key)
+  await supabase.from('vkliu_login_logs').insert({ ip, user_agent: userAgent, success: true })
 
   const token = await signToken()
   const response = NextResponse.json({ ok: true })

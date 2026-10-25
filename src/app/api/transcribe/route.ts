@@ -14,6 +14,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No audio provided' }, { status: 400 })
   }
 
+  if (audio.size > 25 * 1024 * 1024) {
+    return NextResponse.json({ error: 'Audio too large' }, { status: 413 })
+  }
+
   const whisperForm = new FormData()
   whisperForm.append('file', audio, 'audio.webm')
   whisperForm.append('model', 'whisper-1')
@@ -26,8 +30,7 @@ export async function POST(request: Request) {
   })
 
   if (!res.ok) {
-    const err = await res.text()
-    return NextResponse.json({ error: err }, { status: res.status })
+    return NextResponse.json({ error: 'Transcription failed' }, { status: 502 })
   }
 
   const data = await res.json()
