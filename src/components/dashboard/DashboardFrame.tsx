@@ -24,6 +24,7 @@ export default function DashboardFrame({ children }: { children: React.ReactNode
         <div
           className="dashboard-root"
           data-wash={theme.wash ? 'on' : 'off'}
+          data-eve={pathname === '/dashboard/eve' ? 'true' : undefined}
           style={{ '--tab': theme.color } as React.CSSProperties}
         >
           <aside className="dashboard-aside">

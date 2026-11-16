@@ -8,13 +8,15 @@ import { TAB_COLORS } from './theme'
 
 const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
 
-const navItems = [
+const navItems: Array<
+  { href: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; color: string; dividerBefore?: boolean }
+> = [
   { href: '/dashboard', label: 'flight', icon: Plane, color: TAB_COLORS.flight },
   { href: '/dashboard/journal', label: 'journal', icon: Mic, color: TAB_COLORS.journal },
   { href: '/dashboard/todo', label: 'todo', icon: StickyNote, color: TAB_COLORS.todo },
   { href: '/dashboard/ascend', label: '向上', icon: TrendingUp, color: TAB_COLORS.ascend },
   { href: '/dashboard/grit', label: 'grit', icon: Flame, color: TAB_COLORS.grit },
-  { href: '/dashboard/eve', label: 'eve', icon: Bot, color: TAB_COLORS.eve },
+  { href: '/dashboard/eve', label: 'eve', icon: Bot, color: TAB_COLORS.eve, dividerBefore: true },
 ]
 
 export default function DashboardSidebar() {
@@ -59,10 +61,17 @@ export default function DashboardSidebar() {
 
         <nav className="sidebar-nav">
           <ul>
-            {navItems.map(({ href, label, icon: Icon, color }) => {
+            {navItems.map(({ href, label, icon: Icon, color, dividerBefore }) => {
               const isActive = pathname === href
               return (
                 <li key={href}>
+                  {dividerBefore && (
+                    <hr style={{
+                      border: 'none',
+                      borderTop: '1px solid var(--border)',
+                      margin: '0.5rem 0.6rem',
+                    }} />
+                  )}
                   <Link
                     href={href}
                     className="nav-link"
