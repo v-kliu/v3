@@ -36,6 +36,7 @@ type Line = {
   typed: number
   opacity: number
   color: string
+  x: number
 }
 
 export default function EveBg() {
@@ -60,26 +61,31 @@ export default function EveBg() {
     window.addEventListener('resize', resize)
 
     function spawnLine() {
+      if (lines.length >= 2) return  // cap at 2 visible at once
       const maxRows = Math.floor(c.height / SIZE)
+      // Spread x across the full page width in thirds
+      const col = Math.floor(Math.random() * 3)
+      const xOffset = col * Math.floor(c.width / 3) + Math.floor(Math.random() * 80)
       lines.push({
         row: Math.floor(Math.random() * maxRows),
         text: POOL[Math.floor(Math.random() * POOL.length)],
         typed: 0,
-        opacity: 0.18 + Math.random() * 0.12,
+        opacity: 0.2 + Math.random() * 0.1,
         color: GREEN,
+        x: xOffset,
       })
     }
 
-    // Seed a few lines
-    for (let i = 0; i < 6; i++) spawnLine()
+    // Seed with 2 lines
+    spawnLine(); spawnLine()
 
     function tick() {
       frame++
       ctx.clearRect(0, 0, c.width, c.height)
       ctx.font = `${SIZE - 1}px ${mono}`
 
-      // Spawn a new line every ~40 frames
-      if (frame % 40 === 0) spawnLine()
+      // Spawn a new line every ~90 frames
+      if (frame % 90 === 0) spawnLine()
 
       lines = lines.filter(l => l.opacity > 0.01)
 
@@ -93,7 +99,7 @@ export default function EveBg() {
 
         ctx.globalAlpha = l.opacity
         ctx.fillStyle = l.color
-        ctx.fillText(l.text.slice(0, l.typed), 20, l.row * SIZE + SIZE)
+        ctx.fillText(l.text.slice(0, l.typed), l.x, l.row * SIZE + SIZE)
       }
 
       ctx.globalAlpha = 1
