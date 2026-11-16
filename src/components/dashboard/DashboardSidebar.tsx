@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { m } from 'motion/react'
-import { Plane, Mic, LogOut, StickyNote, TrendingUp, Flame } from 'lucide-react'
+import { Plane, Mic, LogOut, StickyNote, TrendingUp, Flame, Bot } from 'lucide-react'
 import { TAB_COLORS } from './theme'
 
 const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/dashboard/todo', label: 'todo', icon: StickyNote, color: TAB_COLORS.todo },
   { href: '/dashboard/ascend', label: '向上', icon: TrendingUp, color: TAB_COLORS.ascend },
   { href: '/dashboard/grit', label: 'grit', icon: Flame, color: TAB_COLORS.grit },
+  { href: '/dashboard/eve', label: 'eve', icon: Bot, color: TAB_COLORS.eve },
 ]
 
 export default function DashboardSidebar() {

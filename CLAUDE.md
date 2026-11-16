@@ -46,6 +46,32 @@ the task complete. A broken build is an incomplete task.
 Note: `npm run build` overwrites `.next` and will kill a running `npm run dev`. Restart dev
 after building.
 
+## Eve
+
+Eve is the personal assistant project that lives behind the hidden dashboard. The `/dashboard/eve`
+page is its build dashboard — a living document updated as the project progresses.
+
+### Rules for all Eve work
+
+- **Explain in plain English first, then technical detail.** Spell out every acronym on first use.
+- **For any architectural change, propose exactly 2 options with trade-offs and wait for a decision
+  before writing any code.**
+- **Every architectural decision gets a record in `docs/decisions/NNNN-title.md`** with four fields:
+  context, options considered, what we chose, why we chose it, and what would make us revisit it.
+- **At the end of every session:** append one entry to `docs/eve/PROGRESS.md` (date, what changed,
+  what's next) and update `src/eve/eveData.ts` to reflect any new decisions, phases, concepts, or
+  ideas discussed.
+- All Eve tables in Supabase are prefixed `vkliu_eve_` to stay consistent with the site convention.
+- Never put personal information about real people on the `/dashboard/eve` page — it is the build
+  dashboard, not Eve's memory store.
+
+### Key files
+
+- `src/eve/eveData.ts` — all page content; edit here to update the dashboard.
+- `src/app/dashboard/(protected)/eve/page.tsx` — renders eveData; layout only.
+- `docs/decisions/` — one file per architectural decision, numbered from 0001.
+- `docs/eve/PROGRESS.md` — session-by-session log.
+
 ## Git workflow
 
 After every completed task where the build passes: stage all changes, write a concise commit
