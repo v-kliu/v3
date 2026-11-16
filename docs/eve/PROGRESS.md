@@ -21,3 +21,18 @@ Append one entry per session. Newest at the top.
   the static data file to Supabase tables (`vkliu_eve_decisions`, `vkliu_eve_ideas`).
 - Fill in the eval set with 20 real questions once the bot is in use.
 - Update Phase 1 status in `eveData.ts` from `not started` to `in progress` when work begins.
+
+---
+
+## 2026-11-16 — live changelog on the Eve dashboard
+
+**What changed**
+- Added `src/app/api/eve/changelog/route.ts`: reads open PRs (and the commits each one adds)
+  plus recent commits on main from the GitHub REST API. Cached 2 minutes. Session-protected
+  like every `/api` route. Optional `GITHUB_TOKEN` env var raises the rate limit.
+- Added `src/components/dashboard/EveChangelog.tsx`: renders the changelog under the summary.
+  Open PRs are listed with their commits as features. A toggle reveals the commit history on
+  main, grouped by day. Commit prefixes like `eve:` or `fix:` become tags.
+
+**What's next**
+- Keep commit messages prefixed (`eve:`, `feat:`, `fix:`, `docs:`) so the tags stay useful.

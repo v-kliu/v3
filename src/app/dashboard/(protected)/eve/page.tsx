@@ -8,6 +8,7 @@ import {
 import { PALETTE } from '@/components/grit/store'
 import EveTabs from '@/components/dashboard/EveTabs'
 import EveBg from '@/components/dashboard/EveBg'
+import EveChangelog from '@/components/dashboard/EveChangelog'
 
 const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
 const EVE_COLOR = PALETTE[5]
@@ -96,6 +97,10 @@ export default function EvePage() {
               {SUMMARY.description}
             </p>
           </section>
+
+          <Rule />
+
+          <EveChangelog />
 
           <Rule />
 
