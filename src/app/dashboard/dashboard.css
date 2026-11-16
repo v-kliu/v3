@@ -186,7 +186,54 @@
   }
 }
 
-/* Todo page: the notebook fills the viewport below the header + tab bar. */
+/* ── Eve dark/blueprint theme ──────────────────────────────────────────────── */
+/* Overrides the shared paper palette with a dark terminal look scoped to     */
+/* /dashboard/eve. All child components inherit these tokens automatically.   */
+[data-eve='true'] {
+  --bg: #0b0b18;
+  --bg-raised: #111128;
+  --text: #d4d4f0;
+  --text-muted: #8888bb;
+  --text-faint: #44446a;
+  --border: rgba(139, 92, 246, 0.16);
+  --accent: #8e5cd9;
+
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(139, 92, 246, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.055) 1px, transparent 1px),
+    linear-gradient(rgba(139, 92, 246, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.022) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+  background-attachment: fixed;
+}
+
+[data-eve='true'] .sidebar-inner {
+  background: #07070f;
+  border-right-color: rgba(139, 92, 246, 0.16);
+}
+
+[data-eve='true'] .nav-link { color: var(--text-muted); }
+[data-eve='true'] .nav-link:hover { color: var(--text); }
+[data-eve='true'] .nav-link[aria-current='page'] { color: var(--text); }
+
+[data-eve='true'] .dashboard-main { background: transparent; }
+
+/* Eve gets full-width content — no centering constraint */
+[data-eve='true'] .dashboard-page { justify-content: flex-start; }
+
+/* Top accent bar in violet */
+[data-eve='true']::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #8e5cd9 0%, #6366f1 50%, #8e5cd9 100%);
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* ── Todo page: the notebook fills the viewport below the header + tab bar. */
 .todo-textarea {
   min-height: calc(100vh - 160px);
 }

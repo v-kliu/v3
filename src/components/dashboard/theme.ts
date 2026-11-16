@@ -10,7 +10,7 @@ const THEMES: Record<string, TabTheme> = {
   '/dashboard/todo': { color: PALETTE[3], wash: true },     // todo — teal
   '/dashboard/ascend': { color: PALETTE[1], wash: true },   // 向上 — marigold
   '/dashboard/grit': { color: PALETTE[0], wash: false },    // grit — vermilion; page has its own look
-  '/dashboard/eve': { color: PALETTE[5], wash: true },      // eve — violet
+  '/dashboard/eve': { color: PALETTE[5], wash: false },     // eve — violet; has its own dark theme
 }
 
 export const TAB_COLORS = {
