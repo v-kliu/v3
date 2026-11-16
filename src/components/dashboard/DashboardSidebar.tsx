@@ -3,13 +3,13 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { m } from 'motion/react'
-import { Plane, Mic, LogOut, StickyNote, TrendingUp, Flame, Bot } from 'lucide-react'
+import { Plane, Mic, LogOut, StickyNote, TrendingUp, Flame, Bot, type LucideIcon } from 'lucide-react'
 import { TAB_COLORS } from './theme'
 
 const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
 
 const navItems: Array<
-  { href: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; color: string; dividerBefore?: boolean }
+  { href: string; label: string; icon: LucideIcon; color: string; dividerBefore?: boolean }
 > = [
   { href: '/dashboard', label: 'flight', icon: Plane, color: TAB_COLORS.flight },
   { href: '/dashboard/journal', label: 'journal', icon: Mic, color: TAB_COLORS.journal },
