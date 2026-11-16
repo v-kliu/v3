@@ -107,19 +107,21 @@ export default function EveRulesPage() {
 
             {/* Section title — prominent */}
             <div style={{
-              background: 'var(--eve-chip)',
-              borderRadius: 4,
+              background: 'var(--eve-panel-2)',
+              border: '1px solid var(--eve-panel-border)',
+              borderLeft: `3px solid ${EVE_COLOR}`,
+              borderRadius: '0 4px 4px 0',
               padding: '0.5rem 0.75rem',
               marginBottom: '1rem',
               display: 'flex',
               alignItems: 'baseline',
               gap: '0.5rem',
             }}>
-              <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--eve-chip-ink-muted)' }}>//</span>
-              <span style={{ fontFamily: mono, fontSize: '1.05rem', fontWeight: 700, color: 'var(--eve-chip-ink)', letterSpacing: '0.04em' }}>
+              <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-muted)' }}>//</span>
+              <span style={{ fontFamily: mono, fontSize: '1.05rem', fontWeight: 700, color: 'var(--eve-title)', letterSpacing: '0.04em' }}>
                 {section.title}
               </span>
-              <span style={{ fontFamily: mono, fontSize: '0.68rem', color: 'var(--eve-chip-ink-muted)', marginLeft: 'auto' }}>
+              <span style={{ fontFamily: mono, fontSize: '0.68rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
                 {section.rules.length} rule{section.rules.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -187,7 +189,7 @@ export default function EveRulesPage() {
               />
               <button
                 onClick={() => addRule(section.id)}
-                style={{ fontFamily: mono, fontSize: '0.8rem', background: 'var(--eve-chip)', border: 'none', borderRadius: '4px', padding: '0.45rem 0.9rem', color: 'var(--eve-chip-ink)', fontWeight: 700, cursor: 'pointer' }}
+                style={{ fontFamily: mono, fontSize: '0.8rem', background: 'var(--eve-button)', border: 'none', borderRadius: '4px', padding: '0.45rem 0.9rem', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
               >
                 + add
               </button>

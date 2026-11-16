@@ -198,12 +198,12 @@
   --border: rgba(139, 92, 246, 0.16);
   --accent: #8e5cd9;
 
-  /* Solid surfaces so titles and boxes read clearly on the dark grid. */
-  --eve-chip: #d6c8f7;          /* light purple fill for titles, tags, steps */
-  --eve-chip-ink: #1b1235;      /* text on --eve-chip */
-  --eve-chip-ink-muted: #4a3a78;
-  --eve-panel: #17132b;         /* solid raised panel for cards */
-  --eve-panel-border: #2c2450;
+  /* Opaque surfaces (mixed from --bg, never see-through) so boxes read on the grid. */
+  --eve-panel: #131026;         /* cards: summary, phases, PRs */
+  --eve-panel-2: #1b1734;       /* raised: steps, active tab, section headers */
+  --eve-panel-border: #2b2452;
+  --eve-title: #c7b8f5;         /* bright lavender for titles and key values */
+  --eve-button: #7048c8;        /* solid violet for primary actions */
 
   background-color: var(--bg);
   background-image:

@@ -61,8 +61,8 @@ function Tag({ tag }: { tag: string }) {
       minWidth: '3.4rem',
       textAlign: 'center',
       fontWeight: 700,
-      color: 'var(--eve-chip-ink)',
-      background: c ? `color-mix(in srgb, ${c} 45%, #fff)` : 'var(--eve-chip)',
+      color: c ? `color-mix(in srgb, ${c} 55%, #fff)` : 'var(--text-muted)',
+      background: c ? `color-mix(in srgb, ${c} 26%, var(--bg))` : 'var(--eve-panel-2)',
     }}>
       {tag}
     </span>
@@ -101,7 +101,7 @@ function PullBlock({ p }: { p: ChangelogPull }) {
           href={p.url}
           target="_blank"
           rel="noreferrer"
-          style={{ fontFamily: mono, fontSize: '1rem', color: 'var(--eve-chip)', textDecoration: 'none', fontWeight: 700 }}
+          style={{ fontFamily: mono, fontSize: '1rem', color: 'var(--eve-title)', textDecoration: 'none', fontWeight: 700 }}
         >
           #{p.number} {p.title}
         </a>
@@ -169,16 +169,12 @@ export default function EveChangelog() {
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
         <p style={{ margin: '0 0 1rem 0' }}>
           <span style={{
-            display: 'inline-block',
             fontFamily: mono,
-            fontSize: '0.78rem',
+            fontSize: '0.8rem',
             fontWeight: 700,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
-            background: 'var(--eve-chip)',
-            color: 'var(--eve-chip-ink)',
-            padding: '0.3rem 0.65rem',
-            borderRadius: 4,
+            color: 'var(--eve-title)',
           }}>
             {'// changelog'}
           </span>
@@ -213,9 +209,9 @@ export default function EveChangelog() {
               fontFamily: mono,
               fontSize: '0.8rem',
               fontWeight: 700,
-              color: 'var(--eve-chip-ink)',
-              background: 'var(--eve-chip)',
-              border: 'none',
+              color: 'var(--eve-title)',
+              background: 'var(--eve-panel-2)',
+              border: '1px solid var(--eve-panel-border)',
               borderRadius: 6,
               padding: '0.4rem 0.75rem',
               cursor: 'pointer',

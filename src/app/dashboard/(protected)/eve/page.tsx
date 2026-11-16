@@ -22,7 +22,7 @@ const STATUS_COLOR: Record<PhaseStatus, string> = {
 function Label({ children }: { children: React.ReactNode }) {
   return (
     <p style={{ margin: '0 0 1rem 0' }}>
-      <span style={{ display: 'inline-block', fontFamily: mono, fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', background: 'var(--eve-chip)', color: 'var(--eve-chip-ink)', padding: '0.3rem 0.65rem', borderRadius: 4 }}>
+      <span style={{ fontFamily: mono, fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--eve-title)' }}>
         {`// ${children}`}
       </span>
     </p>
@@ -42,9 +42,9 @@ function PipelineRow({ label, steps, color }: { label: string; steps: PipelineSt
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0', alignItems: 'stretch' }}>
         {steps.map((step, i) => (
           <div key={step.label} style={{ display: 'flex', alignItems: 'center' }}>
-            <div title={step.note} style={{ background: 'var(--eve-chip)', borderLeft: `4px solid ${color}`, borderRadius: '4px', padding: '0.55rem 1rem' }}>
-              <span style={{ fontFamily: mono, fontSize: '0.88rem', fontWeight: 700, color: 'var(--eve-chip-ink)', display: 'block' }}>{step.label}</span>
-              <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--eve-chip-ink-muted)' }}>{step.note}</span>
+            <div title={step.note} style={{ background: 'var(--eve-panel-2)', border: '1px solid var(--eve-panel-border)', borderLeft: `3px solid ${color}`, borderRadius: '4px', padding: '0.55rem 1rem' }}>
+              <span style={{ fontFamily: mono, fontSize: '0.88rem', fontWeight: 700, color: 'var(--text)', display: 'block' }}>{step.label}</span>
+              <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{step.note}</span>
             </div>
             {i < steps.length - 1 && (
               <span style={{ fontFamily: mono, fontSize: '0.75rem', color: 'var(--text-faint)', padding: '0 0.5rem', flexShrink: 0 }}>→</span>
@@ -59,7 +59,7 @@ function PipelineRow({ label, steps, color }: { label: string; steps: PipelineSt
 function PhaseCard({ phase }: { phase: (typeof PHASES)[number] }) {
   const c = STATUS_COLOR[phase.status]
   return (
-    <div style={{ borderLeft: '3px solid', borderColor: c, background: 'var(--eve-panel)', borderRadius: '0 6px 6px 0', padding: '0.8rem 1rem', marginBottom: '1rem' }}>
+    <div style={{ borderLeft: '3px solid', borderColor: c, background: 'var(--eve-panel)', border: '1px solid var(--eve-panel-border)', borderLeftWidth: 3, borderRadius: '0 6px 6px 0', padding: '0.8rem 1rem', marginBottom: '1rem' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
         <span style={{ fontFamily: mono, fontSize: '0.72rem', fontWeight: 700, color: EVE_COLOR, letterSpacing: '0.04em' }}>phase {phase.number}</span>
         <span style={{ fontFamily: mono, fontSize: '1rem', color: 'var(--text)' }}>{phase.title}</span>
@@ -201,7 +201,7 @@ function Tag({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ fontFamily: mono, fontSize: '0.78rem', display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
       <span style={{ color: 'var(--text-faint)' }}>{label}:</span>
-      <span style={{ background: 'var(--eve-chip)', color: 'var(--eve-chip-ink)', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 4 }}>{value}</span>
+      <span style={{ background: 'var(--eve-panel-2)', border: '1px solid var(--eve-panel-border)', color: 'var(--eve-title)', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 4 }}>{value}</span>
     </div>
   )
 }
