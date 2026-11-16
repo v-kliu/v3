@@ -2,9 +2,41 @@
 
 import { useEffect, useRef } from 'react'
 
-const CHARS = '0123456789abcdef<>/{}[]();=+-!|~$#@%^&*'
 const mono = 'SFMono-Regular, Consolas, Menlo, monospace'
-const COLORS = ['#8E5CD9', '#8E5CD9', '#8E5CD9', '#6A994E', '#7B68EE']
+const SIZE = 15
+const GREEN = '#4ade80'
+
+// Pool of terminal-ish strings that get typed out line by line
+const POOL = [
+  '> loading memory index...',
+  '> query: who did i meet last week?',
+  '0x4a2f8b1c 0x00ff41 0x9b2ef3',
+  'fn embed(text: &str) -> Vec<f32>',
+  '$ git commit -m "add memory node"',
+  '> connected to postgres://eve-db',
+  'SELECT * FROM memories WHERE ts > NOW()',
+  '> 247 nodes loaded',
+  '{"intent":"recall","confidence":0.91}',
+  '> running eval suite... 18/20 pass',
+  '$ webhook received: telegram:msg',
+  'INSERT INTO decisions (id, grade)',
+  '> build agent spawned pid=4821',
+  '> test: 3 retries remaining',
+  '0b10110100 0b00110010 0b11001011',
+  '> similarity: 0.87 | threshold: 0.80',
+  '$ curl -X POST /api/journal',
+  '> memory written: event_id=e291',
+  'type Memory = { id: string; vec: Float32Array }',
+  '> phase 1 status: not_started',
+]
+
+type Line = {
+  row: number
+  text: string
+  typed: number
+  opacity: number
+  color: string
+}
 
 export default function EveBg() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -15,57 +47,53 @@ export default function EveBg() {
     const ctx = canvas.getContext('2d')!
     if (!ctx) return
 
-    const SIZE = 18
-
-    type Cell = { char: string; opacity: number; color: string }
-    let grid: Cell[][] = []
+    const c = canvas
+    let lines: Line[] = []
     let animId: number
+    let frame = 0
 
-    const c2 = canvas
     function resize() {
-      c2.width = window.innerWidth
-      c2.height = window.innerHeight
-      const rows = Math.ceil(c2.height / SIZE)
-      const cols = Math.ceil(c2.width / SIZE)
-      grid = Array.from({ length: rows }, () =>
-        Array.from({ length: cols }, () => ({ char: '', opacity: 0, color: COLORS[0] }))
-      )
+      c.width = window.innerWidth
+      c.height = window.innerHeight
     }
-
     resize()
     window.addEventListener('resize', resize)
 
-    let frame = 0
+    function spawnLine() {
+      const maxRows = Math.floor(c.height / SIZE)
+      lines.push({
+        row: Math.floor(Math.random() * maxRows),
+        text: POOL[Math.floor(Math.random() * POOL.length)],
+        typed: 0,
+        opacity: 0.18 + Math.random() * 0.12,
+        color: GREEN,
+      })
+    }
+
+    // Seed a few lines
+    for (let i = 0; i < 6; i++) spawnLine()
 
     function tick() {
       frame++
-      ctx.clearRect(0, 0, c2.width, c2.height)
-      ctx.font = `${SIZE - 3}px ${mono}`
+      ctx.clearRect(0, 0, c.width, c.height)
+      ctx.font = `${SIZE - 1}px ${mono}`
 
-      if (frame % 4 === 0) {
-        const rows = grid.length
-        const cols = grid[0]?.length ?? 0
-        for (let n = 0; n < 3; n++) {
-          const r = Math.floor(Math.random() * rows)
-          const c = Math.floor(Math.random() * cols)
-          grid[r][c] = {
-            char: CHARS[Math.floor(Math.random() * CHARS.length)],
-            opacity: 0.07 + Math.random() * 0.07,
-            color: COLORS[Math.floor(Math.random() * COLORS.length)],
-          }
-        }
-      }
+      // Spawn a new line every ~40 frames
+      if (frame % 40 === 0) spawnLine()
 
-      for (let r = 0; r < grid.length; r++) {
-        for (let c = 0; c < (grid[r]?.length ?? 0); c++) {
-          const cell = grid[r][c]
-          if (cell.opacity <= 0 || !cell.char) continue
-          ctx.globalAlpha = cell.opacity
-          ctx.fillStyle = cell.color
-          ctx.fillText(cell.char, c * SIZE, (r + 1) * SIZE - 3)
-          cell.opacity -= 0.0008
-          if (cell.opacity < 0) cell.opacity = 0
-        }
+      lines = lines.filter(l => l.opacity > 0.01)
+
+      for (const l of lines) {
+        // Type one char every 2 frames
+        if (frame % 2 === 0 && l.typed < l.text.length) l.typed++
+
+        // Start fading once fully typed
+        if (l.typed >= l.text.length) l.opacity -= 0.0015
+        else l.opacity = Math.min(l.opacity, 0.3)
+
+        ctx.globalAlpha = l.opacity
+        ctx.fillStyle = l.color
+        ctx.fillText(l.text.slice(0, l.typed), 20, l.row * SIZE + SIZE)
       }
 
       ctx.globalAlpha = 1
@@ -73,10 +101,7 @@ export default function EveBg() {
     }
 
     tick()
-    return () => {
-      cancelAnimationFrame(animId)
-      window.removeEventListener('resize', resize)
-    }
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize) }
   }, [])
 
   return (
