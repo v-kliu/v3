@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { tint } from '@/components/dashboard/theme'
 import { PALETTE } from '@/components/grit/store'
 import type { ChangelogCommit, ChangelogPull, ChangelogResponse } from '@/app/api/eve/changelog/route'
 
@@ -61,9 +60,9 @@ function Tag({ tag }: { tag: string }) {
       flexShrink: 0,
       minWidth: '3.4rem',
       textAlign: 'center',
-      color: c ? c : 'var(--text-faint)',
-      border: `1px solid ${c ? tint(c, 40) : 'var(--border)'}`,
-      background: c ? tint(c, 10) : 'transparent',
+      fontWeight: 700,
+      color: 'var(--eve-chip-ink)',
+      background: c ? `color-mix(in srgb, ${c} 45%, #fff)` : 'var(--eve-chip)',
     }}>
       {tag}
     </span>
@@ -96,13 +95,13 @@ function CommitRow({ c }: { c: ChangelogCommit }) {
 
 function PullBlock({ p }: { p: ChangelogPull }) {
   return (
-    <div style={{ borderLeft: `2px solid ${tint(EVE_COLOR, 50)}`, paddingLeft: '0.9rem', marginBottom: '1.25rem' }}>
+    <div style={{ background: 'var(--eve-panel)', border: '1px solid var(--eve-panel-border)', borderLeft: `3px solid ${EVE_COLOR}`, borderRadius: '0 6px 6px 0', padding: '0.8rem 1rem', marginBottom: '1rem' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
         <a
           href={p.url}
           target="_blank"
           rel="noreferrer"
-          style={{ fontFamily: mono, fontSize: '1rem', color: EVE_COLOR, textDecoration: 'none', fontWeight: 600 }}
+          style={{ fontFamily: mono, fontSize: '1rem', color: 'var(--eve-chip)', textDecoration: 'none', fontWeight: 700 }}
         >
           #{p.number} {p.title}
         </a>
@@ -168,16 +167,21 @@ export default function EveChangelog() {
   return (
     <section>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-        <p style={{
-          fontFamily: mono,
-          fontSize: '0.78rem',
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          color: EVE_COLOR,
-          opacity: 0.75,
-          margin: '0 0 1rem 0',
-        }}>
-          {'// changelog'}
+        <p style={{ margin: '0 0 1rem 0' }}>
+          <span style={{
+            display: 'inline-block',
+            fontFamily: mono,
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            background: 'var(--eve-chip)',
+            color: 'var(--eve-chip-ink)',
+            padding: '0.3rem 0.65rem',
+            borderRadius: 4,
+          }}>
+            {'// changelog'}
+          </span>
         </p>
         {data && (
           <a
@@ -208,9 +212,10 @@ export default function EveChangelog() {
             style={{
               fontFamily: mono,
               fontSize: '0.8rem',
-              color: EVE_COLOR,
-              background: 'transparent',
-              border: `1px solid ${tint(EVE_COLOR, 40)}`,
+              fontWeight: 700,
+              color: 'var(--eve-chip-ink)',
+              background: 'var(--eve-chip)',
+              border: 'none',
               borderRadius: 6,
               padding: '0.4rem 0.75rem',
               cursor: 'pointer',

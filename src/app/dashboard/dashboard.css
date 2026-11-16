@@ -194,9 +194,16 @@
   --bg-raised: #111128;
   --text: #d4d4f0;
   --text-muted: #8888bb;
-  --text-faint: #44446a;
+  --text-faint: #6c6c9e;
   --border: rgba(139, 92, 246, 0.16);
   --accent: #8e5cd9;
+
+  /* Solid surfaces so titles and boxes read clearly on the dark grid. */
+  --eve-chip: #d6c8f7;          /* light purple fill for titles, tags, steps */
+  --eve-chip-ink: #1b1235;      /* text on --eve-chip */
+  --eve-chip-ink-muted: #4a3a78;
+  --eve-panel: #17132b;         /* solid raised panel for cards */
+  --eve-panel-border: #2c2450;
 
   background-color: var(--bg);
   background-image:
