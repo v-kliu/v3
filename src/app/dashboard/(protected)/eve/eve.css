@@ -9,7 +9,7 @@
   width: 100%;
   max-width: 1180px;
   padding-bottom: 6rem;
-  font-family: var(--eve-font), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--mono);
   font-size: 15px;
   line-height: 1.65;
   color: var(--text);
@@ -95,7 +95,7 @@
 
 .eve-header { margin-bottom: 3rem; }
 .eve-prompt { font-size: 0.8rem; color: var(--text-faint); margin-bottom: 0.9rem !important; }
-.eve-prompt b { color: var(--accent); font-weight: 400; }
+.eve-prompt b { color: var(--no-cyan); font-weight: 400; }
 .eve-subtitle { color: var(--text-muted); margin-top: 0.6rem !important; }
 .eve-meta { font-size: 0.8rem; color: var(--text-faint); margin-top: 0.35rem !important; }
 .eve-meta strong { color: var(--text-muted); font-weight: 400; }
@@ -131,8 +131,16 @@
   vertical-align: middle;
   white-space: nowrap;
 }
-.eve-tag-accent { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
-.eve-tag-done { color: #86efac; border-color: color-mix(in srgb, #86efac 40%, var(--border)); }
+.eve-tag-accent { color: var(--no-yellow); border-color: color-mix(in srgb, var(--no-yellow) 40%, var(--border)); }
+.eve-tag-done { color: var(--no-green); border-color: color-mix(in srgb, var(--no-green) 40%, var(--border)); }
+
+/* Commit-type tags pick up Night Owl's syntax colors. Unknown types stay muted. */
+.eve-tag-eve, .eve-tag-feat { color: var(--no-purple); }
+.eve-tag-fix { color: var(--no-red); }
+.eve-tag-docs { color: var(--no-yellow); }
+.eve-tag-ci, .eve-tag-test { color: var(--no-cyan); }
+.eve-tag-refactor, .eve-tag-chore, .eve-tag-perf { color: var(--no-orange); }
+.eve-tag-security { color: var(--no-pink); }
 
 /* ── Lists ────────────────────────────────────────────────────────────────── */
 

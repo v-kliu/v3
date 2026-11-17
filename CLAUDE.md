@@ -26,10 +26,13 @@ Stack, scripts, and layout are all derivable from `package.json` and `src/` — 
 - TypeScript throughout — no `any`.
 - Dashboard pages are styled with **inline styles plus CSS variables**, not Tailwind utilities.
   Tailwind is installed and used on the marketing page; match whichever the file already uses.
-- Theme lives in `:root` in `src/app/globals.css` — paper `--bg: #E8DEC8`, oxblood
-  `--accent: #8B0000`. Always reference the variables, never hardcode the hex values.
-- Monospace (`SFMono-Regular, Consolas, …`) for dashboard UI text; this is declared per-file
-  as a `mono` constant.
+- Theme: the marketing page uses `:root` in `src/app/globals.css` (paper `--bg: #E8DEC8`, oxblood
+  `--accent: #8B0000`). The dashboard overrides those tokens on `.dashboard-root` in
+  `src/app/dashboard/dashboard.css` with a jcode-style light theme (white, near-black ink, three
+  grays, hairline borders). Eve dev overrides them again under `[data-eve]` with Night Owl colors,
+  purple in place of blue. Always reference the variables, never hardcode the hex values.
+- Dashboard text uses JetBrains Mono, loaded once in `src/app/dashboard/layout.tsx` and exposed as
+  `var(--mono)`. Tailwind's `font-mono` is remapped to it inside the dashboard.
 
 ## Design principles
 

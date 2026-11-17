@@ -1,14 +1,6 @@
-import { JetBrains_Mono } from 'next/font/google'
 import './eve.css'
 
-// Eve dev uses one typeface throughout, exposed as --eve-font for eve.css.
-const jetbrains = JetBrains_Mono({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--eve-font',
-  display: 'swap',
-})
-
+// Font comes from the dashboard layout (--jb-mono); colors from [data-eve] in dashboard.css.
 export default function EveLayout({ children }: { children: React.ReactNode }) {
-  return <div className={jetbrains.variable} style={{ width: '100%' }}>{children}</div>
+  return <div style={{ width: '100%' }}>{children}</div>
 }
