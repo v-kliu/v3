@@ -107,18 +107,21 @@ export default function EveRulesPage() {
 
             {/* Section title — prominent */}
             <div style={{
-              borderBottom: `2px solid ${EVE_COLOR}`,
-              paddingBottom: '0.5rem',
+              background: 'var(--eve-panel-2)',
+              border: '1px solid var(--eve-panel-border)',
+              borderLeft: `3px solid ${EVE_COLOR}`,
+              borderRadius: '0 4px 4px 0',
+              padding: '0.5rem 0.75rem',
               marginBottom: '1rem',
               display: 'flex',
               alignItems: 'baseline',
               gap: '0.5rem',
             }}>
-              <span style={{ fontFamily: mono, fontSize: '0.65rem', color: EVE_COLOR, opacity: 0.6 }}>//</span>
-              <span style={{ fontFamily: mono, fontSize: '1.05rem', fontWeight: 700, color: EVE_COLOR, letterSpacing: '0.04em' }}>
+              <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-muted)' }}>//</span>
+              <span style={{ fontFamily: mono, fontSize: '1.05rem', fontWeight: 700, color: 'var(--eve-title)', letterSpacing: '0.04em' }}>
                 {section.title}
               </span>
-              <span style={{ fontFamily: mono, fontSize: '0.65rem', color: 'var(--text-faint)', marginLeft: 'auto' }}>
+              <span style={{ fontFamily: mono, fontSize: '0.68rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
                 {section.rules.length} rule{section.rules.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -182,11 +185,11 @@ export default function EveRulesPage() {
                 onChange={e => setDrafts(d => ({ ...d, [section.id]: e.target.value }))}
                 onKeyDown={e => { if (e.key === 'Enter') addRule(section.id) }}
                 placeholder="add a rule..."
-                style={{ flex: 1, fontFamily: mono, fontSize: '0.85rem', background: 'rgba(139,92,246,0.06)', border: '1px solid var(--border)', borderRadius: '4px', padding: '0.45rem 0.7rem', color: 'var(--text)', outline: 'none' }}
+                style={{ flex: 1, fontFamily: mono, fontSize: '0.85rem', background: 'var(--eve-panel)', border: '1px solid var(--eve-panel-border)', borderRadius: '4px', padding: '0.45rem 0.7rem', color: 'var(--text)', outline: 'none' }}
               />
               <button
                 onClick={() => addRule(section.id)}
-                style={{ fontFamily: mono, fontSize: '0.8rem', background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '4px', padding: '0.45rem 0.9rem', color: EVE_COLOR, cursor: 'pointer' }}
+                style={{ fontFamily: mono, fontSize: '0.8rem', background: 'var(--eve-button)', border: 'none', borderRadius: '4px', padding: '0.45rem 0.9rem', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
               >
                 + add
               </button>
@@ -198,7 +201,7 @@ export default function EveRulesPage() {
       <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         <button
           onClick={resetToDefaults}
-          style={{ fontFamily: mono, fontSize: '0.75rem', background: 'none', border: '1px solid var(--border)', borderRadius: '4px', padding: '0.4rem 0.9rem', color: 'var(--text-faint)', cursor: 'pointer' }}
+          style={{ fontFamily: mono, fontSize: '0.75rem', background: 'var(--eve-panel)', border: '1px solid var(--eve-panel-border)', borderRadius: '4px', padding: '0.4rem 0.9rem', color: 'var(--text-muted)', cursor: 'pointer' }}
         >
           reset to defaults
         </button>

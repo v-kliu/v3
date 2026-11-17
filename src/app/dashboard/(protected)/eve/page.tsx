@@ -8,6 +8,7 @@ import {
 import { PALETTE } from '@/components/grit/store'
 import EveTabs from '@/components/dashboard/EveTabs'
 import EveBg from '@/components/dashboard/EveBg'
+import EveChangelog from '@/components/dashboard/EveChangelog'
 
 const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
 const EVE_COLOR = PALETTE[5]
@@ -20,8 +21,10 @@ const STATUS_COLOR: Record<PhaseStatus, string> = {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ fontFamily: mono, fontSize: '0.78rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: EVE_COLOR, margin: '0 0 1rem 0', opacity: 0.75 }}>
-      {`// ${children}`}
+    <p style={{ margin: '0 0 1rem 0' }}>
+      <span style={{ fontFamily: mono, fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--eve-title)' }}>
+        {`// ${children}`}
+      </span>
     </p>
   )
 }
@@ -39,9 +42,9 @@ function PipelineRow({ label, steps, color }: { label: string; steps: PipelineSt
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0', alignItems: 'stretch' }}>
         {steps.map((step, i) => (
           <div key={step.label} style={{ display: 'flex', alignItems: 'center' }}>
-            <div title={step.note} style={{ background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(139,92,246,0.22)', borderRadius: '4px', padding: '0.55rem 1rem' }}>
-              <span style={{ fontFamily: mono, fontSize: '0.88rem', fontWeight: 600, color, display: 'block' }}>{step.label}</span>
-              <span style={{ fontFamily: mono, fontSize: '0.68rem', color: 'var(--text-faint)' }}>{step.note}</span>
+            <div title={step.note} style={{ background: 'var(--eve-panel-2)', border: '1px solid var(--eve-panel-border)', borderLeft: `3px solid ${color}`, borderRadius: '4px', padding: '0.55rem 1rem' }}>
+              <span style={{ fontFamily: mono, fontSize: '0.88rem', fontWeight: 700, color: 'var(--text)', display: 'block' }}>{step.label}</span>
+              <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{step.note}</span>
             </div>
             {i < steps.length - 1 && (
               <span style={{ fontFamily: mono, fontSize: '0.75rem', color: 'var(--text-faint)', padding: '0 0.5rem', flexShrink: 0 }}>→</span>
@@ -56,7 +59,7 @@ function PipelineRow({ label, steps, color }: { label: string; steps: PipelineSt
 function PhaseCard({ phase }: { phase: (typeof PHASES)[number] }) {
   const c = STATUS_COLOR[phase.status]
   return (
-    <div style={{ borderLeft: '2px solid', borderColor: c, paddingLeft: '1rem', marginBottom: '1.5rem' }}>
+    <div style={{ borderLeft: '3px solid', borderColor: c, background: 'var(--eve-panel)', border: '1px solid var(--eve-panel-border)', borderLeftWidth: 3, borderRadius: '0 6px 6px 0', padding: '0.8rem 1rem', marginBottom: '1rem' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
         <span style={{ fontFamily: mono, fontSize: '0.72rem', fontWeight: 700, color: EVE_COLOR, letterSpacing: '0.04em' }}>phase {phase.number}</span>
         <span style={{ fontFamily: mono, fontSize: '1rem', color: 'var(--text)' }}>{phase.title}</span>
@@ -87,18 +90,22 @@ export default function EvePage() {
 
       <EveTabs />
 
+      <section style={{ marginBottom: '2rem' }}>
+        <Label>summary</Label>
+        <p style={{ fontFamily: mono, fontSize: '0.92rem', lineHeight: 1.7, margin: 0, background: 'var(--eve-panel)', border: '1px solid var(--eve-panel-border)', borderLeft: `3px solid ${EVE_COLOR}`, borderRadius: '0 6px 6px 0', padding: '0.9rem 1.1rem', color: 'var(--text)' }}>
+          {SUMMARY.description}
+        </p>
+      </section>
+
+      <Rule />
+
+      <EveChangelog />
+
+      <Rule />
+
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.6fr) minmax(0,1fr)', gap: '0 3rem' }}>
 
         <div>
-          <section style={{ marginBottom: '2rem' }}>
-            <Label>summary</Label>
-            <p style={{ fontFamily: mono, fontSize: '0.92rem', lineHeight: 1.7, color: 'var(--text-muted)', margin: 0, borderLeft: '2px solid rgba(139,92,246,0.3)', paddingLeft: '1rem' }}>
-              {SUMMARY.description}
-            </p>
-          </section>
-
-          <Rule />
-
           <section style={{ marginBottom: '2rem' }}>
             <Label>the loop</Label>
             <PipelineRow label="learning loop — you are involved" steps={LEARNING_LOOP} color={EVE_COLOR} />
@@ -194,7 +201,7 @@ function Tag({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ fontFamily: mono, fontSize: '0.78rem', display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
       <span style={{ color: 'var(--text-faint)' }}>{label}:</span>
-      <span style={{ color: EVE_COLOR, fontWeight: 600 }}>{value}</span>
+      <span style={{ background: 'var(--eve-panel-2)', border: '1px solid var(--eve-panel-border)', color: 'var(--eve-title)', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 4 }}>{value}</span>
     </div>
   )
 }

@@ -194,9 +194,16 @@
   --bg-raised: #111128;
   --text: #d4d4f0;
   --text-muted: #8888bb;
-  --text-faint: #44446a;
+  --text-faint: #6c6c9e;
   --border: rgba(139, 92, 246, 0.16);
   --accent: #8e5cd9;
+
+  /* Opaque surfaces (mixed from --bg, never see-through) so boxes read on the grid. */
+  --eve-panel: #131026;         /* cards: summary, phases, PRs */
+  --eve-panel-2: #1b1734;       /* raised: steps, active tab, section headers */
+  --eve-panel-border: #2b2452;
+  --eve-title: #c7b8f5;         /* bright lavender for titles and key values */
+  --eve-button: #7048c8;        /* solid violet for primary actions */
 
   background-color: var(--bg);
   background-image:
