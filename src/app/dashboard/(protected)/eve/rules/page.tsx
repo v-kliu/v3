@@ -8,43 +8,41 @@ import EveBg from '@/components/dashboard/EveBg'
 
 const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
 const EVE_COLOR = PALETTE[5]
-const STORAGE_KEY = 'eve-rules-v1'
-
-function loadSections(): RuleSection[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as RuleSection[]
-  } catch { /* ignore */ }
-  return RULE_SECTIONS.map(s => ({ ...s, rules: [...s.rules] }))
-}
-
-function saveSections(sections: RuleSection[]) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(sections)) } catch { /* ignore */ }
-}
 
 export default function EveRulesPage() {
   const [sections, setSections] = useState<RuleSection[]>([])
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [loaded, setLoaded] = useState(false)
+  const [saving, setSaving] = useState(false)
   const dragSrc = useRef<{ sectionId: string; index: number } | null>(null)
   const [dragOver, setDragOver] = useState<{ sectionId: string; index: number } | null>(null)
 
-  useEffect(() => { setSections(loadSections()); setLoaded(true) }, [])
+  useEffect(() => {
+    fetch('/api/eve/rules')
+      .then(r => r.json())
+      .then((data: RuleSection[]) => { setSections(data); setLoaded(true) })
+      .catch(() => { setSections(RULE_SECTIONS.map(s => ({ ...s, rules: [...s.rules] }))); setLoaded(true) })
+  }, [])
 
-  function update(next: RuleSection[]) {
-    saveSections(next)
+  async function persist(next: RuleSection[]) {
     setSections(next)
+    setSaving(true)
+    await fetch('/api/eve/rules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(next),
+    }).finally(() => setSaving(false))
   }
 
   function addRule(sectionId: string) {
     const text = (drafts[sectionId] ?? '').trim()
     if (!text) return
-    update(sections.map(s => s.id === sectionId ? { ...s, rules: [...s.rules, text] } : s))
+    persist(sections.map(s => s.id === sectionId ? { ...s, rules: [...s.rules, text] } : s))
     setDrafts(d => ({ ...d, [sectionId]: '' }))
   }
 
   function deleteRule(sectionId: string, index: number) {
-    update(sections.map(s => s.id === sectionId ? { ...s, rules: s.rules.filter((_, i) => i !== index) } : s))
+    persist(sections.map(s => s.id === sectionId ? { ...s, rules: s.rules.filter((_, i) => i !== index) } : s))
   }
 
   function onDragStart(sectionId: string, index: number) {
@@ -71,7 +69,7 @@ export default function EveRulesPage() {
     const [moved] = srcSection.rules.splice(src.index, 1)
     destSection.rules.splice(destIndex, 0, moved)
     dragSrc.current = null
-    update(next)
+    persist(next)
   }
 
   function onDragEnd() {
@@ -80,10 +78,14 @@ export default function EveRulesPage() {
   }
 
   function resetToDefaults() {
-    update(RULE_SECTIONS.map(s => ({ ...s, rules: [...s.rules] })))
+    persist(RULE_SECTIONS.map(s => ({ ...s, rules: [...s.rules] })))
   }
 
-  if (!loaded) return null
+  if (!loaded) return (
+    <div style={{ fontFamily: mono, fontSize: '0.8rem', color: 'var(--text-faint)', padding: '2rem' }}>
+      loading rules...
+    </div>
+  )
 
   return (
     <div style={{ width: '100%', paddingBottom: '4rem', color: 'var(--text)', position: 'relative', zIndex: 1 }}>
@@ -94,8 +96,9 @@ export default function EveRulesPage() {
           {'>'} eve --mode rules --editable true
         </p>
         <h1 style={{ fontFamily: mono, fontSize: '2.2rem', fontWeight: 700, letterSpacing: '0.08em', margin: '0 0 0.3rem 0', color: EVE_COLOR }}>rules</h1>
-        <p style={{ fontFamily: mono, fontSize: '0.75rem', color: 'var(--text-faint)', margin: 0, letterSpacing: '0.06em' }}>
-          explicit workflows and conventions / drag to reorder / edits save to your browser
+        <p style={{ fontFamily: mono, fontSize: '0.75rem', color: 'var(--text-faint)', margin: 0, letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          explicit workflows and conventions / drag to reorder / synced to database
+          {saving && <span style={{ color: EVE_COLOR, opacity: 0.7 }}>saving...</span>}
         </p>
       </header>
 
@@ -105,7 +108,6 @@ export default function EveRulesPage() {
         {sections.map(section => (
           <section key={section.id}>
 
-            {/* Section title — prominent */}
             <div style={{
               borderBottom: `2px solid ${EVE_COLOR}`,
               paddingBottom: '0.5rem',
@@ -137,13 +139,10 @@ export default function EveRulesPage() {
                     style={{
                       display: 'flex', gap: '0.75rem', alignItems: 'baseline',
                       padding: '0.6rem 0',
-                      borderBottom: isOver
-                        ? `2px solid ${EVE_COLOR}`
-                        : '1px solid var(--border)',
+                      borderBottom: isOver ? `2px solid ${EVE_COLOR}` : '1px solid var(--border)',
                       fontFamily: mono, fontSize: '0.9rem',
                       color: 'var(--text-muted)', lineHeight: 1.55,
-                      cursor: 'grab',
-                      userSelect: 'none',
+                      cursor: 'grab', userSelect: 'none',
                     }}
                   >
                     <span style={{ color: 'var(--text-faint)', flexShrink: 0, fontSize: '0.65rem', opacity: 0.5 }}>⠿</span>
@@ -163,7 +162,6 @@ export default function EveRulesPage() {
                 )
               })}
 
-              {/* Drop zone at end of list */}
               <li
                 onDragOver={e => onDragOver(e, section.id, section.rules.length)}
                 onDrop={e => onDrop(e, section.id, section.rules.length)}
@@ -203,7 +201,7 @@ export default function EveRulesPage() {
           reset to defaults
         </button>
         <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-faint)' }}>
-          edits save in this browser only — to make them permanent, update eveData.ts
+          edits sync to database — changes persist across devices
         </span>
       </div>
     </div>
