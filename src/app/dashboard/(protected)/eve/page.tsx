@@ -5,140 +5,92 @@ import {
   IDEAS, EVAL_NOTE, EVAL_QUESTIONS, CONCEPTS,
   type PhaseStatus, type PipelineStep,
 } from '@/eve/eveData'
-import { PALETTE } from '@/components/grit/store'
-import EveTabs from '@/components/dashboard/EveTabs'
+import EveHeader from '@/components/dashboard/EveHeader'
 import EveBg from '@/components/dashboard/EveBg'
 import EveChangelog from '@/components/dashboard/EveChangelog'
 
-const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
-const EVE_COLOR = PALETTE[5]
+// Eve dev overview. Layout only: every word on this page comes from eveData.ts.
+// Styles: eve.css (components) + dashboard.css [data-eve] (tokens).
 
-const STATUS_COLOR: Record<PhaseStatus, string> = {
-  'not started': 'var(--text-faint)',
-  'in progress': PALETTE[1],
-  done: PALETTE[2],
+const REPO_BLOB = 'https://github.com/v-kliu/v3/blob/main/'
+
+const STATUS_TAG: Record<PhaseStatus, string> = {
+  'not started': 'eve-tag',
+  'in progress': 'eve-tag eve-tag-accent',
+  done: 'eve-tag eve-tag-done',
 }
 
-function Label({ children }: { children: React.ReactNode }) {
+function Flow({ title, note, steps }: { title: string; note: string; steps: PipelineStep[] }) {
   return (
-    <p style={{ margin: '0 0 1rem 0' }}>
-      <span style={{ fontFamily: mono, fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--eve-title)' }}>
-        {`// ${children}`}
-      </span>
-    </p>
-  )
-}
-
-function Rule() {
-  return <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '2.5rem 0' }} />
-}
-
-function PipelineRow({ label, steps, color }: { label: string; steps: PipelineStep[]; color: string }) {
-  return (
-    <div style={{ marginBottom: '1.5rem' }}>
-      <p style={{ fontFamily: mono, fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-faint)', margin: '0 0 0.75rem 0' }}>
-        {label}
+    <div style={{ marginBottom: '1.75rem' }}>
+      <p>
+        <span className="eve-h3">{title}</span>
+        <span className="eve-faint eve-small"> · {note}</span>
       </p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0', alignItems: 'stretch' }}>
-        {steps.map((step, i) => (
-          <div key={step.label} style={{ display: 'flex', alignItems: 'center' }}>
-            <div title={step.note} style={{ background: 'var(--eve-panel-2)', border: '1px solid var(--eve-panel-border)', borderLeft: `3px solid ${color}`, borderRadius: '4px', padding: '0.55rem 1rem' }}>
-              <span style={{ fontFamily: mono, fontSize: '0.88rem', fontWeight: 700, color: 'var(--text)', display: 'block' }}>{step.label}</span>
-              <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{step.note}</span>
-            </div>
-            {i < steps.length - 1 && (
-              <span style={{ fontFamily: mono, fontSize: '0.75rem', color: 'var(--text-faint)', padding: '0 0.5rem', flexShrink: 0 }}>→</span>
-            )}
-          </div>
+      <ol className="eve-flow">
+        {steps.map(s => (
+          <li key={s.label}><b>{s.label}</b><span>{s.note}</span></li>
         ))}
-      </div>
-    </div>
-  )
-}
-
-function PhaseCard({ phase }: { phase: (typeof PHASES)[number] }) {
-  const c = STATUS_COLOR[phase.status]
-  return (
-    <div style={{ borderLeft: '3px solid', borderColor: c, background: 'var(--eve-panel)', border: '1px solid var(--eve-panel-border)', borderLeftWidth: 3, borderRadius: '0 6px 6px 0', padding: '0.8rem 1rem', marginBottom: '1rem' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: mono, fontSize: '0.72rem', fontWeight: 700, color: EVE_COLOR, letterSpacing: '0.04em' }}>phase {phase.number}</span>
-        <span style={{ fontFamily: mono, fontSize: '1rem', color: 'var(--text)' }}>{phase.title}</span>
-        <span style={{ fontFamily: mono, fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: c, marginLeft: 'auto' }}>{phase.status}</span>
-      </div>
-      <p style={{ fontFamily: mono, fontSize: '0.9rem', color: 'var(--text-muted)', margin: '0 0 0.35rem 0', lineHeight: 1.6 }}>{phase.description}</p>
-      <p style={{ fontFamily: mono, fontSize: '0.68rem', color: 'var(--text-faint)', margin: 0 }}>learns: {phase.concept}</p>
+      </ol>
     </div>
   )
 }
 
 export default function EvePage() {
   return (
-    <div style={{ width: '100%', paddingBottom: '4rem', color: 'var(--text)', position: 'relative', zIndex: 1 }}>
+    <div className="eve">
       <EveBg />
+      <EveHeader command="eve dev --mode overview" />
 
-      <header style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)' }}>
-        <p style={{ fontFamily: mono, fontSize: '0.72rem', color: 'var(--text-faint)', margin: '0 0 0.6rem 0', letterSpacing: '0.08em' }}>
-          {'>'} eve --mode build-dashboard --status active
-        </p>
-        <h1 style={{ fontFamily: mono, fontSize: '2.2rem', fontWeight: 700, letterSpacing: '0.08em', margin: '0 0 0.3rem 0', color: EVE_COLOR }}>eve</h1>
-        <p style={{ fontFamily: mono, fontSize: '0.75rem', color: 'var(--text-faint)', margin: '0 0 1.1rem 0', letterSpacing: '0.06em' }}>personal assistant / build dashboard</p>
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <Tag label="phase" value={SUMMARY.currentPhase} />
-          <Tag label="updated" value={SUMMARY.lastUpdated} />
-        </div>
-      </header>
-
-      <EveTabs />
-
-      <section style={{ marginBottom: '2rem' }}>
-        <Label>summary</Label>
-        <p style={{ fontFamily: mono, fontSize: '0.92rem', lineHeight: 1.7, margin: 0, background: 'var(--eve-panel)', border: '1px solid var(--eve-panel-border)', borderLeft: `3px solid ${EVE_COLOR}`, borderRadius: '0 6px 6px 0', padding: '0.9rem 1.1rem', color: 'var(--text)' }}>
-          {SUMMARY.description}
-        </p>
+      <section>
+        <h2 className="eve-h2">Summary</h2>
+        <p style={{ maxWidth: '82ch' }}>{SUMMARY.description}</p>
       </section>
 
-      <Rule />
+      <hr className="eve-hr" />
 
       <EveChangelog />
 
-      <Rule />
+      <hr className="eve-hr" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.6fr) minmax(0,1fr)', gap: '0 3rem' }}>
-
+      <div className="eve-grid">
         <div>
-          <section style={{ marginBottom: '2rem' }}>
-            <Label>the loop</Label>
-            <PipelineRow label="learning loop — you are involved" steps={LEARNING_LOOP} color={EVE_COLOR} />
-            <PipelineRow label="build loop — runs on its own" steps={BUILD_LOOP} color={PALETTE[2]} />
+          <section className="eve-section">
+            <h2 className="eve-h2">The loop</h2>
+            <p className="eve-lede">How a request moves through Eve, from a message to shipped code.</p>
+            <Flow title="Learning loop" note="you are involved" steps={LEARNING_LOOP} />
+            <Flow title="Build loop" note="runs on its own" steps={BUILD_LOOP} />
           </section>
 
-          <Rule />
-
-          <section style={{ marginBottom: '2rem' }}>
-            <Label>roadmap</Label>
-            {PHASES.map(p => <PhaseCard key={p.number} phase={p} />)}
+          <section className="eve-section">
+            <h2 className="eve-h2">Roadmap</h2>
+            {PHASES.map(p => (
+              <article key={p.number} className="eve-entry">
+                <div className="eve-entry-head">
+                  <h3 className="eve-h3">Phase {p.number}</h3>
+                  <span className="eve-muted">{p.title}</span>
+                  <span className={`${STATUS_TAG[p.status]} eve-push`}>{p.status}</span>
+                </div>
+                <p className="eve-muted" style={{ margin: '0.6rem 0 0.35rem' }}>{p.description}</p>
+                <p className="eve-faint eve-small">learns: {p.concept}</p>
+              </article>
+            ))}
           </section>
 
-          <Rule />
-
-          <section>
-            <Label>decision log</Label>
-            {DECISIONS.length === 0 ? <Muted>no decisions yet</Muted> : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: mono, fontSize: '0.88rem' }}>
+          <section className="eve-section">
+            <h2 className="eve-h2">Decision log</h2>
+            {DECISIONS.length === 0 ? <p className="eve-faint">No decisions yet.</p> : (
+              <table className="eve-table">
                 <thead>
-                  <tr>
-                    {['#', 'title', 'date', 'summary'].map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '0 0.75rem 0.5rem 0', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-faint)', fontWeight: 400, borderBottom: '1px solid var(--border)' }}>{h}</th>
-                    ))}
-                  </tr>
+                  <tr><th>#</th><th>Decision</th><th>Date</th><th>Summary</th></tr>
                 </thead>
                 <tbody>
                   {DECISIONS.map(d => (
-                    <tr key={d.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '0.65rem 0.75rem 0.65rem 0', color: EVE_COLOR, whiteSpace: 'nowrap' }}>{d.id}</td>
-                      <td style={{ padding: '0.65rem 0.75rem 0.65rem 0', color: 'var(--text)' }}>{d.title}</td>
-                      <td style={{ padding: '0.65rem 0.75rem 0.65rem 0', color: 'var(--text-faint)', whiteSpace: 'nowrap' }}>{d.date}</td>
-                      <td style={{ padding: '0.65rem 0 0.65rem 0', color: 'var(--text-muted)' }}>{d.summary}</td>
+                    <tr key={d.id}>
+                      <td className="eve-faint">{d.id}</td>
+                      <td><a href={REPO_BLOB + d.file} target="_blank" rel="noreferrer">{d.title}</a></td>
+                      <td className="eve-faint" style={{ whiteSpace: 'nowrap' }}>{d.date}</td>
+                      <td className="eve-muted">{d.summary}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -148,64 +100,43 @@ export default function EvePage() {
         </div>
 
         <div>
-          <section style={{ marginBottom: '2rem' }}>
-            <Label>ideas inbox</Label>
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-              {IDEAS.map((idea, i) => (
-                <li key={i} style={{ fontFamily: mono, fontSize: '0.88rem', color: 'var(--text-muted)', padding: '0.55rem 0', borderBottom: '1px solid var(--border)', display: 'flex', gap: '0.75rem', alignItems: 'baseline', lineHeight: 1.5 }}>
-                  <span style={{ color: EVE_COLOR, opacity: 0.5, flexShrink: 0, fontSize: '0.68rem' }}>{String(i + 1).padStart(2, '0')}</span>
-                  {idea}
-                </li>
-              ))}
+          <section className="eve-section">
+            <h2 className="eve-h2">Ideas inbox</h2>
+            <ul className="eve-bullets">
+              {IDEAS.map((idea, i) => <li key={i} className="eve-muted">{idea}</li>)}
             </ul>
           </section>
 
-          <Rule />
-
-          <section style={{ marginBottom: '2rem' }}>
-            <Label>eval set</Label>
-            <p style={{ fontFamily: mono, fontSize: '0.85rem', lineHeight: 1.65, color: 'var(--text-faint)', margin: '0 0 1rem 0' }}>{EVAL_NOTE}</p>
-            {EVAL_QUESTIONS[0]?.question === '(placeholder)' ? <Muted>questions added during phase 1</Muted> : (
-              <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+          <section className="eve-section">
+            <h2 className="eve-h2">Eval set</h2>
+            <p className="eve-muted">{EVAL_NOTE}</p>
+            {EVAL_QUESTIONS[0]?.question === '(placeholder)' ? (
+              <p className="eve-faint eve-small" style={{ marginTop: '1rem' }}>Questions get added during phase 1.</p>
+            ) : (
+              <ul className="eve-rows" style={{ marginTop: '1rem' }}>
                 {EVAL_QUESTIONS.map((q, i) => (
-                  <li key={i} style={{ fontFamily: mono, fontSize: '0.88rem', padding: '0.6rem 0', borderBottom: '1px solid var(--border)' }}>
-                    <div style={{ color: 'var(--text)', marginBottom: '0.2rem' }}>
-                      <span style={{ color: 'var(--text-faint)', marginRight: '0.5rem', fontSize: '0.68rem' }}>{String(i + 1).padStart(2, '0')}</span>{q.question}
-                    </div>
-                    <div style={{ color: 'var(--text-faint)', fontSize: '0.75rem', paddingLeft: '1.5rem' }}>expected: {q.expected}</div>
+                  <li key={i}>
+                    <p><span className="eve-num">{String(i + 1).padStart(2, '0')}</span> {q.question}</p>
+                    <p className="eve-faint eve-small">expected: {q.expected}</p>
                   </li>
                 ))}
               </ul>
             )}
           </section>
 
-          <Rule />
-
-          <section>
-            <Label>concepts learned</Label>
-            {CONCEPTS.map(c => (
-              <div key={c.term} style={{ padding: '0.65rem 0', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ fontFamily: mono, fontSize: '0.85rem', fontWeight: 700, color: EVE_COLOR, display: 'block', marginBottom: '0.2rem' }}>{c.term}</span>
-                <span style={{ fontFamily: mono, fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.55 }}>{c.plain}</span>
-              </div>
-            ))}
+          <section className="eve-section">
+            <h2 className="eve-h2">Concepts learned</h2>
+            <ul className="eve-rows">
+              {CONCEPTS.map(c => (
+                <li key={c.term}>
+                  <p style={{ fontWeight: 700 }}>{c.term}</p>
+                  <p className="eve-muted eve-small" style={{ marginTop: '0.2rem' }}>{c.plain}</p>
+                </li>
+              ))}
+            </ul>
           </section>
         </div>
-
       </div>
     </div>
   )
-}
-
-function Tag({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ fontFamily: mono, fontSize: '0.78rem', display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-      <span style={{ color: 'var(--text-faint)' }}>{label}:</span>
-      <span style={{ background: 'var(--eve-panel-2)', border: '1px solid var(--eve-panel-border)', color: 'var(--eve-title)', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 4 }}>{value}</span>
-    </div>
-  )
-}
-
-function Muted({ children }: { children: React.ReactNode }) {
-  return <p style={{ fontFamily: mono, fontSize: '0.82rem', color: 'var(--text-faint)', margin: 0 }}>{children}</p>
 }

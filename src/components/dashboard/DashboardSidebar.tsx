@@ -16,7 +16,7 @@ const navItems: Array<
   { href: '/dashboard/todo', label: 'todo', icon: StickyNote, color: TAB_COLORS.todo },
   { href: '/dashboard/ascend', label: '向上', icon: TrendingUp, color: TAB_COLORS.ascend },
   { href: '/dashboard/grit', label: 'grit', icon: Flame, color: TAB_COLORS.grit },
-  { href: '/dashboard/eve', label: 'eve', icon: Bot, color: TAB_COLORS.eve, dividerBefore: true },
+  { href: '/dashboard/eve', label: 'eve dev', icon: Bot, color: TAB_COLORS.eve, dividerBefore: true },
 ]
 
 export default function DashboardSidebar() {

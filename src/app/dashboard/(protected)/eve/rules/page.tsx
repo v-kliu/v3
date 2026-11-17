@@ -2,12 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { RULE_SECTIONS, type RuleSection } from '@/eve/eveData'
-import { PALETTE } from '@/components/grit/store'
-import EveTabs from '@/components/dashboard/EveTabs'
+import EveHeader from '@/components/dashboard/EveHeader'
 import EveBg from '@/components/dashboard/EveBg'
 
-const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
-const EVE_COLOR = PALETTE[5]
+// Styles: eve.css (components) + dashboard.css [data-eve] (tokens).
 const STORAGE_KEY = 'eve-rules-v1'
 
 function loadSections(): RuleSection[] {
@@ -86,47 +84,25 @@ export default function EveRulesPage() {
   if (!loaded) return null
 
   return (
-    <div style={{ width: '100%', paddingBottom: '4rem', color: 'var(--text)', position: 'relative', zIndex: 1 }}>
+    <div className="eve">
       <EveBg />
+      <EveHeader command="eve dev --mode rules --editable" />
 
-      <header style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)' }}>
-        <p style={{ fontFamily: mono, fontSize: '0.72rem', color: 'var(--text-faint)', margin: '0 0 0.6rem 0', letterSpacing: '0.08em' }}>
-          {'>'} eve --mode rules --editable true
-        </p>
-        <h1 style={{ fontFamily: mono, fontSize: '2.2rem', fontWeight: 700, letterSpacing: '0.08em', margin: '0 0 0.3rem 0', color: EVE_COLOR }}>rules</h1>
-        <p style={{ fontFamily: mono, fontSize: '0.75rem', color: 'var(--text-faint)', margin: 0, letterSpacing: '0.06em' }}>
-          explicit workflows and conventions / drag to reorder / edits save to your browser
-        </p>
-      </header>
+      <p className="eve-lede" style={{ maxWidth: '82ch' }}>
+        Explicit workflows and conventions every session follows. Drag to reorder. Edits save in this browser.
+      </p>
 
-      <EveTabs />
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '2.5rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(380px, 100%), 1fr))', gap: '3.5rem 4rem', alignItems: 'start' }}>
         {sections.map(section => (
           <section key={section.id}>
-
-            {/* Section title — prominent */}
-            <div style={{
-              background: 'var(--eve-panel-2)',
-              border: '1px solid var(--eve-panel-border)',
-              borderLeft: `3px solid ${EVE_COLOR}`,
-              borderRadius: '0 4px 4px 0',
-              padding: '0.5rem 0.75rem',
-              marginBottom: '1rem',
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: '0.5rem',
-            }}>
-              <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-muted)' }}>//</span>
-              <span style={{ fontFamily: mono, fontSize: '1.05rem', fontWeight: 700, color: 'var(--eve-title)', letterSpacing: '0.04em' }}>
-                {section.title}
-              </span>
-              <span style={{ fontFamily: mono, fontSize: '0.68rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+            <div className="eve-entry-head" style={{ marginBottom: '0.5rem' }}>
+              <h2 className="eve-h2" style={{ margin: 0 }}>{section.title}</h2>
+              <span className="eve-faint eve-small eve-push">
                 {section.rules.length} rule{section.rules.length !== 1 ? 's' : ''}
               </span>
             </div>
 
-            <ol style={{ margin: '0 0 0.9rem 0', padding: 0, listStyle: 'none' }}>
+            <ol className="eve-rows" style={{ marginBottom: '1rem' }}>
               {section.rules.map((rule, i) => {
                 const isOver = dragOver?.sectionId === section.id && dragOver?.index === i
                 return (
@@ -139,26 +115,17 @@ export default function EveRulesPage() {
                     onDragEnd={onDragEnd}
                     style={{
                       display: 'flex', gap: '0.75rem', alignItems: 'baseline',
-                      padding: '0.6rem 0',
-                      borderBottom: isOver
-                        ? `2px solid ${EVE_COLOR}`
-                        : '1px solid var(--border)',
-                      fontFamily: mono, fontSize: '0.9rem',
-                      color: 'var(--text-muted)', lineHeight: 1.55,
-                      cursor: 'grab',
-                      userSelect: 'none',
+                      cursor: 'grab', userSelect: 'none',
+                      boxShadow: isOver ? 'inset 0 2px 0 var(--accent)' : undefined,
                     }}
                   >
-                    <span style={{ color: 'var(--text-faint)', flexShrink: 0, fontSize: '0.65rem', opacity: 0.5 }}>⠿</span>
-                    <span style={{ color: EVE_COLOR, opacity: 0.6, flexShrink: 0, fontSize: '0.68rem', minWidth: '1.6rem' }}>
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <span style={{ flex: 1 }}>{rule}</span>
+                    <span className="eve-num" style={{ minWidth: '1.5rem' }}>{String(i + 1).padStart(2, '0')}</span>
+                    <span className="eve-muted" style={{ flex: 1 }}>{rule}</span>
                     <button
                       onClick={() => deleteRule(section.id, i)}
                       title="Remove"
                       aria-label="remove rule"
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-faint)', fontFamily: mono, fontSize: '1rem', padding: '0 0.2rem', flexShrink: 0, lineHeight: 1 }}
+                      className="eve-icon-btn"
                     >
                       ×
                     </button>
@@ -171,10 +138,10 @@ export default function EveRulesPage() {
                 onDragOver={e => onDragOver(e, section.id, section.rules.length)}
                 onDrop={e => onDrop(e, section.id, section.rules.length)}
                 style={{
-                  height: dragOver?.sectionId === section.id && dragOver?.index === section.rules.length ? '2px' : '0',
-                  background: EVE_COLOR,
-                  transition: 'height 0.1s',
-                  listStyle: 'none',
+                  padding: 0,
+                  border: 'none',
+                  height: dragOver?.sectionId === section.id && dragOver?.index === section.rules.length ? '2px' : '0.5rem',
+                  background: dragOver?.sectionId === section.id && dragOver?.index === section.rules.length ? 'var(--accent)' : 'transparent',
                 }}
               />
             </ol>
@@ -184,30 +151,22 @@ export default function EveRulesPage() {
                 value={drafts[section.id] ?? ''}
                 onChange={e => setDrafts(d => ({ ...d, [section.id]: e.target.value }))}
                 onKeyDown={e => { if (e.key === 'Enter') addRule(section.id) }}
-                placeholder="add a rule..."
-                style={{ flex: 1, fontFamily: mono, fontSize: '0.85rem', background: 'var(--eve-panel)', border: '1px solid var(--eve-panel-border)', borderRadius: '4px', padding: '0.45rem 0.7rem', color: 'var(--text)', outline: 'none' }}
+                placeholder="add a rule…"
+                aria-label={`add a rule to ${section.title}`}
+                className="eve-input"
+                style={{ flex: 1 }}
               />
-              <button
-                onClick={() => addRule(section.id)}
-                style={{ fontFamily: mono, fontSize: '0.8rem', background: 'var(--eve-button)', border: 'none', borderRadius: '4px', padding: '0.45rem 0.9rem', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
-              >
-                + add
-              </button>
+              <button onClick={() => addRule(section.id)} className="eve-btn">add</button>
             </div>
           </section>
         ))}
       </div>
 
-      <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-        <button
-          onClick={resetToDefaults}
-          style={{ fontFamily: mono, fontSize: '0.75rem', background: 'var(--eve-panel)', border: '1px solid var(--eve-panel-border)', borderRadius: '4px', padding: '0.4rem 0.9rem', color: 'var(--text-muted)', cursor: 'pointer' }}
-        >
-          reset to defaults
-        </button>
-        <span style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-faint)' }}>
-          edits save in this browser only — to make them permanent, update eveData.ts
-        </span>
+      <hr className="eve-hr" />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+        <button onClick={resetToDefaults} className="eve-btn eve-btn-quiet">reset to defaults</button>
+        <span className="eve-faint eve-small">Edits stay in this browser. To make them permanent, update eveData.ts.</span>
       </div>
     </div>
   )

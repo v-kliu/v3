@@ -69,6 +69,10 @@ page is its build dashboard — a living document updated as the project progres
 
 - `src/eve/eveData.ts` — all page content; edit here to update the dashboard.
 - `src/app/dashboard/(protected)/eve/page.tsx` — renders eveData; layout only.
+- `src/app/dashboard/(protected)/eve/eve.css` — Eve dev component styles (JetBrains Mono, ink/muted/faint,
+  fading hairlines, violet as the only accent). Color tokens live in `dashboard.css` under `[data-eve]`.
+  Use these classes on Eve pages instead of inline colors.
+- `src/components/dashboard/EveHeader.tsx` — shared title, meta and tabs for every Eve dev page.
 - `docs/decisions/` — one file per architectural decision, numbered from 0001.
 - `docs/eve/PROGRESS.md` — session-by-session log.
 

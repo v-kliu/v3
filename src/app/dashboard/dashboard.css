@@ -186,38 +186,37 @@
   }
 }
 
-/* ── Eve dark/blueprint theme ──────────────────────────────────────────────── */
-/* Overrides the shared paper palette with a dark terminal look scoped to     */
-/* /dashboard/eve. All child components inherit these tokens automatically.   */
+/* ── Eve dev theme ─────────────────────────────────────────────────────────── */
+/* Dark, near-monochrome palette scoped to /dashboard/eve. Ink, muted and faint  */
+/* do the work; violet is the single accent (links, active states, focus).       */
+/* Component styles live in src/app/dashboard/(protected)/eve/eve.css.          */
 [data-eve='true'] {
-  --bg: #0b0b18;
-  --bg-raised: #111128;
-  --text: #d4d4f0;
-  --text-muted: #8888bb;
-  --text-faint: #6c6c9e;
-  --border: rgba(139, 92, 246, 0.16);
-  --accent: #8e5cd9;
+  --bg: #0b0b10;
+  --bg-raised: #111117;
+  --wash: #15151c;
+  --text: #ececf1;
+  --text-muted: #9d9dad;
+  --text-faint: #6b6b7b;
+  --border: #272730;
+  --accent: #a78bfa;
 
-  /* Opaque surfaces (mixed from --bg, never see-through) so boxes read on the grid. */
-  --eve-panel: #131026;         /* cards: summary, phases, PRs */
-  --eve-panel-2: #1b1734;       /* raised: steps, active tab, section headers */
-  --eve-panel-border: #2b2452;
-  --eve-title: #c7b8f5;         /* bright lavender for titles and key values */
-  --eve-button: #7048c8;        /* solid violet for primary actions */
+  /* Hairlines fade out at both ends instead of stopping hard. */
+  --rule-fade: linear-gradient(to right, transparent, var(--border) 15%, var(--border) 85%, transparent);
+  --rule-fade-ink: linear-gradient(to right, transparent, var(--text-muted) 15%, var(--text-muted) 85%, transparent);
+  --rule-fade-accent: linear-gradient(to right, transparent, var(--accent) 15%, var(--accent) 85%, transparent);
 
   background-color: var(--bg);
+  /* Blueprint grid, kept quiet so it reads as texture, not structure. */
   background-image:
-    linear-gradient(rgba(139, 92, 246, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(139, 92, 246, 0.055) 1px, transparent 1px),
-    linear-gradient(rgba(139, 92, 246, 0.022) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(139, 92, 246, 0.022) 1px, transparent 1px);
-  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+    linear-gradient(rgba(167, 139, 250, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(167, 139, 250, 0.028) 1px, transparent 1px);
+  background-size: 64px 64px, 64px 64px;
   background-attachment: fixed;
 }
 
 [data-eve='true'] .sidebar-inner {
-  background: #07070f;
-  border-right-color: rgba(139, 92, 246, 0.16);
+  background: #08080c;
+  border-right-color: var(--border);
 }
 
 [data-eve='true'] .nav-link { color: var(--text-muted); }
@@ -228,17 +227,6 @@
 
 /* Eve gets full-width content — no centering constraint */
 [data-eve='true'] .dashboard-page { justify-content: flex-start; }
-
-/* Top accent bar in violet */
-[data-eve='true']::before {
-  content: '';
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #8e5cd9 0%, #6366f1 50%, #8e5cd9 100%);
-  z-index: 20;
-  pointer-events: none;
-}
 
 /* ── Todo page: the notebook fills the viewport below the header + tab bar. */
 .todo-textarea {

@@ -1,25 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { PALETTE } from '@/components/grit/store'
 import type { ChangelogCommit, ChangelogPull, ChangelogResponse } from '@/app/api/eve/changelog/route'
 
-// Live changelog: open PRs and the features (commits) each one adds, plus a
-// collapsible history of commits on main. Data comes from /api/eve/changelog.
-
-const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
-const EVE_COLOR = PALETTE[5]
-
-const TAG_COLOR: Record<string, string> = {
-  feat: PALETTE[2],
-  eve: PALETTE[5],
-  fix: PALETTE[0],
-  docs: PALETTE[3],
-  refactor: PALETTE[4],
-  chore: PALETTE[4],
-  ci: PALETTE[1],
-  test: PALETTE[1],
-}
+// Live changelog: open PRs and the commits each one adds, plus a collapsible
+// history of commits on main. Data comes from /api/eve/changelog.
+// Styles: eve.css (.eve-entry, .eve-tag, .eve-disclosure, .eve-log).
 
 function ago(iso: string): string {
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
@@ -46,97 +32,35 @@ function groupByDay(commits: ChangelogCommit[]): [string, ChangelogCommit[]][] {
   return [...groups.entries()]
 }
 
-// ─── Pieces ──────────────────────────────────────────────────────────────────
-
-function Tag({ tag }: { tag: string }) {
-  const c = TAG_COLOR[tag]
+function Pull({ p }: { p: ChangelogPull }) {
   return (
-    <span style={{
-      fontFamily: mono,
-      fontSize: '0.66rem',
-      letterSpacing: '0.06em',
-      padding: '0.1rem 0.4rem',
-      borderRadius: 4,
-      flexShrink: 0,
-      minWidth: '3.4rem',
-      textAlign: 'center',
-      fontWeight: 700,
-      color: c ? `color-mix(in srgb, ${c} 55%, #fff)` : 'var(--text-muted)',
-      background: c ? `color-mix(in srgb, ${c} 26%, var(--bg))` : 'var(--eve-panel-2)',
-    }}>
-      {tag}
-    </span>
-  )
-}
-
-function CommitRow({ c }: { c: ChangelogCommit }) {
-  return (
-    <li style={{
-      display: 'flex',
-      alignItems: 'baseline',
-      gap: '0.65rem',
-      padding: '0.3rem 0',
-      fontFamily: mono,
-      fontSize: '0.88rem',
-    }}>
-      <Tag tag={c.tag} />
-      <a
-        href={c.url}
-        target="_blank"
-        rel="noreferrer"
-        style={{ color: 'var(--text)', textDecoration: 'none', flex: 1, minWidth: 0, lineHeight: 1.5 }}
-      >
-        {c.message}
-      </a>
-      <span style={{ color: 'var(--text-faint)', fontSize: '0.68rem', flexShrink: 0 }}>{c.sha}</span>
-    </li>
-  )
-}
-
-function PullBlock({ p }: { p: ChangelogPull }) {
-  return (
-    <div style={{ background: 'var(--eve-panel)', border: '1px solid var(--eve-panel-border)', borderLeft: `3px solid ${EVE_COLOR}`, borderRadius: '0 6px 6px 0', padding: '0.8rem 1rem', marginBottom: '1rem' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
-        <a
-          href={p.url}
-          target="_blank"
-          rel="noreferrer"
-          style={{ fontFamily: mono, fontSize: '1rem', color: 'var(--eve-title)', textDecoration: 'none', fontWeight: 700 }}
-        >
-          #{p.number} {p.title}
-        </a>
-        {p.draft && (
-          <span style={{ fontFamily: mono, fontSize: '0.58rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-faint)' }}>
-            draft
-          </span>
-        )}
+    <article className="eve-entry">
+      <div className="eve-entry-head">
+        <h3 className="eve-h3">
+          <a href={p.url} target="_blank" rel="noreferrer">#{p.number} {p.title}</a>
+        </h3>
+        {p.draft && <span className="eve-tag">draft</span>}
+        <span className="eve-faint eve-small">{p.branch} · updated {ago(p.updatedAt)}</span>
       </div>
-      <p style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-faint)', margin: '0 0 0.4rem 0' }}>
-        {p.branch} · {p.commits.length} {p.commits.length === 1 ? 'change' : 'changes'} · updated {ago(p.updatedAt)}
-      </p>
-      {p.commits.length > 0 && (
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-          {p.commits.map(c => <CommitRow key={c.sha} c={c} />)}
+      {p.commits.length > 0 ? (
+        <ul className="eve-bullets" style={{ margin: '0.85rem 0 0.5rem' }}>
+          {p.commits.map(c => (
+            <li key={c.sha}>
+              <span className="eve-tag" style={{ marginRight: '0.5em' }}>{c.tag}</span>
+              <a href={c.url} target="_blank" rel="noreferrer">{c.message}</a>
+            </li>
+          ))}
         </ul>
+      ) : (
+        <p className="eve-faint eve-small" style={{ margin: '0.6rem 0' }}>No new commits yet.</p>
       )}
-    </div>
+    </article>
   )
 }
-
-function Faint({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{ fontFamily: mono, fontSize: '0.82rem', color: 'var(--text-faint)', margin: 0, fontStyle: 'italic' }}>
-      {children}
-    </p>
-  )
-}
-
-// ─── Main ────────────────────────────────────────────────────────────────────
 
 export default function EveChangelog() {
   const [data, setData] = useState<ChangelogResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [showHistory, setShowHistory] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -151,92 +75,49 @@ export default function EveChangelog() {
     return () => { cancelled = true }
   }, [])
 
-  const label = (text: string) => (
-    <p style={{
-      fontFamily: mono,
-      fontSize: '0.68rem',
-      letterSpacing: '0.12em',
-      textTransform: 'uppercase',
-      color: 'var(--text-faint)',
-      margin: '0 0 0.8rem 0',
-    }}>
-      {text}
-    </p>
-  )
-
   return (
     <section>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-        <p style={{ margin: '0 0 1rem 0' }}>
-          <span style={{
-            fontFamily: mono,
-            fontSize: '0.8rem',
-            fontWeight: 700,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            color: 'var(--eve-title)',
-          }}>
-            {'// changelog'}
-          </span>
-        </p>
-        {data && (
-          <a
-            href={`https://github.com/${data.repo}/pulls`}
-            target="_blank"
-            rel="noreferrer"
-            style={{ fontFamily: mono, fontSize: '0.7rem', color: 'var(--text-faint)' }}
-          >
-            {data.repo} ↗
-          </a>
-        )}
-      </div>
+      <h2 className="eve-h2">Changelog</h2>
+      <p className="eve-lede">
+        Open pull requests and what each one adds.{' '}
+        {data && <>Full history on <a href={`https://github.com/${data.repo}`} target="_blank" rel="noreferrer">GitHub</a>.</>}
+      </p>
 
-      {error && <Faint>could not load changelog: {error}</Faint>}
-      {!error && !data && <Faint>loading changelog…</Faint>}
+      {error && <p className="eve-faint">Could not load the changelog: {error}</p>}
+      {!error && !data && <p className="eve-faint">Loading changelog…</p>}
 
       {data && (
         <>
-          {label(`in review · ${data.pulls.length} open ${data.pulls.length === 1 ? 'pr' : 'prs'}`)}
+          <p className="eve-faint eve-small" style={{ marginBottom: '1.25rem' }}>
+            In review · {data.pulls.length} open {data.pulls.length === 1 ? 'pull request' : 'pull requests'}
+          </p>
           {data.pulls.length === 0
-            ? <div style={{ marginBottom: '1.25rem' }}><Faint>no open pull requests</Faint></div>
-            : data.pulls.map(p => <PullBlock key={p.number} p={p} />)}
+            ? <p className="eve-muted">Nothing open right now.</p>
+            : data.pulls.map(p => <Pull key={p.number} p={p} />)}
 
-          <button
-            type="button"
-            onClick={() => setShowHistory(v => !v)}
-            aria-expanded={showHistory}
-            style={{
-              fontFamily: mono,
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              color: 'var(--eve-title)',
-              background: 'var(--eve-panel-2)',
-              border: '1px solid var(--eve-panel-border)',
-              borderRadius: 6,
-              padding: '0.4rem 0.75rem',
-              cursor: 'pointer',
-            }}
-          >
-            {showHistory ? '▾ hide' : '▸ show'} commit history ({data.commits.length})
-          </button>
-
-          {showHistory && (
-            <div style={{ marginTop: '1.1rem' }}>
+          <details className="eve-disclosure">
+            <summary>
+              <span className="eve-when-closed">Show commit history ({data.commits.length})</span>
+              <span className="eve-when-open">Hide commit history</span>
+            </summary>
+            <div className="eve-log">
               {groupByDay(data.commits).map(([day, commits]) => (
-                <div key={day} style={{ marginBottom: '1rem' }}>
-                  <p style={{ fontFamily: mono, fontSize: '0.74rem', color: 'var(--text-muted)', margin: '0 0 0.2rem 0' }}>
-                    {day} <span style={{ color: 'var(--text-faint)' }}>· {ago(commits[0].date)}</span>
-                  </p>
-                  <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                    {commits.map(c => <CommitRow key={c.sha} c={c} />)}
+                <div key={day}>
+                  <div className="eve-log-day">{day} · {ago(commits[0].date)}</div>
+                  <ul>
+                    {commits.map(c => (
+                      <li key={c.sha}>
+                        <span className="eve-tag">{c.tag}</span>
+                        <a href={c.url} target="_blank" rel="noreferrer" className="eve-quiet">{c.message}</a>
+                        <span className="eve-sha">{c.sha}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               ))}
-              <p style={{ fontFamily: mono, fontSize: '0.6rem', color: 'var(--text-faint)', margin: 0 }}>
-                listed automatically from commit messages on main
-              </p>
             </div>
-          )}
+            <p className="eve-faint eve-tiny" style={{ marginTop: '0.6rem' }}>Listed automatically from commit messages on main.</p>
+          </details>
         </>
       )}
     </section>
