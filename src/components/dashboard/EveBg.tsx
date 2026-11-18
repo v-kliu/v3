@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 
 const mono = 'SFMono-Regular, Consolas, Menlo, monospace'
 const SIZE = 15
-const GREEN = '#4ade80'
+const GREEN = '#7fdbca' // Night Owl cyan
 const MAX_ALPHA = 0.14 // texture, not content
 
 // Pool of terminal-ish strings that get typed out line by line

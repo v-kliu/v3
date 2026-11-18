@@ -54,3 +54,17 @@ Append one entry per session. Newest at the top.
 
 **What's next**
 - New Eve sections should reuse the eve.css classes (`eve-h2`, `eve-entry`, `eve-rows`, `eve-tag`).
+
+---
+
+## 2026-11-17 — dashboard-wide jcode theme, Night Owl for eve dev
+
+**What changed**
+- Every dashboard tab (flight, journal, todo, 向上, grit) now uses a jcode-style light theme:
+  white page, near-black ink, three grays, hairline borders, JetBrains Mono. No colored page wash.
+- Eve dev keeps its layout, recolored to Night Owl with purple in place of blue. Commit-type
+  tags use Night Owl syntax colors.
+- JetBrains Mono now loads once in `src/app/dashboard/layout.tsx` as `--jb-mono` (`var(--mono)`).
+
+**What's next**
+- Nothing pending from this change.

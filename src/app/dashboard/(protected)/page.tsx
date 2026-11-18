@@ -515,7 +515,7 @@ const FADE = {
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] shadow-[0_1px_0_rgba(255,255,255,0.5)_inset,0_18px_40px_-28px_rgba(60,40,10,0.35)]">
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] shadow-[0_1px_0_rgba(255,255,255,0.5)_inset,0_18px_40px_-28px_rgba(0,0,0,0.18)]">
       <div className="h-[3px] w-full" style={{ background: `linear-gradient(90deg, ${DEP}, ${SKY}, ${ARR})` }} />
       {children}
     </div>

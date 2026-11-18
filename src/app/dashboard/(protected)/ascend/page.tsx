@@ -10,7 +10,7 @@ import {
 import { colorForId } from '@/components/dashboard/theme'
 import { useTabTint } from '@/components/dashboard/useTabTint'
 
-const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
+const mono = 'var(--mono)'
 
 const ICONS = {
   utensils: Utensils, droplets: Droplets, scale: Scale, book: BookOpen,

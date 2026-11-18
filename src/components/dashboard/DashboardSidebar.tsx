@@ -6,7 +6,7 @@ import { m } from 'motion/react'
 import { Plane, Mic, LogOut, StickyNote, TrendingUp, Flame, Bot, type LucideIcon } from 'lucide-react'
 import { TAB_COLORS } from './theme'
 
-const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
+const mono = 'var(--mono)'
 
 const navItems: Array<
   { href: string; label: string; icon: LucideIcon; color: string; dividerBefore?: boolean }

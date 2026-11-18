@@ -46,7 +46,7 @@ function Pull({ p }: { p: ChangelogPull }) {
         <ul className="eve-bullets" style={{ margin: '0.85rem 0 0.5rem' }}>
           {p.commits.map(c => (
             <li key={c.sha}>
-              <span className="eve-tag" style={{ marginRight: '0.5em' }}>{c.tag}</span>
+              <span className={`eve-tag eve-tag-${c.tag}`} style={{ marginRight: '0.5em' }}>{c.tag}</span>
               <a href={c.url} target="_blank" rel="noreferrer">{c.message}</a>
             </li>
           ))}
@@ -107,7 +107,7 @@ export default function EveChangelog() {
                   <ul>
                     {commits.map(c => (
                       <li key={c.sha}>
-                        <span className="eve-tag">{c.tag}</span>
+                        <span className={`eve-tag eve-tag-${c.tag}`}>{c.tag}</span>
                         <a href={c.url} target="_blank" rel="noreferrer" className="eve-quiet">{c.message}</a>
                         <span className="eve-sha">{c.sha}</span>
                       </li>
