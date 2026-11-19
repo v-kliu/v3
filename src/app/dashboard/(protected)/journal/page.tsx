@@ -311,7 +311,7 @@ export default function JournalPage() {
                   <m.span
                     layoutId="journal-mode"
                     className="absolute inset-0 rounded-full bg-[var(--bg-raised)]"
-                    style={{ boxShadow: `inset 0 0 0 1px ${tint(ACCENT, 40)}, 0 1px 3px rgba(60,40,10,0.12)` }}
+                    style={{ boxShadow: `inset 0 0 0 1px ${tint(ACCENT, 40)}, 0 1px 3px rgba(0,0,0,0.06)` }}
                     transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                   />
                 )}
@@ -357,7 +357,7 @@ export default function JournalPage() {
                         style={{
                           borderColor: ACCENT,
                           background: isActive ? ACCENT : tint(ACCENT, 10),
-                          color: isActive ? '#fff8f0' : inkOf(ACCENT),
+                          color: isActive ? '#fff' : inkOf(ACCENT),
                         }}
                       >
                         {isActive ? <Square size={24} fill="currentColor" /> : <Mic size={26} />}
@@ -497,7 +497,7 @@ export default function JournalPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.22, delay: Math.min(i, 8) * 0.035 }}
                   className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] transition-shadow"
-                  style={{ borderLeft: `4px solid ${band}`, boxShadow: open ? '0 10px 24px -18px rgba(60,40,10,0.4)' : undefined }}
+                  style={{ borderLeft: `4px solid ${band}`, boxShadow: open ? '0 10px 24px -18px rgba(0,0,0,0.2)' : undefined }}
                 >
                   <button
                     onClick={() => setExpanded(open ? null : entry.id)}
@@ -565,7 +565,7 @@ const FADE = {
 function Card({ children, tone = 'idle' }: { children: React.ReactNode; tone?: 'idle' | 'live' | 'error' }) {
   return (
     <div
-      className="overflow-hidden rounded-xl border bg-[var(--bg-raised)] shadow-[0_1px_0_rgba(255,255,255,0.5)_inset,0_18px_40px_-28px_rgba(60,40,10,0.35)] transition-colors duration-300"
+      className="overflow-hidden rounded-xl border bg-[var(--bg-raised)] shadow-[0_1px_0_rgba(255,255,255,0.5)_inset,0_18px_40px_-28px_rgba(0,0,0,0.18)] transition-colors duration-300"
       style={{
         borderColor: tone === 'live' ? ACCENT : tone === 'error' ? 'var(--accent)' : 'var(--border)',
         backgroundImage: tone === 'live' ? `linear-gradient(180deg, ${tint(ACCENT, 9)}, transparent 70%)` : undefined,

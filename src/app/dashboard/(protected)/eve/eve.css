@@ -1,0 +1,308 @@
+/* Eve dev: shared component styles for /dashboard/eve/*.
+   Colors come from the [data-eve] tokens in dashboard.css.
+   Principles: one typeface, ink/muted/faint hierarchy, fading hairlines
+   instead of boxes, violet only where something is interactive or active. */
+
+.eve {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1180px;
+  padding-bottom: 6rem;
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.eve p { margin: 0; }
+
+/* ── Type ─────────────────────────────────────────────────────────────────── */
+
+.eve-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0;
+}
+.eve-title .eve-title-sub { color: var(--accent); }
+
+.eve-h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  margin: 0 0 1rem;
+}
+
+.eve-h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.eve-muted { color: var(--text-muted); }
+.eve-faint { color: var(--text-faint); }
+.eve-small { font-size: 0.8rem; }
+.eve-tiny { font-size: 0.7rem; }
+.eve-accent { color: var(--accent); }
+
+.eve-lede {
+  color: var(--text-muted);
+  margin-bottom: 2rem !important;
+}
+
+/* ── Rules and spacing ────────────────────────────────────────────────────── */
+
+.eve-hr {
+  border: none;
+  height: 1px;
+  background: var(--rule-fade);
+  margin: 3.5rem 0;
+}
+
+.eve-section + .eve-section { margin-top: 3.5rem; }
+
+.eve-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 0 4rem;
+}
+@media (max-width: 1000px) {
+  .eve-grid { grid-template-columns: minmax(0, 1fr); }
+  .eve-grid > * + * { margin-top: 3.5rem; }
+}
+
+/* ── Links ────────────────────────────────────────────────────────────────── */
+
+.eve a {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  border-image: var(--rule-fade) 1;
+  transition: color 0.15s;
+}
+.eve a:hover {
+  color: var(--accent);
+  border-image-source: var(--rule-fade-accent);
+}
+.eve a.eve-quiet { color: var(--text-muted); }
+.eve a.eve-quiet:hover { color: var(--accent); }
+
+/* ── Header + tabs ────────────────────────────────────────────────────────── */
+
+.eve-header { margin-bottom: 3rem; }
+.eve-prompt { font-size: 0.8rem; color: var(--text-faint); margin-bottom: 0.9rem !important; }
+.eve-prompt b { color: var(--no-cyan); font-weight: 400; }
+.eve-subtitle { color: var(--text-muted); margin-top: 0.6rem !important; }
+.eve-meta { font-size: 0.8rem; color: var(--text-faint); margin-top: 0.35rem !important; }
+.eve-meta strong { color: var(--text-muted); font-weight: 400; }
+
+.eve-tabs {
+  display: flex;
+  gap: 1.75rem;
+  margin-top: 2rem;
+}
+.eve .eve-tabs a {
+  font-size: 0.9rem;
+  color: var(--text-faint);
+  border-bottom: 1px solid transparent;
+  border-image: none;
+  padding-bottom: 0.2rem;
+}
+.eve .eve-tabs a:hover { color: var(--text); }
+.eve .eve-tabs a[aria-current='page'] {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Tags ─────────────────────────────────────────────────────────────────── */
+
+.eve-tag {
+  display: inline-block;
+  padding: 0 0.45em;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1.6;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.eve-tag-accent { color: var(--no-yellow); border-color: color-mix(in srgb, var(--no-yellow) 40%, var(--border)); }
+.eve-tag-done { color: var(--no-green); border-color: color-mix(in srgb, var(--no-green) 40%, var(--border)); }
+
+/* Commit-type tags pick up Night Owl's syntax colors. Unknown types stay muted. */
+.eve-tag-eve, .eve-tag-feat { color: var(--no-purple); }
+.eve-tag-fix { color: var(--no-red); }
+.eve-tag-docs { color: var(--no-yellow); }
+.eve-tag-ci, .eve-tag-test { color: var(--no-cyan); }
+.eve-tag-refactor, .eve-tag-chore, .eve-tag-perf { color: var(--no-orange); }
+.eve-tag-security { color: var(--no-pink); }
+
+/* ── Lists ────────────────────────────────────────────────────────────────── */
+
+.eve-rows { list-style: none; margin: 0; padding: 0; }
+.eve-rows > li {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  border-image: var(--rule-fade) 1;
+}
+
+.eve-bullets { margin: 0; padding-left: 1.25rem; }
+.eve-bullets > li { margin: 0.4rem 0; }
+.eve-bullets > li::marker { color: var(--text-faint); }
+
+.eve-num { color: var(--text-faint); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+
+/* Flow: numbered steps with a faint rail, used for the two loops. */
+.eve-flow { list-style: none; margin: 0.75rem 0 0; padding: 0; counter-reset: step; }
+.eve-flow > li {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 2.25rem 9rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  align-items: baseline;
+}
+.eve-flow > li::before {
+  content: counter(step, decimal-leading-zero);
+  color: var(--text-faint);
+  font-size: 0.75rem;
+}
+.eve-flow b { font-weight: 700; }
+.eve-flow span { color: var(--text-muted); font-size: 0.85rem; }
+
+/* Release-style block: hairline on top, head row, body. */
+.eve-entry {
+  border-top: 1px solid var(--border);
+  border-image: var(--rule-fade) 1;
+  padding: 1.5rem 0 0.25rem;
+}
+.eve-entry:first-of-type { border-top: none; padding-top: 0; }
+.eve-entry-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.eve-entry-head .eve-push { margin-left: auto; }
+
+/* ── Tables ───────────────────────────────────────────────────────────────── */
+
+.eve-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.eve-table th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  padding: 0 1rem 0.5rem 0;
+  border-bottom: 1px solid var(--text-muted);
+  border-image: var(--rule-fade-ink) 1;
+}
+.eve-table td {
+  padding: 0.6rem 1rem 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  border-image: var(--rule-fade) 1;
+  vertical-align: top;
+}
+
+/* ── Controls ─────────────────────────────────────────────────────────────── */
+
+.eve-btn {
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.eve-btn:hover { border-color: var(--text-faint); }
+.eve-btn:focus-visible, .eve-input:focus-visible { outline: none; border-color: var(--accent); }
+.eve-btn-quiet { color: var(--text-muted); }
+
+.eve-input {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--wash);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  min-width: 0;
+}
+.eve-input::placeholder { color: var(--text-faint); }
+
+.eve-icon-btn {
+  font: inherit;
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 0 0.2rem;
+  line-height: 1;
+}
+.eve-icon-btn:hover { color: var(--text); }
+
+/* Disclosure: quiet underlined summary, scrolling log inside. */
+.eve-disclosure { margin-top: 1.75rem; }
+.eve-disclosure > summary {
+  display: inline-block;
+  cursor: pointer;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--border);
+  border-image: var(--rule-fade) 1;
+}
+.eve-disclosure > summary::-webkit-details-marker { display: none; }
+.eve-disclosure > summary:hover { color: var(--text); border-image-source: var(--rule-fade-ink); }
+.eve-disclosure .eve-when-open { display: none; }
+.eve-disclosure[open] .eve-when-open { display: inline; }
+.eve-disclosure[open] .eve-when-closed { display: none; }
+
+.eve-log {
+  margin-top: 1rem;
+  max-height: 24rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 0.8rem;
+  scrollbar-color: var(--border) var(--bg);
+}
+.eve-log-day {
+  position: sticky;
+  top: 0;
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  padding: 0.4rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.eve-log ul { list-style: none; margin: 0; padding: 0.25rem 0; }
+.eve-log li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  padding: 0.3rem 1rem;
+}
+.eve-log li:hover { background: var(--wash); }
+.eve-sha { color: var(--text-faint); font-size: 0.7rem; margin-left: auto; padding-left: 1rem; flex-shrink: 0; }
+
+/* Commit row used inside PR entries. */
+.eve-commit {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  margin: 0.4rem 0;
+}
+.eve-commit .eve-msg { min-width: 0; }

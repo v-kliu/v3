@@ -6,7 +6,7 @@ import { m } from 'motion/react'
 import { Plane, Mic, LogOut, StickyNote, TrendingUp, Flame, Bot, type LucideIcon } from 'lucide-react'
 import { TAB_COLORS } from './theme'
 
-const mono = 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace'
+const mono = 'var(--mono)'
 
 const navItems: Array<
   { href: string; label: string; icon: LucideIcon; color: string; dividerBefore?: boolean }
@@ -16,7 +16,7 @@ const navItems: Array<
   { href: '/dashboard/todo', label: 'todo', icon: StickyNote, color: TAB_COLORS.todo },
   { href: '/dashboard/ascend', label: '向上', icon: TrendingUp, color: TAB_COLORS.ascend },
   { href: '/dashboard/grit', label: 'grit', icon: Flame, color: TAB_COLORS.grit },
-  { href: '/dashboard/eve', label: 'eve', icon: Bot, color: TAB_COLORS.eve, dividerBefore: true },
+  { href: '/dashboard/eve', label: 'eve dev', icon: Bot, color: TAB_COLORS.eve, dividerBefore: true },
 ]
 
 export default function DashboardSidebar() {

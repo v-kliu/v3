@@ -36,3 +36,35 @@ Append one entry per session. Newest at the top.
 
 **What's next**
 - Keep commit messages prefixed (`eve:`, `feat:`, `fix:`, `docs:`) so the tags stay useful.
+
+---
+
+## 2026-11-16 — Eve dev visual refresh
+
+**What changed**
+- Renamed the sidebar item and page title to "eve dev".
+- New look based on jcode.sh's design principles: JetBrains Mono throughout, a near-monochrome
+  ink/muted/faint palette, fading hairlines instead of boxes, small outlined tags, and violet
+  used only for links, active tabs and focus.
+- Component styles moved into `src/app/dashboard/(protected)/eve/eve.css`. Tokens stay in
+  `dashboard.css` under `[data-eve]`.
+- `EveHeader.tsx` replaces `EveTabs.tsx` and is shared by the overview and rules pages.
+- Commit history is now a native disclosure with a scrolling log grouped by day.
+- Blueprint grid and typing background kept, but quieter.
+
+**What's next**
+- New Eve sections should reuse the eve.css classes (`eve-h2`, `eve-entry`, `eve-rows`, `eve-tag`).
+
+---
+
+## 2026-11-17 — dashboard-wide jcode theme, Night Owl for eve dev
+
+**What changed**
+- Every dashboard tab (flight, journal, todo, 向上, grit) now uses a jcode-style light theme:
+  white page, near-black ink, three grays, hairline borders, JetBrains Mono. No colored page wash.
+- Eve dev keeps its layout, recolored to Night Owl with purple in place of blue. Commit-type
+  tags use Night Owl syntax colors.
+- JetBrains Mono now loads once in `src/app/dashboard/layout.tsx` as `--jb-mono` (`var(--mono)`).
+
+**What's next**
+- Nothing pending from this change.

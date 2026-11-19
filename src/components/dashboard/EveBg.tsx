@@ -4,7 +4,8 @@ import { useEffect, useRef } from 'react'
 
 const mono = 'SFMono-Regular, Consolas, Menlo, monospace'
 const SIZE = 15
-const GREEN = '#4ade80'
+const GREEN = '#7fdbca' // Night Owl cyan
+const MAX_ALPHA = 0.14 // texture, not content
 
 // Pool of terminal-ish strings that get typed out line by line
 const POOL = [
@@ -70,7 +71,7 @@ export default function EveBg() {
         row: Math.floor(Math.random() * maxRows),
         text: POOL[Math.floor(Math.random() * POOL.length)],
         typed: 0,
-        opacity: 0.2 + Math.random() * 0.1,
+        opacity: MAX_ALPHA * (0.7 + Math.random() * 0.3),
         color: GREEN,
         x: xOffset,
       })
@@ -94,8 +95,8 @@ export default function EveBg() {
         if (frame % 2 === 0 && l.typed < l.text.length) l.typed++
 
         // Start fading once fully typed
-        if (l.typed >= l.text.length) l.opacity -= 0.0015
-        else l.opacity = Math.min(l.opacity, 0.3)
+        if (l.typed >= l.text.length) l.opacity -= 0.0008
+        else l.opacity = Math.min(l.opacity, MAX_ALPHA)
 
         ctx.globalAlpha = l.opacity
         ctx.fillStyle = l.color

@@ -5,31 +5,42 @@
   initial-value: transparent;
 }
 
+/* ── Dashboard theme (jcode-style) ──────────────────────────────────────────── */
+/* White page, near-black ink, three grays, hairline borders, one monospace face.  */
+/* Tab colors (--tab, PALETTE) stay as small accents: icons, rings, charts.       */
+/* Eve dev overrides these tokens further down under [data-eve].                  */
 .dashboard-root {
+  --bg: #fff;
+  --bg-alt: #f4f4f4;
+  --bg-raised: #fff;
+  --wash: #f4f4f4;
+  --text: #111;
+  --text-muted: #666;
+  --text-faint: #999;
+  --border: #d9d9d9;
+  --accent: #111;
+  --mono: var(--jb-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
   --tab-ink: color-mix(in srgb, var(--tab) 68%, #000);
   position: relative;
   display: flex;
   min-height: 100vh;
   background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  -webkit-font-smoothing: antialiased;
   transition: --tab 0.5s ease;
 }
 
-/* Soft wash of the tab's color from the top of the page, plus a thin top rule. */
-.dashboard-root[data-wash='on'] {
-  background-image: linear-gradient(180deg, color-mix(in srgb, var(--tab) 15%, transparent) 0%, transparent 420px);
-  background-repeat: no-repeat;
-}
-.dashboard-root[data-wash='on']::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--tab);
-  z-index: 20;
-  pointer-events: none;
-}
+/* Tailwind's font-mono (DM Mono) and the ascend mono stack follow the same face. */
+.dashboard-root .font-mono { font-family: var(--mono); }
+.dashboard-root .ascend-page { --ascend-mono: var(--mono); }
+
+/* Headings: tight and bold instead of wide-tracked. */
+.dashboard-root:not([data-eve]) h1 { font-weight: 700; letter-spacing: -0.02em; }
+
+/* No paper shading on the sidebar edge. */
+.dashboard-root .paper-crease { box-shadow: none; }
 
 .dashboard-aside {
   width: 200px;
@@ -71,7 +82,7 @@
 }
 .nav-link:hover {
   color: var(--text);
-  background: color-mix(in srgb, var(--c) 10%, transparent);
+  background: var(--wash);
   text-decoration: none;
 }
 .nav-link[aria-current='page'] {
@@ -90,8 +101,8 @@
   inset: 0;
   z-index: 0 !important;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--c) 17%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 38%, transparent);
+  background: var(--wash);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 
 .sidebar-dots { display: inline-flex; gap: 3px; }
@@ -186,38 +197,45 @@
   }
 }
 
-/* ── Eve dark/blueprint theme ──────────────────────────────────────────────── */
-/* Overrides the shared paper palette with a dark terminal look scoped to     */
-/* /dashboard/eve. All child components inherit these tokens automatically.   */
+/* ── Eve dev theme: Night Owl, with its blues turned purple ─────────────────── */
+/* Same layout and principles as the rest of the dashboard, dark palette.         */
+/* Component styles live in src/app/dashboard/(protected)/eve/eve.css.          */
 [data-eve='true'] {
-  --bg: #0b0b18;
-  --bg-raised: #111128;
-  --text: #d4d4f0;
-  --text-muted: #8888bb;
-  --text-faint: #6c6c9e;
-  --border: rgba(139, 92, 246, 0.16);
-  --accent: #8e5cd9;
+  --bg: #120a24;
+  --bg-raised: #180f2e;
+  --wash: #1f1438;
+  --text: #e2dcf0;
+  --text-muted: #a497c0;
+  --text-faint: #716593;
+  --border: #2d2048;
+  --accent: #c792ea;
 
-  /* Opaque surfaces (mixed from --bg, never see-through) so boxes read on the grid. */
-  --eve-panel: #131026;         /* cards: summary, phases, PRs */
-  --eve-panel-2: #1b1734;       /* raised: steps, active tab, section headers */
-  --eve-panel-border: #2b2452;
-  --eve-title: #c7b8f5;         /* bright lavender for titles and key values */
-  --eve-button: #7048c8;        /* solid violet for primary actions */
+  /* Night Owl syntax colors, used for tags and small status marks. */
+  --no-purple: #c792ea;
+  --no-cyan: #7fdbca;
+  --no-green: #addb67;
+  --no-yellow: #ecc48d;
+  --no-orange: #f78c6c;
+  --no-red: #ef5350;
+  --no-pink: #ff5874;
+
+  /* Hairlines fade out at both ends instead of stopping hard. */
+  --rule-fade: linear-gradient(to right, transparent, var(--border) 15%, var(--border) 85%, transparent);
+  --rule-fade-ink: linear-gradient(to right, transparent, var(--text-muted) 15%, var(--text-muted) 85%, transparent);
+  --rule-fade-accent: linear-gradient(to right, transparent, var(--accent) 15%, var(--accent) 85%, transparent);
 
   background-color: var(--bg);
+  /* Blueprint grid, kept quiet so it reads as texture, not structure. */
   background-image:
-    linear-gradient(rgba(139, 92, 246, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(139, 92, 246, 0.055) 1px, transparent 1px),
-    linear-gradient(rgba(139, 92, 246, 0.022) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(139, 92, 246, 0.022) 1px, transparent 1px);
-  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+    linear-gradient(rgba(199, 146, 234, 0.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(199, 146, 234, 0.024) 1px, transparent 1px);
+  background-size: 64px 64px, 64px 64px;
   background-attachment: fixed;
 }
 
 [data-eve='true'] .sidebar-inner {
-  background: #07070f;
-  border-right-color: rgba(139, 92, 246, 0.16);
+  background: #0d0619;
+  border-right-color: var(--border);
 }
 
 [data-eve='true'] .nav-link { color: var(--text-muted); }
@@ -228,17 +246,6 @@
 
 /* Eve gets full-width content — no centering constraint */
 [data-eve='true'] .dashboard-page { justify-content: flex-start; }
-
-/* Top accent bar in violet */
-[data-eve='true']::before {
-  content: '';
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #8e5cd9 0%, #6366f1 50%, #8e5cd9 100%);
-  z-index: 20;
-  pointer-events: none;
-}
 
 /* ── Todo page: the notebook fills the viewport below the header + tab bar. */
 .todo-textarea {

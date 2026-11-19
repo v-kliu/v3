@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-const mono = 'Consolas, "Lucida Console", "Courier New", monospace'
+const mono = 'var(--mono)'
 
 type Tab = { id: number; name: string; position: number }
 type SaveStatus = 'saved' | 'saving'
@@ -141,11 +141,11 @@ export default function TodoClient({ initial }: { initial: TodoInitial }) {
   const btn: React.CSSProperties = { font: 'inherit', background: 'none', border: 0, padding: '0 6px', cursor: 'pointer', color: 'inherit' }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1320, fontFamily: mono, fontSize: 13, color: '#000' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 1320, fontFamily: mono, fontSize: 13, color: '#111' }}>
 
       {/* Tabs */}
       {loaded && (
-        <div role="tablist" style={{ display: 'flex', alignItems: 'flex-end', background: '#e6e6e6', border: '1px solid #bdbdbd', borderBottom: 0, overflowX: 'auto' }}>
+        <div role="tablist" style={{ display: 'flex', alignItems: 'flex-end', background: '#f4f4f4', border: '1px solid #d9d9d9', borderBottom: 0, overflowX: 'auto' }}>
           {tabs.map(tab => {
             const isActive = tab.id === activeTabId
             return (
@@ -158,7 +158,7 @@ export default function TodoClient({ initial }: { initial: TodoInitial }) {
                 onKeyDown={e => { if (e.key === 'Enter' && editingTabId !== tab.id) handleTabClick(tab.id) }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'default', userSelect: 'none',
-                  padding: '5px 8px 5px 12px', borderRight: '1px solid #bdbdbd',
+                  padding: '5px 8px 5px 12px', borderRight: '1px solid #d9d9d9',
                   background: isActive ? '#fff' : 'transparent', color: isActive ? '#000' : '#444',
                 }}
               >
@@ -189,7 +189,7 @@ export default function TodoClient({ initial }: { initial: TodoInitial }) {
       )}
 
       {loaded && stale && (
-        <button onClick={() => loadAll(activeTabId ?? undefined)} style={{ ...btn, textAlign: 'left', padding: '4px 8px', background: '#fffbe0', border: '1px solid #bdbdbd', borderBottom: 0 }}>
+        <button onClick={() => loadAll(activeTabId ?? undefined)} style={{ ...btn, textAlign: 'left', padding: '4px 8px', background: '#fff', border: '1px solid #d9d9d9', borderBottom: 0 }}>
           updated in another tab - click to reload
         </button>
       )}
@@ -206,16 +206,16 @@ export default function TodoClient({ initial }: { initial: TodoInitial }) {
         className="todo-textarea"
         style={{
           width: '100%', flex: 1, resize: 'none', outline: 'none', borderRadius: 0,
-          border: '1px solid #bdbdbd', background: '#fff', color: '#000',
+          border: '1px solid #d9d9d9', background: '#fff', color: '#111',
           fontFamily: mono, fontSize: FONT, lineHeight: `${LINE}px`, padding: `${LINE / 2}px 10px`,
           WebkitTextSizeAdjust: '100%', textSizeAdjust: '100%', boxSizing: 'border-box',
           backgroundAttachment: 'local', backgroundOrigin: 'padding-box',
-          backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${LINE - 1}px, #ececec ${LINE - 1}px, #ececec ${LINE}px)`,
+          backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${LINE - 1}px, #f0f0f0 ${LINE - 1}px, #f0f0f0 ${LINE}px)`,
           backgroundPosition: `0 ${LINE / 2}px`,
         }}
       />
 
-      <footer style={{ display: 'flex', gap: 24, padding: '3px 10px', background: '#f0f0f0', border: '1px solid #bdbdbd', borderTop: 0, fontSize: 12, color: '#222' }}>
+      <footer style={{ display: 'flex', gap: 24, padding: '3px 10px', background: '#f4f4f4', border: '1px solid #d9d9d9', borderTop: 0, fontSize: 12, color: '#222' }}>
         <span>Ln {caret.ln}, Col {caret.col}</span>
         <span>{caret.selLines > 0 ? `${caret.selLines} of ${lineCount}` : lineCount} {lineCount === 1 ? 'line' : 'lines'}</span>
         <span>{chars} characters</span>
