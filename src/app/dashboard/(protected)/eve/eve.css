@@ -100,24 +100,6 @@
 .eve-meta { font-size: 0.8rem; color: var(--text-faint); margin-top: 0.35rem !important; }
 .eve-meta strong { color: var(--text-muted); font-weight: 400; }
 
-.eve-tabs {
-  display: flex;
-  gap: 1.75rem;
-  margin-top: 2rem;
-}
-.eve .eve-tabs a {
-  font-size: 0.9rem;
-  color: var(--text-faint);
-  border-bottom: 1px solid transparent;
-  border-image: none;
-  padding-bottom: 0.2rem;
-}
-.eve .eve-tabs a:hover { color: var(--text); }
-.eve .eve-tabs a[aria-current='page'] {
-  color: var(--text);
-  border-bottom-color: var(--accent);
-}
-
 /* ── Tags ─────────────────────────────────────────────────────────────────── */
 
 .eve-tag {
@@ -189,6 +171,25 @@
   flex-wrap: wrap;
 }
 .eve-entry-head .eve-push { margin-left: auto; }
+
+/* ── Changelog feature boxes ──────────────────────────────────────────────── */
+
+.eve-features { display: flex; flex-direction: column; gap: 1rem; }
+.eve-feature {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.1rem 1.25rem 1.2rem;
+}
+.eve-feature-prs {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+.eve-feature-num { color: var(--text-faint); }
 
 /* ── Tables ───────────────────────────────────────────────────────────────── */
 
