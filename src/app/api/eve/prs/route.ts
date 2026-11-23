@@ -51,7 +51,7 @@ async function gh<T>(path: string): Promise<T> {
     Accept: 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
   }
-  if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
+  if (process.env.GH_PAT) headers.Authorization = `Bearer ${process.env.GH_PAT}`
   const res = await fetch(`${API}${path}`, { headers, cache: 'no-store' })
   if (!res.ok) throw new Error(`GitHub ${res.status} on ${path.split('?')[0]}`)
   return res.json() as Promise<T>
