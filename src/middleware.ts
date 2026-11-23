@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { verifyToken, COOKIE_NAME } from '@/lib/auth'
 
 // API routes that are intentionally reachable without a session.
-const PUBLIC_API = new Set(['/api/auth/login', '/api/auth/logout', '/api/visit', '/api/locations'])
+const PUBLIC_API = new Set(['/api/auth/login', '/api/auth/logout', '/api/visit', '/api/locations', '/api/eve/telegram'])
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

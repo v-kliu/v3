@@ -20,15 +20,16 @@ export interface ChangelogFeature {
 export const REPO_URL = 'https://github.com/v-kliu/v3'
 
 export const CHANGELOG: ChangelogFeature[] = [
-  // ── Planned ───────────────────────────────────────────────────────────────
+  // ── Open ──────────────────────────────────────────────────────────────────
   {
-    title: 'Telegram bot',
+    title: 'Telegram + prompt sanitization',
     date: '2026-11-23',
     summary:
-      'Webhook endpoint at /api/eve/telegram. Receives messages, runs prompt sanitization via Claude, then feeds the learning loop. Inline keyboard buttons for the pick step.',
-    status: 'planned',
+      'Webhook at /api/eve/telegram. Receives mobile messages, runs sanitize() via Claude Haiku to clean garbled text into structured instructions, stores session to Supabase.',
+    status: 'open',
     prs: [],
   },
+  // ── Planned ───────────────────────────────────────────────────────────────
   {
     title: 'Learning loop',
     date: '2026-11-23',
@@ -37,13 +38,13 @@ export const CHANGELOG: ChangelogFeature[] = [
     status: 'planned',
     prs: [],
   },
-  // ── Open ──────────────────────────────────────────────────────────────────
+  // ── Closed ────────────────────────────────────────────────────────────────
   {
     title: 'Eve UI polish',
     date: '2026-11-23',
     summary:
-      'Fluid viewport width, text-align center, purple changelog feature cards, combined from #8 and #9.',
-    status: 'open',
+      'Fluid viewport width, text-align center, purple changelog feature cards, clean header, traffic-light status dots, shorthand dates.',
+    status: 'closed',
     prs: [{ number: 10, title: 'eve: centered text, purple changelog cards, smaller fonts' }],
   },
   {
@@ -51,10 +52,9 @@ export const CHANGELOG: ChangelogFeature[] = [
     date: '2026-11-23',
     summary:
       'Visit counter reads a count of every row in vkliu_visits from Supabase. Login rate limiting removed. Audio transcription and journal analysis turned off.',
-    status: 'open',
+    status: 'closed',
     prs: [{ number: 7, title: 'drop upstash redis and openai audio' }],
   },
-  // ── Closed ────────────────────────────────────────────────────────────────
   {
     title: 'Rules as a file, feature changelog, centered layout',
     date: '2026-11-23',
