@@ -22,10 +22,10 @@ export const REPO_URL = 'https://github.com/v-kliu/v3'
 export const CHANGELOG: ChangelogFeature[] = [
   // ── Open ──────────────────────────────────────────────────────────────────
   {
-    title: 'Telegram + prompt sanitization',
+    title: 'Telegram router + GitHub Actions build',
     date: '2026-11-23',
     summary:
-      'Webhook at /api/eve/telegram. Receives mobile messages, runs sanitize() via Claude Haiku to clean garbled text into structured instructions, stores session to Supabase.',
+      'MessageType enum routes /build, /journal, /ask. Sonnet structures feature requests into step-by-step specs stored in vkliu_eve_dev_sessions. GitHub Actions agentic loop checks out the repo, implements the spec, opens a PR, and notifies Telegram.',
     status: 'open',
     prs: [],
   },

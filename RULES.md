@@ -1,4 +1,4 @@
-Rules: (updated: 11/23/26)
+Rules: (updated: 11/23/26 — added Learning Loop and Communication sections)
 
 This file is the source of truth for how work gets done in this repo. It is read only for
 Claude Code. Victor edits it by hand. CLAUDE.md imports it, so every session loads it.
@@ -38,11 +38,24 @@ Architecture
 5. SUPABASE_SECRET_KEY is server-side only. Never use it in client code or prefix it NEXT_PUBLIC_.
 6. New API routes must be covered by the matcher in src/middleware.ts (not the root middleware.ts).
 
+Learning Loop (applies to any decision or recommendation Victor asks for)
+1. Before presenting options to Victor, write the sealed recommendation to vkliu_eve_decisions
+   (or state it explicitly in the response if Supabase is not involved). This must happen before
+   Victor says anything about his preference, so the recommendation cannot be influenced by him.
+2. Present 2-4 options with trade-offs. Do not hint at the recommendation in the framing.
+3. After Victor picks, compare his choice to the sealed recommendation. Grade the match 1-10 and
+   write one sentence of critique: what the sealed rec got right or wrong, what Victor's pick
+   implies about his priorities. Store this in vkliu_eve_decisions.
+4. The goal is to give Victor actual system design feedback, not validation. If his pick and the
+   sealed rec differ, say why clearly and what that trade-off costs him.
+5. Never ask Victor to confirm the recommendation is good. Never change the sealed rec after the
+   fact. Never agree with his pick just because he picked it.
+
 Communication
 1. One paragraph per response, plain English, no fluff. A smart high schooler should follow it.
 2. No em dashes, no semicolons.
 3. Plain English first, technical detail after if needed. Spell out every acronym on first use.
-4. When Victor has to choose, give a clear recommendation with the main trade-off.
+4. When Victor has to choose, follow the Learning Loop above, not just "give a recommendation."
 
 Eve
 1. At the end of every Eve session, append one entry to docs/eve/PROGRESS.md (date, what

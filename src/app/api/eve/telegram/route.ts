@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sanitize } from '@/eve/sanitize'
+import { classifyMessage, MessageType } from '@/eve/router'
+import { structureFeature } from '@/eve/structure'
 
-// Telegram sends POST requests to this endpoint. Auth is the secret token in the
-// X-Telegram-Bot-Api-Secret-Token header — not the site JWT (Telegram calls this
-// from outside, so it's listed in PUBLIC_API in src/middleware.ts).
+// Telegram webhook. NOT behind JWT — Telegram calls from outside.
+// Auth is X-Telegram-Bot-Api-Secret-Token. Added to PUBLIC_API in src/middleware.ts.
 
-const TABLE = 'vkliu_eve_sessions'
+const SESSIONS_TABLE = 'vkliu_eve_sessions'
+const DEV_TABLE      = 'vkliu_eve_dev_sessions'
 
 function supabase() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!,
-  )
+  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
 }
 
 async function sendMessage(chatId: number, text: string) {
@@ -23,66 +22,133 @@ async function sendMessage(chatId: number, text: string) {
   })
 }
 
+async function triggerBuild(devSessionId: string, spec: { title: string; steps: string[] }) {
+  const token = process.env.GITHUB_TOKEN
+  if (!token) return
+  await fetch('https://api.github.com/repos/v-kliu/v3/actions/workflows/eve-build.yml/dispatches', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      ref: 'main',
+      inputs: { dev_session_id: devSessionId, title: spec.title },
+    }),
+  })
+}
+
 export async function POST(request: Request) {
-  // Verify the secret token Telegram sends with every update.
   const secret = request.headers.get('X-Telegram-Bot-Api-Secret-Token')
   if (!process.env.TELEGRAM_WEBHOOK_SECRET || secret !== process.env.TELEGRAM_WEBHOOK_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   let body: TelegramUpdate
-  try {
-    body = await request.json()
-  } catch {
+  try { body = await request.json() } catch {
     return NextResponse.json({ error: 'Bad request' }, { status: 400 })
   }
 
   const message = body.message
-  if (!message?.text) {
-    // Telegram sends other update types (edits, reactions, etc.) — just ack them.
-    return NextResponse.json({ ok: true })
-  }
+  if (!message?.text) return NextResponse.json({ ok: true })
 
   const chatId = message.chat.id
   const rawText = message.text
   const telegramUserId = message.from?.id?.toString() ?? 'unknown'
 
-  // Commands: /start, /help
   if (rawText.startsWith('/start') || rawText.startsWith('/help')) {
-    await sendMessage(chatId, `*Eve* is listening.\n\nSend me a message and I'll clean and process it.`)
+    await sendMessage(chatId,
+      `*Eve* is ready.\n\n` +
+      `/build <request> — structure a feature and queue it for Claude Code\n` +
+      `/journal <note> — save a note\n` +
+      `/ask <question> — research a question\n\n` +
+      `No prefix? Treated as /build.`
+    )
     return NextResponse.json({ ok: true })
   }
 
-  // Sanitize the raw message.
+  // 1. Sanitize
   let cleaned = rawText
-  try {
-    cleaned = await sanitize(rawText)
-  } catch (err) {
-    console.error('sanitize error', err)
+  try { cleaned = await sanitize(rawText) } catch (e) {
+    console.error('sanitize error', e)
   }
 
-  // Store the session row.
+  // 2. Classify
+  const { type, body: routedBody } = classifyMessage(cleaned)
+  const effectiveType = type === MessageType.UNKNOWN ? MessageType.BUILD : type
+
+  // 3. Store base session
   const db = supabase()
-  await db.from(TABLE).insert({
-    telegram_user_id: telegramUserId,
-    chat_id: chatId.toString(),
-    raw_text: rawText,
-    cleaned_text: cleaned,
-    status: 'received',
-  })
+  const { data: session, error: sessionErr } = await db
+    .from(SESSIONS_TABLE)
+    .insert({
+      telegram_user_id: telegramUserId,
+      chat_id: chatId.toString(),
+      raw_text: rawText,
+      cleaned_text: cleaned,
+      message_type: effectiveType,
+      status: 'received',
+    })
+    .select('id')
+    .single()
 
-  // Echo the sanitized version back so the user can see the cleanup.
-  const changed = cleaned !== rawText
-  const reply = changed
-    ? `*Cleaned:*\n${cleaned}`
-    : cleaned
+  if (sessionErr || !session) {
+    console.error('session insert error', sessionErr)
+    await sendMessage(chatId, 'Failed to store message. Check Supabase.')
+    return NextResponse.json({ ok: true })
+  }
 
-  await sendMessage(chatId, reply)
+  // 4. Route
+  if (effectiveType === MessageType.BUILD) {
+    await sendMessage(chatId, `Structuring: _${routedBody.slice(0, 80)}…_`)
+
+    let spec
+    try {
+      spec = await structureFeature(routedBody)
+    } catch (e) {
+      console.error('structureFeature error', e)
+      await sendMessage(chatId, 'Failed to structure the feature. Try again.')
+      return NextResponse.json({ ok: true })
+    }
+
+    const { data: dev, error: devErr } = await db
+      .from(DEV_TABLE)
+      .insert({
+        session_id: session.id,
+        title: spec.title,
+        summary: spec.summary,
+        steps: spec.steps,
+        acceptance: spec.acceptance,
+        files_likely_touched: spec.files_likely_touched,
+        status: 'structured',
+      })
+      .select('id')
+      .single()
+
+    if (devErr || !dev) {
+      console.error('dev session insert error', devErr)
+      await sendMessage(chatId, 'Structured but failed to save. Check Supabase.')
+      return NextResponse.json({ ok: true })
+    }
+
+    // 5. Trigger GitHub Actions
+    await triggerBuild(dev.id, spec)
+
+    const stepList = spec.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')
+    await sendMessage(chatId,
+      `*${spec.title}*\n${spec.summary}\n\n*Steps queued:*\n${stepList}\n\n_Building…_`
+    )
+
+  } else if (effectiveType === MessageType.JOURNAL) {
+    await sendMessage(chatId, `Saved note.`)
+
+  } else if (effectiveType === MessageType.ASK) {
+    await sendMessage(chatId, `Got your question. Research coming soon.`)
+  }
 
   return NextResponse.json({ ok: true })
 }
-
-// ── Telegram update types (minimal) ──────────────────────────────────────────
 
 interface TelegramUpdate {
   update_id: number
