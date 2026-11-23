@@ -23,9 +23,10 @@ async function sendMessage(chatId: number, text: string) {
 }
 
 async function triggerBuild(devSessionId: string, spec: { title: string; steps: string[] }) {
-  const token = process.env.GITHUB_TOKEN
-  if (!token) return
-  await fetch('https://api.github.com/repos/v-kliu/v3/actions/workflows/eve-build.yml/dispatches', {
+  const token = process.env.GH_PAT
+  if (!token) throw new Error('GH_PAT env var not set')
+
+  const res = await fetch('https://api.github.com/repos/v-kliu/v3/actions/workflows/eve-build.yml/dispatches', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -37,6 +38,11 @@ async function triggerBuild(devSessionId: string, spec: { title: string; steps: 
       inputs: { dev_session_id: devSessionId, title: spec.title },
     }),
   })
+
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`workflow_dispatch failed ${res.status}: ${body}`)
+  }
 }
 
 export async function POST(request: Request) {
@@ -133,7 +139,14 @@ export async function POST(request: Request) {
     }
 
     // 5. Trigger GitHub Actions
-    await triggerBuild(dev.id, spec)
+    try {
+      await triggerBuild(dev.id, spec)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      console.error('triggerBuild error', msg)
+      await sendMessage(chatId, `Spec saved but build trigger failed: ${msg}`)
+      return NextResponse.json({ ok: true })
+    }
 
     const stepList = spec.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')
     await sendMessage(chatId,
