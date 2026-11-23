@@ -44,7 +44,7 @@ export default function EvePage() {
 
       <section>
         <h2 className="eve-h2">Summary</h2>
-        <p style={{ maxWidth: '82ch' }}>{SUMMARY.description}</p>
+        <p>{SUMMARY.description}</p>
       </section>
 
       <hr className="eve-hr" />

@@ -34,27 +34,26 @@ function groupByDay(commits: ChangelogCommit[]): [string, ChangelogCommit[]][] {
 
 function Pull({ p }: { p: ChangelogPull }) {
   return (
-    <article className="eve-entry">
-      <div className="eve-entry-head">
-        <h3 className="eve-h3">
-          <a href={p.url} target="_blank" rel="noreferrer">#{p.number} {p.title}</a>
-        </h3>
-        {p.draft && <span className="eve-tag">draft</span>}
-        <span className="eve-faint eve-small">{p.branch} · updated {ago(p.updatedAt)}</span>
-      </div>
+    <div className="eve-pr-card">
+      <h3 className="eve-h3">
+        <a href={p.url} target="_blank" rel="noreferrer">#{p.number}</a>
+        {p.draft && <span className="eve-tag" style={{ marginLeft: '0.4em' }}>draft</span>}
+      </h3>
+      <p className="eve-muted" style={{ fontSize: '0.78rem', margin: '0.15rem 0 0.1rem' }}>{p.title}</p>
+      <p className="eve-faint" style={{ fontSize: '0.7rem', margin: '0 0 0.5rem' }}>{ago(p.updatedAt)}</p>
       {p.commits.length > 0 ? (
-        <ul className="eve-bullets" style={{ margin: '0.85rem 0 0.5rem' }}>
+        <ul className="eve-bullets">
           {p.commits.map(c => (
             <li key={c.sha}>
-              <span className={`eve-tag eve-tag-${c.tag}`} style={{ marginRight: '0.5em' }}>{c.tag}</span>
-              <a href={c.url} target="_blank" rel="noreferrer">{c.message}</a>
+              <span className={`eve-tag eve-tag-${c.tag}`} style={{ marginRight: '0.4em' }}>{c.tag}</span>
+              <a href={c.url} target="_blank" rel="noreferrer" className="eve-quiet">{c.message}</a>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="eve-faint eve-small" style={{ margin: '0.6rem 0' }}>No new commits yet.</p>
+        <p className="eve-faint" style={{ fontSize: '0.75rem', margin: '0.4rem 0 0' }}>No new commits yet.</p>
       )}
-    </article>
+    </div>
   )
 }
 
@@ -93,7 +92,7 @@ export default function EveChangelog() {
           </p>
           {data.pulls.length === 0
             ? <p className="eve-muted">Nothing open right now.</p>
-            : data.pulls.map(p => <Pull key={p.number} p={p} />)}
+            : <div className="eve-pr-grid">{data.pulls.map(p => <Pull key={p.number} p={p} />)}</div>}
 
           <details className="eve-disclosure">
             <summary>
