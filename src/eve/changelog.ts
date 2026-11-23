@@ -18,6 +18,13 @@ export const REPO_URL = 'https://github.com/v-kliu/v3'
 
 export const CHANGELOG: ChangelogFeature[] = [
   {
+    title: 'Drop Upstash Redis and OpenAI',
+    date: '2026-11-23',
+    summary:
+      'Visit counter reads a count of every row in vkliu_visits from Supabase. Login rate limiting removed. Audio transcription and journal analysis turned off.',
+    prs: [{ number: 7, title: 'drop upstash redis and openai audio' }],
+  },
+  {
     title: 'Rules as a file, feature changelog, centered layout',
     date: '2026-11-23',
     summary:
