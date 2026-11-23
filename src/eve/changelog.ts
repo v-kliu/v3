@@ -1,6 +1,9 @@
 // Eve dev changelog. One entry per feature, newest first.
 // Each feature lists every pull request that belongs to it (usually one, sometimes more).
 // Claude Code adds an entry as part of every feature (see RULES.md, step 6).
+// `status` is a fallback: once the page loads live PR state from GitHub (/api/eve/prs),
+// a feature with PRs shows open while any PR is open and closed once all are merged.
+// `planned` features (no PRs yet) always use this value.
 
 export interface ChangelogPR {
   number: number
@@ -27,7 +30,7 @@ export const CHANGELOG: ChangelogFeature[] = [
     summary:
       'MessageType enum routes /build, /journal, /ask. Sonnet structures feature requests into step-by-step specs stored in vkliu_eve_dev_sessions. GitHub Actions agentic loop checks out the repo, implements the spec, opens a PR, and notifies Telegram.',
     status: 'open',
-    prs: [],
+    prs: [{ number: 12, title: 'eve: live PR status on the changelog' }],
   },
   // ── Planned ───────────────────────────────────────────────────────────────
   {
@@ -39,6 +42,14 @@ export const CHANGELOG: ChangelogFeature[] = [
     prs: [],
   },
   // ── Closed ────────────────────────────────────────────────────────────────
+  {
+    title: 'Telegram + prompt sanitization',
+    date: '2026-11-23',
+    summary:
+      'Webhook at /api/eve/telegram. Receives mobile messages, runs sanitize() via Claude Haiku to clean garbled text into structured instructions, stores session to Supabase.',
+    status: 'closed',
+    prs: [{ number: 11, title: 'feat: telegram webhook + prompt sanitization' }],
+  },
   {
     title: 'Eve UI polish',
     date: '2026-11-23',
