@@ -4,6 +4,20 @@ Append one entry per session. Newest at the top.
 
 ---
 
+## 2026-11-23 — rules file, feature changelog, centered layout
+
+**What changed**
+- Rules moved to `RULES.md` at the repo root, imported by `CLAUDE.md`. The Rules tab, its
+  localStorage editor, and `RULE_SECTIONS` in `eveData.ts` are gone.
+- Changelog is now static data in `src/eve/changelog.ts`: one box per feature, each linking to
+  its pull requests. The GitHub-backed `/api/eve/changelog` route is removed.
+- Eve dev is centered (removed the full-width override in `dashboard.css`).
+
+**What's next**
+- Every feature follows RULES.md and adds its own changelog entry.
+
+---
+
 ## 2026-11-16
 
 **What changed**

@@ -6,22 +6,29 @@
 .eve {
   position: relative;
   z-index: 1;
-  width: 100%;
-  max-width: 1180px;
+  width: clamp(520px, 88%, 1600px);
+  margin-inline: auto;
   padding-bottom: 6rem;
   font-family: var(--mono);
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1.65;
   color: var(--text);
+  text-align: center;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Everything that must stay left-aligned inside the centered container */
+.eve ul, .eve ol, .eve table,
+.eve-flow, .eve-rows, .eve-bullets,
+.eve-log, .eve-table, .eve-feature-prs,
+.eve-entry-head, .eve-commit { text-align: left; }
 
 .eve p { margin: 0; }
 
 /* ── Type ─────────────────────────────────────────────────────────────────── */
 
 .eve-title {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
@@ -30,15 +37,15 @@
 .eve-title .eve-title-sub { color: var(--accent); }
 
 .eve-h2 {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.35;
-  margin: 0 0 1rem;
+  margin: 0 0 0.75rem;
 }
 
 .eve-h3 {
-  font-size: 1.05rem;
+  font-size: 0.9rem;
   font-weight: 700;
   margin: 0;
 }
@@ -99,24 +106,6 @@
 .eve-subtitle { color: var(--text-muted); margin-top: 0.6rem !important; }
 .eve-meta { font-size: 0.8rem; color: var(--text-faint); margin-top: 0.35rem !important; }
 .eve-meta strong { color: var(--text-muted); font-weight: 400; }
-
-.eve-tabs {
-  display: flex;
-  gap: 1.75rem;
-  margin-top: 2rem;
-}
-.eve .eve-tabs a {
-  font-size: 0.9rem;
-  color: var(--text-faint);
-  border-bottom: 1px solid transparent;
-  border-image: none;
-  padding-bottom: 0.2rem;
-}
-.eve .eve-tabs a:hover { color: var(--text); }
-.eve .eve-tabs a[aria-current='page'] {
-  color: var(--text);
-  border-bottom-color: var(--accent);
-}
 
 /* ── Tags ─────────────────────────────────────────────────────────────────── */
 
@@ -189,6 +178,39 @@
   flex-wrap: wrap;
 }
 .eve-entry-head .eve-push { margin-left: auto; }
+
+/* ── Changelog feature boxes ──────────────────────────────────────────────── */
+
+.eve-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.eve-feature {
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  text-align: left;
+}
+.eve-feature-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+.eve-feature-prs {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+}
+.eve-feature-num { color: var(--text-faint); }
 
 /* ── Tables ───────────────────────────────────────────────────────────────── */
 
@@ -306,3 +328,4 @@
   margin: 0.4rem 0;
 }
 .eve-commit .eve-msg { min-width: 0; }
+
