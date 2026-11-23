@@ -29,7 +29,6 @@ export async function POST(request: Request) {
     const { count } = await supabase
       .from('vkliu_visits')
       .select('*', { count: 'exact', head: true })
-      .eq('is_admin', false)
 
     return NextResponse.json({ totalVisits: count ?? 0 })
   } catch {
