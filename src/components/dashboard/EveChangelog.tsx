@@ -4,10 +4,16 @@ import { CHANGELOG, REPO_URL, type ChangelogFeature } from '@/eve/changelog'
 // Open → expanded grid. Closed / Planned → collapsible <details>.
 // Styles: eve.css (.eve-feature*).
 
+// Classic traffic-light palette — not Night Owl tokens, which are too muted.
 const STATUS_DOT: Record<string, string> = {
-  open: 'var(--no-yellow)',
-  closed: 'var(--no-green)',
-  planned: 'var(--text-faint)',
+  open: '#f59e0b',   // amber
+  closed: '#22c55e', // green
+  planned: '#6b7280', // gray
+}
+
+function fmtDate(iso: string) {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 function FeatureCard({ f }: { f: ChangelogFeature }) {
@@ -15,12 +21,14 @@ function FeatureCard({ f }: { f: ChangelogFeature }) {
     <article className="eve-feature">
       <div className="eve-feature-head">
         <h3 className="eve-h3">{f.title}</h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
-          <span className="eve-faint eve-small">{f.date}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, marginLeft: 'auto' }}>
+          <span className="eve-faint eve-small" style={{ whiteSpace: 'nowrap' }}>{fmtDate(f.date)}</span>
           <span style={{
+            display: 'inline-block',
             width: '7px', height: '7px', borderRadius: '50%',
-            background: STATUS_DOT[f.status] ?? 'var(--text-faint)',
+            background: STATUS_DOT[f.status] ?? '#6b7280',
             flexShrink: 0,
+            verticalAlign: 'middle',
           }} />
         </div>
       </div>
