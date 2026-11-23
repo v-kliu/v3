@@ -1,6 +1,9 @@
 // Eve dev changelog. One entry per feature, newest first.
 // Each feature lists every pull request that belongs to it (usually one, sometimes more).
 // Claude Code adds an entry as part of every feature (see RULES.md, step 6).
+// `status` is a fallback: once the page loads live PR state from GitHub (/api/eve/prs),
+// a feature with PRs shows open while any PR is open and closed once all are merged.
+// `planned` features (no PRs yet) always use this value.
 
 export interface ChangelogPR {
   number: number
@@ -39,6 +42,14 @@ export const CHANGELOG: ChangelogFeature[] = [
     prs: [],
   },
   // ── Closed ────────────────────────────────────────────────────────────────
+  {
+    title: 'Live PR status on the changelog',
+    date: '2026-11-23',
+    summary:
+      'Changelog checks GitHub on page load and on a refresh button: open, merged or closed, build status, and preview links. Open PRs not in changelog.ts show as unfiled.',
+    status: 'open',
+    prs: [],
+  },
   {
     title: 'Eve UI polish',
     date: '2026-11-23',

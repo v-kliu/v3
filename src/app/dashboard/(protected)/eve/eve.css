@@ -212,6 +212,43 @@
 }
 .eve-feature-num { color: var(--text-faint); }
 
+/* Live PR status line under each PR link, and the refresh row above the cards. */
+.eve-pr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  color: var(--text-faint);
+}
+.eve-pr-open { color: #f59e0b; }
+.eve-pr-merged { color: var(--no-purple); }
+.eve-pr-closed { color: var(--text-faint); }
+.eve-pr-build-success { color: #22c55e; }
+.eve-pr-build-pending { color: #f59e0b; }
+.eve-pr-build-failure { color: #ef4444; }
+
+.eve-pr-sync {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: -1rem 0 1.25rem;
+}
+.eve-pr-sync button {
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.15rem 0.6rem;
+  cursor: pointer;
+}
+.eve-pr-sync button:hover:not(:disabled) { border-color: var(--accent); }
+.eve-pr-sync button:disabled { color: var(--text-faint); cursor: default; }
+
 /* ── Tables ───────────────────────────────────────────────────────────────── */
 
 .eve-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
