@@ -25,6 +25,14 @@ export const REPO_URL = 'https://github.com/v-kliu/v3'
 export const CHANGELOG: ChangelogFeature[] = [
   // ── Open ──────────────────────────────────────────────────────────────────
   {
+    title: 'Schema contract tests',
+    date: '2026-11-23',
+    summary:
+      'Test suite catches insert shape mismatches (the class of bug that caused the telegram session insert failure), missing GHA env vars, and sync classifier contract. 18 tests across router, telegram route, env, and changelog.',
+    status: 'open',
+    prs: [],
+  },
+  {
     title: 'Telegram router + GitHub Actions build',
     date: '2026-11-23',
     summary:
