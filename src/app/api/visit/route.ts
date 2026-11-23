@@ -1,16 +1,12 @@
 import { NextResponse } from 'next/server'
-import { Redis } from '@upstash/redis'
 import { createClient } from '@supabase/supabase-js'
 
-const redis = Redis.fromEnv()
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SECRET_KEY!
 )
 
 export async function POST(request: Request) {
-  const totalVisits = await redis.incr('totalVisits')
-
   try {
     const country = request.headers.get('x-vercel-ip-country') ?? 'unknown'
     const rawCity = request.headers.get('x-vercel-ip-city') ?? 'unknown'
@@ -28,11 +24,13 @@ export async function POST(request: Request) {
       country, city, region, device, latitude, longitude, is_admin, ip,
     })
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    return NextResponse.json({ totalVisits })
+    const { count } = await supabase
+      .from('vkliu_visits')
+      .select('*', { count: 'exact', head: true })
+
+    return NextResponse.json({ totalVisits: count ?? 0 })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
