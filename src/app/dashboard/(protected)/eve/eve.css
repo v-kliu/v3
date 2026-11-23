@@ -6,8 +6,7 @@
 .eve {
   position: relative;
   z-index: 1;
-  width: 100%;
-  max-width: 960px;
+  width: clamp(520px, 88%, 1600px);
   margin-inline: auto;
   padding-bottom: 6rem;
   font-family: var(--mono);
