@@ -48,7 +48,7 @@ export const CHANGELOG: ChangelogFeature[] = [
     summary:
       'Changelog checks GitHub on page load and on a refresh button: open, merged or closed, build status, and preview links. Open PRs not in changelog.ts show as unfiled.',
     status: 'open',
-    prs: [],
+    prs: [{ number: 12, title: 'eve: live PR status on the changelog' }],
   },
   {
     title: 'Eve UI polish',
