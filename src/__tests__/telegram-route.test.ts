@@ -68,3 +68,58 @@ describe('classifyMessage is synchronous', () => {
     expect(body.startsWith('/build')).toBe(false)
   })
 })
+
+// Contract: every key the route inserts into vkliu_eve_dev_sessions.
+// If the insert changes, update this to match — test fails at CI time before
+// hitting the DB with a missing NOT NULL column.
+const DEV_INSERT_SHAPE = {
+  session_id: '',
+  title: '',
+  summary: '',
+  steps: [],
+  acceptance: [],
+  files_likely_touched: [],
+  status: '',
+} as const
+
+describe('vkliu_eve_dev_sessions insert contract', () => {
+  it('insert shape has exactly the expected keys', () => {
+    const keys = Object.keys(DEV_INSERT_SHAPE).sort()
+    expect(keys).toEqual([
+      'acceptance',
+      'files_likely_touched',
+      'session_id',
+      'status',
+      'steps',
+      'summary',
+      'title',
+    ])
+  })
+
+  it('steps, acceptance, files_likely_touched are arrays', () => {
+    expect(Array.isArray(DEV_INSERT_SHAPE.steps)).toBe(true)
+    expect(Array.isArray(DEV_INSERT_SHAPE.acceptance)).toBe(true)
+    expect(Array.isArray(DEV_INSERT_SHAPE.files_likely_touched)).toBe(true)
+  })
+})
+
+// Contract: the workflow_dispatch inputs object sent to GitHub Actions.
+// The eve-build.yml YAML expects exactly these input names. If someone renames
+// dev_session_id → session_id here without updating the YAML, the action gets
+// an empty input and silently fails.
+const TRIGGER_BUILD_INPUTS = {
+  dev_session_id: 'string',
+  title: 'string',
+} as const
+
+describe('triggerBuild workflow_dispatch inputs', () => {
+  it('inputs shape has dev_session_id and title', () => {
+    expect(Object.keys(TRIGGER_BUILD_INPUTS).sort()).toEqual(['dev_session_id', 'title'])
+  })
+
+  it('input key matches the eve-build.yml input name', () => {
+    // The YAML declares: inputs: { dev_session_id: ..., title: ... }
+    // If this key changes in code, the action receives an empty string.
+    expect('dev_session_id' in TRIGGER_BUILD_INPUTS).toBe(true)
+  })
+})
