@@ -1,0 +1,102 @@
+name: Eve Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      dev_session_id:
+        description: 'vkliu_eve_dev_sessions row id'
+        required: true
+        type: string
+      title:
+        description: 'Feature title (used for the branch name)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create feature branch
+        id: branch
+        run: |
+          SLUG=$(echo "${{ inputs.title }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')
+          BRANCH="eve/auto-${SLUG}-${{ inputs.dev_session_id }}"
+          git config user.email "eve-bot@vkliu.com"
+          git config user.name "Eve Bot"
+          git checkout -b "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch spec from Supabase
+        id: spec
+        run: |
+          SPEC=$(curl -s \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/vkliu_eve_dev_sessions?id=eq.${{ inputs.dev_session_id }}&select=*" \
+            -H "apikey: ${{ secrets.SUPABASE_SECRET_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SECRET_KEY }}")
+          echo "spec<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$SPEC" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Run Claude agentic loop
+        run: node .github/scripts/eve-agent.mjs
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DEV_SESSION_ID: ${{ inputs.dev_session_id }}
+          SPEC_JSON: ${{ steps.spec.outputs.spec }}
+
+      - name: Build and type-check
+        run: |
+          npm run build
+          npx tsc --noEmit
+
+      - name: Commit and push
+        id: push
+        run: |
+          git add -A
+          git diff --staged --quiet || git commit -m "feat: ${{ inputs.title }} (eve auto-build)"
+          git push origin "${{ steps.branch.outputs.branch }}"
+
+      - name: Open PR
+        id: pr
+        run: |
+          PR_URL=$(gh pr create \
+            --title "${{ inputs.title }}" \
+            --body "Auto-built by Eve from dev session \`${{ inputs.dev_session_id }}\`." \
+            --base main \
+            --head "${{ steps.branch.outputs.branch }}")
+          echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+
+      - name: Update Supabase with PR URL
+        run: |
+          curl -s -X PATCH \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/vkliu_eve_dev_sessions?id=eq.${{ inputs.dev_session_id }}" \
+            -H "apikey: ${{ secrets.SUPABASE_SECRET_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"status\": \"pr_opened\", \"pr_url\": \"${{ steps.pr.outputs.url }}\"}"
+
+      - name: Notify Telegram
+        run: |
+          curl -s -X POST \
+            "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{\"chat_id\": \"${{ secrets.TELEGRAM_CHAT_ID }}\", \"text\": \"PR ready: ${{ steps.pr.outputs.url }}\", \"parse_mode\": \"Markdown\"}"

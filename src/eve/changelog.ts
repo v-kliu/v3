@@ -25,10 +25,10 @@ export const REPO_URL = 'https://github.com/v-kliu/v3'
 export const CHANGELOG: ChangelogFeature[] = [
   // ── Open ──────────────────────────────────────────────────────────────────
   {
-    title: 'Live PR status on the changelog',
+    title: 'Telegram router + GitHub Actions build',
     date: '2026-11-23',
     summary:
-      'Changelog checks GitHub on page load and on a refresh button: open, merged or closed, build status, and preview links. Open PRs not in changelog.ts show as unfiled.',
+      'MessageType enum routes /build, /journal, /ask. Sonnet structures feature requests into step-by-step specs stored in vkliu_eve_dev_sessions. GitHub Actions agentic loop checks out the repo, implements the spec, opens a PR, and notifies Telegram.',
     status: 'open',
     prs: [{ number: 12, title: 'eve: live PR status on the changelog' }],
   },
