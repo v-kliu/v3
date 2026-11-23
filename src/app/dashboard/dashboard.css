@@ -244,9 +244,6 @@
 
 [data-eve='true'] .dashboard-main { background: transparent; }
 
-/* Eve gets full-width content — no centering constraint */
-[data-eve='true'] .dashboard-page { justify-content: flex-start; }
-
 /* ── Todo page: the notebook fills the viewport below the header + tab bar. */
 .todo-textarea {
   min-height: calc(100vh - 160px);

@@ -1,5 +1,11 @@
 # Victor Liu Personal Website
 
+@RULES.md
+
+**`RULES.md` (imported above) is the workflow for every change: break down the request, branch,
+build, verify with an independent subagent, add a Changelog entry, open a PR, and report back with
+the PR and Vercel preview links. Follow it for every feature without being reminded.**
+
 Next.js App Router site with a password-gated personal dashboard.
 Stack, scripts, and layout are all derivable from `package.json` and `src/` — read those.
 
@@ -41,10 +47,7 @@ Stack, scripts, and layout are all derivable from `package.json` and `src/` — 
 - Generous whitespace — sections breathe.
 - No AI-slop patterns — no gradient blobs, no bento boxes, no generic 3-column icon grids.
 
-## Build requirement
-
-Every coding session ends with a passing `npm run build`. Fix all errors before considering
-the task complete. A broken build is an incomplete task.
+## Build note
 
 Note: `npm run build` overwrites `.next` and will kill a running `npm run dev`. Restart dev
 after building.
@@ -54,19 +57,7 @@ after building.
 Eve is the personal assistant project that lives behind the hidden dashboard. The `/dashboard/eve`
 page is its build dashboard — a living document updated as the project progresses.
 
-### Rules for all Eve work
-
-- **Explain in plain English first, then technical detail.** Spell out every acronym on first use.
-- **For any architectural change, propose exactly 2 options with trade-offs and wait for a decision
-  before writing any code.**
-- **Every architectural decision gets a record in `docs/decisions/NNNN-title.md`** with four fields:
-  context, options considered, what we chose, why we chose it, and what would make us revisit it.
-- **At the end of every session:** append one entry to `docs/eve/PROGRESS.md` (date, what changed,
-  what's next) and update `src/eve/eveData.ts` to reflect any new decisions, phases, concepts, or
-  ideas discussed.
-- All Eve tables in Supabase are prefixed `vkliu_eve_` to stay consistent with the site convention.
-- Never put personal information about real people on the `/dashboard/eve` page — it is the build
-  dashboard, not Eve's memory store.
+Eve-specific rules (PROGRESS.md entry, eveData.ts sync, no personal info) are in `RULES.md`.
 
 ### Key files
 
@@ -75,11 +66,8 @@ page is its build dashboard — a living document updated as the project progres
 - `src/app/dashboard/(protected)/eve/eve.css` — Eve dev component styles (JetBrains Mono, ink/muted/faint,
   fading hairlines, violet as the only accent). Color tokens live in `dashboard.css` under `[data-eve]`.
   Use these classes on Eve pages instead of inline colors.
-- `src/components/dashboard/EveHeader.tsx` — shared title, meta and tabs for every Eve dev page.
+- `src/components/dashboard/EveHeader.tsx` — shared title and meta for Eve dev.
+- `src/eve/changelog.ts` — Changelog data: one entry per feature with its PR numbers. Add to it
+  for every feature (RULES.md step 6). Rendered by `src/components/dashboard/EveChangelog.tsx`.
 - `docs/decisions/` — one file per architectural decision, numbered from 0001.
 - `docs/eve/PROGRESS.md` — session-by-session log.
-
-## Git workflow
-
-After every completed task where the build passes: stage all changes, write a concise commit
-message, commit and push to the current branch. Do not commit if the build is failing.
