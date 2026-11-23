@@ -7,6 +7,7 @@ const syne = Syne({
   weight: ['400', '600', '700', '800'],
   variable: '--font-syne',
   display: 'swap',
+  preload: false,
 })
 
 const dmSerifDisplay = DM_Serif_Display({
@@ -15,6 +16,7 @@ const dmSerifDisplay = DM_Serif_Display({
   style: ['normal', 'italic'],
   variable: '--font-dm-serif',
   display: 'swap',
+  preload: false,
 })
 
 const dmMono = DM_Mono({
@@ -22,6 +24,7 @@ const dmMono = DM_Mono({
   weight: ['300', '400', '500'],
   variable: '--font-dm-mono',
   display: 'swap',
+  preload: false,
 })
 
 const inter = Inter({
@@ -29,6 +32,7 @@ const inter = Inter({
   weight: ['300', '400', '500', '600'],
   variable: '--font-inter',
   display: 'swap',
+  preload: false,
 })
 
 export const metadata: Metadata = {
