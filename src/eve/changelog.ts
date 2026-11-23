@@ -22,7 +22,7 @@ export const CHANGELOG: ChangelogFeature[] = [
     date: '2026-11-23',
     summary:
       'Rules moved out of the dashboard into RULES.md, loaded by CLAUDE.md. Changelog now groups pull requests by feature. Eve dev is centered.',
-    prs: [],
+    prs: [{ number: 8, title: 'eve: rules as RULES.md, feature changelog, centered eve dev' }],
   },
   {
     title: 'Visual refresh',
