@@ -150,6 +150,13 @@ export default function EveChangelog() {
 
   useEffect(() => { refresh(false) }, [refresh])
 
+  // Re-render every 30s so "checked … ago" stays accurate.
+  const [, tick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => tick(n => n + 1), 30_000)
+    return () => clearInterval(id)
+  }, [])
+
   const live: Live | null = data ? new Map(data.pulls.map(p => [p.number, p])) : null
   const rows: Row[] = CHANGELOG.map(feature => ({ feature, status: liveStatus(feature, live) }))
   const listed = new Set(CHANGELOG.flatMap(f => f.prs.map(p => p.number)))
@@ -174,7 +181,9 @@ export default function EveChangelog() {
         </button>
         <span className="eve-faint eve-small">
           {error
-            ? `could not reach GitHub (${error}), showing last saved status`
+            ? data
+              ? `could not reach GitHub (${error}), showing status from ${ago(data.fetchedAt)}`
+              : `could not reach GitHub (${error}), showing last saved status`
             : data
               ? `PR status from GitHub · checked ${ago(data.fetchedAt)}`
               : 'checking GitHub…'}

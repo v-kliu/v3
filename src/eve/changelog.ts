@@ -25,12 +25,12 @@ export const REPO_URL = 'https://github.com/v-kliu/v3'
 export const CHANGELOG: ChangelogFeature[] = [
   // ── Open ──────────────────────────────────────────────────────────────────
   {
-    title: 'Telegram + prompt sanitization',
+    title: 'Live PR status on the changelog',
     date: '2026-11-23',
     summary:
-      'Webhook at /api/eve/telegram. Receives mobile messages, runs sanitize() via Claude Haiku to clean garbled text into structured instructions, stores session to Supabase.',
+      'Changelog checks GitHub on page load and on a refresh button: open, merged or closed, build status, and preview links. Open PRs not in changelog.ts show as unfiled.',
     status: 'open',
-    prs: [],
+    prs: [{ number: 12, title: 'eve: live PR status on the changelog' }],
   },
   // ── Planned ───────────────────────────────────────────────────────────────
   {
@@ -43,12 +43,12 @@ export const CHANGELOG: ChangelogFeature[] = [
   },
   // ── Closed ────────────────────────────────────────────────────────────────
   {
-    title: 'Live PR status on the changelog',
+    title: 'Telegram + prompt sanitization',
     date: '2026-11-23',
     summary:
-      'Changelog checks GitHub on page load and on a refresh button: open, merged or closed, build status, and preview links. Open PRs not in changelog.ts show as unfiled.',
-    status: 'open',
-    prs: [{ number: 12, title: 'eve: live PR status on the changelog' }],
+      'Webhook at /api/eve/telegram. Receives mobile messages, runs sanitize() via Claude Haiku to clean garbled text into structured instructions, stores session to Supabase.',
+    status: 'closed',
+    prs: [{ number: 11, title: 'feat: telegram webhook + prompt sanitization' }],
   },
   {
     title: 'Eve UI polish',
