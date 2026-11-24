@@ -1,0 +1,29 @@
+name: Daily Pulse
+
+on:
+  schedule:
+    # 3pm UTC daily = morning US Pacific / midday US Eastern
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+jobs:
+  pulse:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Stamp activity
+        run: |
+          DATE=$(date -u '+%Y-%m-%d')
+          TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
+          # Append one line so the file grows as a log
+          echo "$TIMESTAMP — daily pulse" >> ACTIVITY.md
+          git config user.name "Victor Liu"
+          git config user.email "64110392+v-kliu@users.noreply.github.com"
+          git add ACTIVITY.md
+          # Only commit if there's something to commit (idempotent if run twice)
+          git diff --staged --quiet || git commit -m "chore: daily pulse $DATE"
+          git push

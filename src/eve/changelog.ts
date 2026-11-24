@@ -25,6 +25,14 @@ export const REPO_URL = 'https://github.com/v-kliu/v3'
 export const CHANGELOG: ChangelogFeature[] = [
   // ── Open ──────────────────────────────────────────────────────────────────
   {
+    title: 'Daily contribution pulse',
+    date: '2026-11-24',
+    summary:
+      'Scheduled GitHub Actions workflow that commits a timestamp to ACTIVITY.md daily at 3pm UTC. Uses GH_PAT so commits count toward the contribution graph.',
+    status: 'open',
+    prs: [],
+  },
+  {
     title: 'CI rename: Unit Tests + Build Check',
     date: '2026-11-24',
     summary:
