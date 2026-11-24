@@ -65,6 +65,19 @@ jobs:
         run: |
           npm run build
           npx tsc --noEmit
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: placeholder
+          TELEGRAM_WEBHOOK_SECRET: placeholder
+          TELEGRAM_CHAT_ID: placeholder
+          GH_PAT: placeholder
+          ADMIN_IP: placeholder
+          ADMIN_IP_MOBILE: placeholder
+          ADMIN_PASSWORD: placeholder
+          JWT_SECRET: placeholder
+          AVIATIONSTACK_API_KEY: placeholder
 
       - name: Commit and push
         id: push
