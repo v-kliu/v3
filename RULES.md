@@ -1,4 +1,4 @@
-Rules: (updated: 11/23/26 — added Learning Loop and Communication sections)
+Rules: (updated: 11/24/26 — PR ownership, PR consolidation, test coverage mandate)
 
 This file is the source of truth for how work gets done in this repo. It is read only for
 Claude Code. Victor edits it by hand. CLAUDE.md imports it, so every session loads it.
@@ -17,11 +17,19 @@ Development from Claude Code
    For UI changes it takes screenshots. Fix anything it finds and verify again.
 6. Add the feature to the Changelog in src/eve/changelog.ts. One entry per feature, with every
    pull request that belongs to it. Most features are one pull request, some are more.
-7. Push the branch and open a pull request to main. The description says what was built, where
-   each file lives, and any judgment calls made.
-8. Wait for the Vercel preview build on the pull request to pass. Only then report back to
-   Victor with the pull request link and the preview link to check by hand.
-9. No Co-Authored-By lines and no "Generated with Claude Code" in commits or pull requests.
+7. Before pushing, consider what could go wrong in production: schema mismatches, missing env
+   vars, constraint violations, edge cases in the new logic, CI/CD integration points. Write
+   tests in src/__tests__/ that cover these risks. Every bug fix gets a test that would have
+   caught it. Every new route or Supabase insert gets a schema-sync entry and shape constant.
+8. Consolidate PRs of similar nature. Bug fixes for the same feature go in one PR. A test suite
+   addition and the fix it validates go together. Do not open a separate PR for a one-line
+   companion change — amend it into the branch that owns the feature.
+9. Push the branch and open the pull request to main without waiting for Victor to trigger it.
+   The description says what was built, where each file lives, and any judgment calls made.
+   Victor should never have to run gh pr create himself.
+10. Wait for the Vercel preview build on the pull request to pass. Only then report back to
+    Victor with the pull request link and the preview link to check by hand.
+11. No Co-Authored-By lines and no "Generated with Claude Code" in commits or pull requests.
 
 Before starting
 1. Read CLAUDE.md (gotchas) and the memory files in ~/.claude/projects/... for this repo.
