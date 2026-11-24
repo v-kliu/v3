@@ -25,20 +25,12 @@ export const REPO_URL = 'https://github.com/v-kliu/v3'
 export const CHANGELOG: ChangelogFeature[] = [
   // ── Open ──────────────────────────────────────────────────────────────────
   {
-    title: 'Schema contract tests',
-    date: '2026-11-23',
+    title: 'Update header tagline text',
+    date: '2026-11-24',
     summary:
-      'Test suite catches insert shape mismatches (the class of bug that caused the telegram session insert failure), missing GHA env vars, and sync classifier contract. 18 tests across router, telegram route, env, and changelog.',
+      'First auto-built feature by the Eve agentic pipeline. Triggered via /build in Telegram, structured by Sonnet, implemented by Claude in GitHub Actions.',
     status: 'open',
-    prs: [],
-  },
-  {
-    title: 'Telegram router + GitHub Actions build',
-    date: '2026-11-23',
-    summary:
-      'MessageType enum routes /build, /journal, /ask. Sonnet structures feature requests into step-by-step specs stored in vkliu_eve_dev_sessions. GitHub Actions agentic loop checks out the repo, implements the spec, opens a PR, and notifies Telegram.',
-    status: 'open',
-    prs: [{ number: 12, title: 'eve: live PR status on the changelog' }],
+    prs: [{ number: 18, title: 'Update header tagline text' }],
   },
   // ── Planned ───────────────────────────────────────────────────────────────
   {
@@ -51,12 +43,38 @@ export const CHANGELOG: ChangelogFeature[] = [
   },
   // ── Closed ────────────────────────────────────────────────────────────────
   {
+    title: 'GitHub Actions agentic build pipeline',
+    date: '2026-11-23',
+    summary:
+      'MessageType enum routes /build, /journal, /ask. Sonnet structures feature requests into step-by-step specs stored in vkliu_eve_dev_sessions. GitHub Actions agentic loop checks out the repo, implements the spec, opens a PR, and notifies Telegram. Includes GH_PAT fix and env var stubs for the build step.',
+    status: 'closed',
+    prs: [
+      { number: 13, title: 'feat: telegram router + Sonnet structuring + GitHub Actions agentic build' },
+      { number: 16, title: 'fix: GH_PAT env var, surface build trigger errors, env var scan test' },
+      { number: 17, title: 'fix: pass env vars to eve-build.yml build step' },
+    ],
+  },
+  {
+    title: 'Test suite + CI pipeline',
+    date: '2026-11-23',
+    summary:
+      'Vitest test suite with 38 tests: router, insert shapes, env var scan, schema-sync against migration files, middleware whitelist, sanitize contract. GitHub Actions CI runs on every PR.',
+    status: 'closed',
+    prs: [
+      { number: 14, title: 'feat: vitest test suite + GitHub Actions CI pipeline' },
+      { number: 15, title: 'test: schema contract tests — insert shape, env vars, sync classifier' },
+    ],
+  },
+  {
     title: 'Telegram + prompt sanitization',
     date: '2026-11-23',
     summary:
       'Webhook at /api/eve/telegram. Receives mobile messages, runs sanitize() via Claude Haiku to clean garbled text into structured instructions, stores session to Supabase.',
     status: 'closed',
-    prs: [{ number: 11, title: 'feat: telegram webhook + prompt sanitization' }],
+    prs: [
+      { number: 11, title: 'feat: telegram webhook + prompt sanitization' },
+      { number: 12, title: 'eve: live PR status on the changelog' },
+    ],
   },
   {
     title: 'Eve UI polish',
