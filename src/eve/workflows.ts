@@ -56,7 +56,7 @@ const ARCH = 'Architecture'
 const YOU: Lane = { id: 'you', label: 'You', where: 'Telegram' }
 const HOOK: Lane = { id: 'hook', label: 'Webhook', where: 'Vercel · /api/eve/telegram' }
 
-// The first four stages are shared by every command that goes through the router.
+// The first five stages are shared by every command that goes through the router.
 function intake(command: string): Stage[] {
   return [
     {
@@ -113,7 +113,7 @@ export const WORKFLOWS: Workflow[] = [
       {
         id: 'structure', lane: 'hook', kind: 'ai', label: 'Structure into a spec', file: 'src/eve/structure.ts',
         model: 'claude-sonnet-4-6',
-        what: 'Claude Sonnet turns the request into a spec: title, one-line summary, 4 to 10 atomic steps, acceptance criteria and the files likely touched.',
+        what: 'Eve first replies "Structuring: …". Then Claude Sonnet turns the request into a spec: title, one-line summary, 4 to 10 atomic steps, acceptance criteria and the files likely touched.',
         onFail: 'Eve replies "Failed to structure the feature" and stops.',
         rules: [{ section: DEV, rules: [1] }],
       },
@@ -134,32 +134,38 @@ export const WORKFLOWS: Workflow[] = [
         rules: [{ section: DEV, rules: [2] }],
       },
       {
+        id: 'fetch', lane: 'dev', kind: 'db', label: 'Load spec', file: '.github/workflows/eve-build.yml',
+        table: 'vkliu_eve_dev_sessions',
+        what: 'Reads the saved spec row from Supabase and hands it to the agent.',
+      },
+      {
         id: 'agent', lane: 'dev', kind: 'ai', label: 'Claude builds it', file: '.github/scripts/eve-agent.mjs',
         model: 'claude-sonnet-4-6',
-        what: 'Claude Sonnet runs in a loop with read_file, write_file, list_files and run_bash, working through the spec steps until it calls done.',
-        onFail: 'If Claude gives up, it calls done with an error and the later steps report it.',
-        rules: [{ section: DEV, rules: [3] }],
+        what: 'Claude Sonnet runs in a loop with read_file, write_file, list_files and run_bash, working through the spec steps until it calls done. It is not asked to write tests yet, which RULES.md requires.',
+        onFail: 'Only hitting the 40-step limit or an API error stops the run, and then you get no message. If Claude gives up by calling done, the workflow does not notice: it still builds and opens a PR if the build passes.',
+        rules: [{ section: DEV, rules: [7] }],
       },
       {
         id: 'check', lane: 'dev', kind: 'code', label: 'Build + type-check', file: '.github/workflows/eve-build.yml',
         what: 'Runs npm run build and npx tsc --noEmit on the result.',
-        onFail: 'The workflow stops and no pull request is opened.',
+        onFail: 'The workflow stops and no pull request is opened. You are not told on Telegram, and the spec row stays "structured".',
         rules: [{ section: DEV, rules: [4] }],
       },
       {
         id: 'pr', lane: 'dev', kind: 'github', label: 'Push + open PR', file: '.github/workflows/eve-build.yml',
-        what: 'Commits as Eve Bot, pushes the branch and opens a pull request to main.',
-        rules: [{ section: DEV, rules: [9, 11] }],
+        what: 'Commits everything as one "feat: … (eve auto-build)" commit as Eve Bot, pushes the branch and opens a pull request to main. The PR description is a single line, so it does not yet say what was built, where files live or what judgment calls were made.',
+        rules: [{ section: DEV, rules: [3, 9, 11] }],
       },
       {
         id: 'notify', lane: 'dev', kind: 'reply', label: 'Save PR + notify you', file: '.github/workflows/eve-build.yml',
         table: 'vkliu_eve_dev_sessions',
-        what: 'Writes the PR link back to the spec row (status "pr_opened") and sends you "PR ready" on Telegram.',
+        what: 'Writes the PR link back to the spec row (status "pr_opened") and sends you "PR ready" on Telegram. This goes out as soon as the PR opens, before the Vercel preview is ready, which RULES.md says to wait for. Both calls fail silently.',
+        rules: [{ section: DEV, rules: [10] }],
       },
       {
         id: 'ci', lane: 'review', kind: 'code', label: 'CI: tests + build', file: '.github/workflows/ci.yml',
-        what: 'Every pull request runs the type check, the Vitest suite and a production build.',
-        rules: [{ section: DEV, rules: [4, 7] }],
+        what: 'Runs on the push and on the pull request: type check, the Vitest suite and a production build. It only runs tests that already exist, because the agent does not add new ones.',
+        rules: [{ section: DEV, rules: [4] }],
       },
       {
         id: 'verify-agent', lane: 'review', kind: 'ai', status: 'gap', label: 'Independent check',
@@ -179,7 +185,7 @@ export const WORKFLOWS: Workflow[] = [
       {
         id: 'merge', lane: 'review', kind: 'human', label: 'You review + merge',
         what: 'You open the preview, check it by hand and merge the pull request.',
-        rules: [{ section: DEV, rules: [8, 10] }],
+        rules: [{ section: DEV, rules: [10] }],
       },
     ],
     edges: [
@@ -188,11 +194,12 @@ export const WORKFLOWS: Workflow[] = [
       { from: 'structure', to: 'spec' },
       { from: 'spec', to: 'trigger' },
       { from: 'trigger', to: 'branch' },
-      { from: 'branch', to: 'agent' },
+      { from: 'branch', to: 'fetch' },
+      { from: 'fetch', to: 'agent' },
       { from: 'agent', to: 'check' },
       { from: 'check', to: 'pr' },
       { from: 'pr', to: 'notify' },
-      { from: 'notify', to: 'ci' },
+      { from: 'pr', to: 'ci' },
       { from: 'ci', to: 'verify-agent' },
       { from: 'verify-agent', to: 'changelog' },
       { from: 'changelog', to: 'preview' },
