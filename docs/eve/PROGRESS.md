@@ -4,6 +4,25 @@ Append one entry per session. Newest at the top.
 
 ---
 
+## 2026-11-24 — workflow graph on Eve dev
+
+**What changed**
+- New Workflows section on `/dashboard/eve`: a React Flow graph per bot command (/build, /journal,
+  /ask, /help). Lanes are You, Webhook, Development (GitHub Actions) and Review.
+- Clicking a stage shows what it does, the file that runs it, what happens if it fails, and the
+  RULES.md rules it follows. Rule text is parsed from RULES.md at build time (`src/eve/rules.ts`).
+- Stage data lives in `src/eve/workflows.ts`. `src/__tests__/workflows.test.ts` fails if a stage's
+  file, model, table or rule reference drifts from the code or RULES.md.
+- The graph marks two gaps in the automated /build pipeline: no independent verification agent and
+  no changelog entry, both required by RULES.md.
+- Added an npm override so React Flow gets d3-transition 3 (react-simple-maps pins 2, which crashed
+  the page with "interrupt is not a function"). Covered by a test.
+
+**What's next**
+- Close the two gaps in eve-build.yml: a verification step and an automatic changelog entry.
+
+---
+
 ## 2026-11-23 — rules file, feature changelog, centered layout
 
 **What changed**

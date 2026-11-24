@@ -1,5 +1,5 @@
-'use client'
-
+import fs from 'fs'
+import path from 'path'
 import {
   SUMMARY, LEARNING_LOOP, BUILD_LOOP, PHASES, DECISIONS,
   IDEAS, EVAL_NOTE, EVAL_QUESTIONS, CONCEPTS,
@@ -8,9 +8,15 @@ import {
 import EveHeader from '@/components/dashboard/EveHeader'
 import EveBg from '@/components/dashboard/EveBg'
 import EveChangelog from '@/components/dashboard/EveChangelog'
+import EveWorkflows from '@/components/dashboard/EveWorkflows'
+import { parseRules } from '@/eve/rules'
 
-// Eve dev overview. Layout only: every word on this page comes from eveData.ts.
+// Eve dev overview. Layout only: every word on this page comes from eveData.ts,
+// except the workflow rules, which are read from RULES.md at build time.
+// Server component so it can read RULES.md. Interactive parts are client components.
 // Styles: eve.css (components) + dashboard.css [data-eve] (tokens).
+
+const RULES = parseRules(fs.readFileSync(path.join(process.cwd(), 'RULES.md'), 'utf8'))
 
 const REPO_BLOB = 'https://github.com/v-kliu/v3/blob/main/'
 
@@ -50,6 +56,10 @@ export default function EvePage() {
       <hr className="eve-hr" />
 
       <EveChangelog />
+
+      <hr className="eve-hr" />
+
+      <EveWorkflows rules={RULES} />
 
       <hr className="eve-hr" />
 

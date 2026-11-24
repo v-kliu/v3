@@ -366,3 +366,98 @@
 }
 .eve-commit .eve-msg { min-width: 0; }
 
+
+/* ── Workflows graph (EveWorkflows.tsx, React Flow) ───────────────────────── */
+
+.eve-wf-tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.eve-wf-tabs button {
+  font: inherit; font-size: 0.8rem;
+  color: var(--text-muted); background: transparent;
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 0.15rem 0.7rem; cursor: pointer;
+}
+.eve-wf-tabs button:hover { color: var(--text); }
+.eve-wf-tabs button[aria-selected='true'] { color: var(--accent); border-color: var(--accent); }
+
+.eve-wf {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 1rem;
+  text-align: left;
+}
+@media (max-width: 900px) { .eve-wf { grid-template-columns: minmax(0, 1fr); } }
+
+.eve-wf-canvas {
+  min-height: 320px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bg-raised) 70%, transparent);
+}
+.eve-wf-panel {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.1rem;
+  font-size: 0.9rem;
+  align-self: start;
+}
+
+/* React Flow theming: transparent pane, faint edges, Night Owl controls. */
+.eve-wf .react-flow { background: transparent; --xy-edge-stroke-default: var(--text-faint); }
+.eve-wf .react-flow__attribution { background: transparent; }
+.eve-wf .react-flow__attribution a { color: var(--text-faint); }
+.eve-wf .react-flow__controls { box-shadow: none; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.eve-wf .react-flow__controls-button { background: var(--bg-raised); border-color: var(--border); fill: var(--text-muted); }
+.eve-wf .react-flow__controls-button:hover { background: var(--border); }
+.eve-wf .react-flow__handle { opacity: 0; pointer-events: none; }
+.eve-wf .react-flow__edge-path { stroke: var(--text-faint); stroke-width: 1.25; }
+.eve-wf .eve-wf-edge-soft .react-flow__edge-path { stroke-dasharray: 4 4; }
+.eve-wf .react-flow__arrowhead polyline { stroke: var(--text-faint); fill: var(--text-faint); }
+.eve-wf .react-flow__edge-textbg { fill: var(--bg); }
+.eve-wf .react-flow__edge-text { fill: var(--text-faint); font-family: var(--mono); font-size: 10px; }
+
+.eve-wf-lane {
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+  display: flex; flex-direction: column;
+  pointer-events: none;
+}
+.eve-wf-lane-label { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+.eve-wf-lane-where { font-size: 0.65rem; color: var(--text-faint); }
+
+.eve-wf-node {
+  --kind: var(--text-muted);
+  display: flex; flex-direction: column;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--kind);
+  border-radius: 4px;
+  background: var(--bg-raised);
+  font-family: var(--mono);
+  cursor: pointer;
+  text-align: left;
+}
+.eve-wf-node:hover { border-color: var(--kind); }
+.eve-wf-selected { border-color: var(--kind); box-shadow: 0 0 0 1px var(--kind); }
+.eve-wf-kind { font-size: 0.6rem; color: var(--kind); text-transform: lowercase; }
+.eve-wf-label { font-size: 0.78rem; color: var(--text); line-height: 1.3; }
+
+.eve-wf-human { --kind: var(--no-cyan); }
+.eve-wf-code { --kind: var(--text-muted); }
+.eve-wf-ai { --kind: var(--no-purple); }
+.eve-wf-db { --kind: var(--no-green); }
+.eve-wf-github { --kind: var(--no-orange); }
+.eve-wf-reply { --kind: var(--no-yellow); }
+.eve-wf-node.eve-wf-gap, .eve-wf-node.eve-wf-planned { border-style: dashed; border-left-style: dashed; opacity: 0.75; }
+
+.eve-wf-flag {
+  display: inline-block; margin-bottom: 0.5rem !important;
+  font-size: 0.7rem; color: var(--no-yellow);
+  border: 1px solid color-mix(in srgb, var(--no-yellow) 40%, var(--border));
+  border-radius: 4px; padding: 0 0.45em;
+}
+.eve-wf-rules { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.8rem; }
+.eve-wf-rules li { display: flex; flex-direction: column; gap: 0.1rem; }
+.eve-wf-legend { list-style: none; margin: 1rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem 0.9rem; font-size: 0.75rem; color: var(--text-muted); }
+.eve-wf-swatch { --kind: var(--text-muted); display: inline-block; width: 10px; height: 10px; margin-right: 0.35rem; border-left: 3px solid var(--kind); border: 1px solid var(--kind); border-radius: 2px; vertical-align: middle; }
+.eve-wf-swatch.eve-wf-gap { border-style: dashed; --kind: var(--text-faint); }
