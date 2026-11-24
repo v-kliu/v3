@@ -164,7 +164,7 @@ export const WORKFLOWS: Workflow[] = [
       },
       {
         id: 'ci', lane: 'review', kind: 'code', label: 'CI: tests + build', file: '.github/workflows/ci.yml',
-        what: 'Runs on the push and on the pull request: type check, the Vitest suite and a production build. It only runs tests that already exist, because the agent does not add new ones.',
+        what: 'Runs on the pull request as two checks: Unit Tests (type check + Vitest) and Build Check (production build). It only runs tests that already exist, because the agent does not add new ones.',
         rules: [{ section: DEV, rules: [4] }],
       },
       {
