@@ -71,6 +71,7 @@ export const CHANGELOG: ChangelogFeature[] = [
     prs: [
       { number: 14, title: 'feat: vitest test suite + GitHub Actions CI pipeline' },
       { number: 15, title: 'test: schema contract tests — insert shape, env vars, sync classifier' },
+      { number: 20, title: 'ci: rename checks to Unit Tests + Build Check, drop duplicate push trigger' },
     ],
   },
   {
