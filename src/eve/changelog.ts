@@ -30,7 +30,7 @@ export const CHANGELOG: ChangelogFeature[] = [
     summary:
       'Interactive graph of what each Eve bot command triggers (/build, /journal, /ask, /help). Click a stage to see the file that runs it and the RULES.md rules it follows, read live from RULES.md.',
     status: 'open',
-    prs: [],
+    prs: [{ number: 23, title: 'eve: workflow graph for each bot command' }],
   },
   {
     title: 'CI rename: Unit Tests + Build Check',
