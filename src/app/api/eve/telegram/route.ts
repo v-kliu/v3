@@ -100,8 +100,9 @@ export async function POST(request: Request) {
     .single()
 
   if (sessionErr || !session) {
+    const errDetail = sessionErr ? `${sessionErr.code}: ${sessionErr.message}` : 'no data returned'
     console.error('session insert error', sessionErr)
-    await sendMessage(chatId, 'Failed to store message. Check Supabase.')
+    await sendMessage(chatId, `Insert failed: ${errDetail}`)
     return NextResponse.json({ ok: true })
   }
 
