@@ -8,6 +8,7 @@ const jetbrains = JetBrains_Mono({
   weight: ['400', '700'],
   variable: '--jb-mono',
   display: 'swap',
+  preload: false,
 })
 
 export default function DashboardRootLayout({ children }: { children: React.ReactNode }) {
