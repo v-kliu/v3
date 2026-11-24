@@ -25,11 +25,19 @@ export const REPO_URL = 'https://github.com/v-kliu/v3'
 export const CHANGELOG: ChangelogFeature[] = [
   // ── Open ──────────────────────────────────────────────────────────────────
   {
+    title: 'CI rename: Unit Tests + Build Check',
+    date: '2026-11-24',
+    summary:
+      'Split the single "ci" job into two clearly named jobs. Removes the push trigger that was causing duplicate check entries on every PR.',
+    status: 'open',
+    prs: [{ number: 20, title: 'ci: rename checks to Unit Tests + Build Check, drop duplicate push trigger' }],
+  },
+  {
     title: 'Update header tagline text',
     date: '2026-11-24',
     summary:
       'First auto-built feature by the Eve agentic pipeline. Triggered via /build in Telegram, structured by Sonnet, implemented by Claude in GitHub Actions.',
-    status: 'open',
+    status: 'closed',
     prs: [{ number: 18, title: 'Update header tagline text' }],
   },
   // ── Planned ───────────────────────────────────────────────────────────────
