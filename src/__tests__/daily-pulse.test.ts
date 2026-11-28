@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { decide, toggleTrailingBlank, utcDaysBetween, MAX_EMPTY_DAYS } from '../../scripts/daily-pulse.mjs'
+import { decide, toggleTrailingBlank, daysBetween, MAX_EMPTY_DAYS } from '../../scripts/daily-pulse.mjs'
 
 describe('daily pulse', () => {
   it('skips when main already has a commit today', () => {
@@ -26,8 +26,11 @@ describe('daily pulse', () => {
     expect(toggleTrailingBlank('# Title')).toBe('# Title\n')
   })
 
-  it('counts UTC calendar days, not 24h windows', () => {
-    expect(utcDaysBetween(new Date('2026-11-24T23:59:00Z'), new Date('2026-11-25T00:01:00Z'))).toBe(1)
-    expect(utcDaysBetween(new Date('2026-11-24T00:01:00Z'), new Date('2026-11-24T23:59:00Z'))).toBe(0)
+  it('counts Pacific calendar days, not UTC or 24h windows', () => {
+    // 8pm and 11pm Pacific on Nov 24 are Nov 25 in UTC but the same Pacific day
+    expect(daysBetween(new Date('2026-11-25T04:00:00Z'), new Date('2026-11-25T07:00:00Z'))).toBe(0)
+    // 11:59pm -> 12:01am Pacific crosses a day
+    expect(daysBetween(new Date('2026-11-25T07:59:00Z'), new Date('2026-11-25T08:01:00Z'))).toBe(1)
+    expect(daysBetween(new Date('2026-11-20T18:00:00Z'), new Date('2026-11-24T18:00:00Z'))).toBe(4)
   })
 })

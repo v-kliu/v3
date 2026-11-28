@@ -14,6 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
+          # Enough history to find Victor's last commit past bot commits
+          fetch-depth: 100
           token: ${{ secrets.GH_PAT }}
 
       - name: Decide and toggle README
