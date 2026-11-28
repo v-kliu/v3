@@ -28,9 +28,9 @@ export const CHANGELOG: ChangelogFeature[] = [
     title: 'Daily contribution pulse',
     date: '2026-11-24',
     summary:
-      'Scheduled GitHub Actions workflow that commits a timestamp to ACTIVITY.md daily at 3pm UTC. Uses GH_PAT so commits count toward the contribution graph.',
+      'Daily GitHub Actions job that toggles a trailing blank line in README.md so commits count toward the contribution graph. Skips about 40% of days at random but never leaves more than 3 empty days in a row. Vercel skips README-only commits, and failures ping Telegram.',
     status: 'open',
-    prs: [],
+    prs: [{ number: 22, title: 'feat: daily contribution pulse workflow' }],
   },
   {
     title: 'CI rename: Unit Tests + Build Check',
