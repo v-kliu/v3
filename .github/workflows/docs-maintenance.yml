@@ -1,4 +1,4 @@
-name: Daily Pulse
+name: Docs Maintenance
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  pulse:
+  docs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -15,16 +15,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-          # Enough history to find Victor's last commit past bot commits
+          # History for the last-change lookup
           fetch-depth: 100
           token: ${{ secrets.GH_PAT }}
 
-      - name: Decide and toggle README
-        id: pulse
-        run: node scripts/daily-pulse.mjs
+      - name: Format README
+        id: docs
+        run: node scripts/docs-maintenance.mjs
 
       - name: Commit and push
-        if: steps.pulse.outputs.commit == 'true'
+        if: steps.docs.outputs.commit == 'true'
         run: |
           git config user.name "Victor Liu"
           git config user.email "64110392+v-kliu@users.noreply.github.com"
@@ -41,4 +41,4 @@ jobs:
         run: |
           curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${CHAT_ID}" \
-            --data-urlencode "text=Daily pulse failed (GH_PAT expired?): ${RUN_URL}"
+            --data-urlencode "text=Docs maintenance failed (GH_PAT expired?): ${RUN_URL}"

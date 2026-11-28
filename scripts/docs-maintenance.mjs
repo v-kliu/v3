@@ -1,12 +1,5 @@
-// Daily pulse: decides whether today gets a commit, and if so toggles a
-// trailing blank line at the end of README.md.
-//
-// Rules:
-//   - At most one pulse per day (skip if Victor already committed today, Pacific).
-//   - Otherwise commit with probability COMMIT_PROBABILITY, so the graph has
-//     natural-looking holes.
-//   - Never allow more than MAX_EMPTY_DAYS empty days in a row: once the last
-//     commit is older than that, commit no matter what.
+// Scheduled README formatting pass. Normalizes the trailing newline of
+// README.md, at most once per day and at a randomized cadence.
 
 import { execSync } from 'node:child_process'
 import { readFileSync, writeFileSync, appendFileSync } from 'node:fs'
@@ -15,9 +8,9 @@ export const COMMIT_PROBABILITY = 0.6
 export const MAX_EMPTY_DAYS = 3
 const DAY_MS = 24 * 60 * 60 * 1000
 
-// The contribution graph places Victor's commits on Pacific calendar days.
+// Calendar days are counted in Pacific time.
 export const TIME_ZONE = 'America/Los_Angeles'
-// Matches the author emails that count toward Victor's graph.
+// Maintainer author emails.
 export const AUTHOR_PATTERN = 'vkliu@uw.edu\\|v-kliu@users.noreply.github.com'
 
 function dayStamp(date, timeZone) {
@@ -32,7 +25,7 @@ export function daysBetween(earlier, later, timeZone = TIME_ZONE) {
 }
 
 /**
- * @param {number} daysSinceLast Pacific calendar days since Victor's last commit
+ * @param {number} daysSinceLast Pacific calendar days since the last maintainer commit
  * @param {number} rand a number in [0, 1)
  * @returns {'skip-today' | 'force' | 'random-commit' | 'random-skip'}
  */

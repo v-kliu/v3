@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { decide, toggleTrailingBlank, daysBetween, MAX_EMPTY_DAYS } from '../../scripts/daily-pulse.mjs'
+import { decide, toggleTrailingBlank, daysBetween, MAX_EMPTY_DAYS } from '../../scripts/docs-maintenance.mjs'
 
-describe('daily pulse', () => {
+describe('docs maintenance', () => {
   it('skips when main already has a commit today', () => {
     expect(decide(0, 0)).toBe('skip-today')
   })
