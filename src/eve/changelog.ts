@@ -25,6 +25,14 @@ export const REPO_URL = 'https://github.com/v-kliu/v3'
 export const CHANGELOG: ChangelogFeature[] = [
   // ── Open ──────────────────────────────────────────────────────────────────
   {
+    title: 'Docs maintenance job',
+    date: '2026-11-24',
+    summary:
+      'Scheduled GitHub Actions job that normalizes README.md formatting on a randomized cadence. Vercel skips README-only commits, and failures ping Telegram.',
+    status: 'open',
+    prs: [{ number: 22, title: 'ci: scheduled docs maintenance' }],
+  },
+  {
     title: 'CI rename: Unit Tests + Build Check',
     date: '2026-11-24',
     summary:
