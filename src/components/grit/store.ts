@@ -26,23 +26,26 @@ function weekNumber(startDate: string, today: string): number {
 function dow(day: string): number { return parseDay(day).getDay() }
 
 function skincareSteps(startDate: string, today: string): StepSection[] {
-  const wk = weekNumber(startDate, today)
-  if (wk === 0) {
+  if (today < startDate) {
     const start = parseDay(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     return [{ label: 'not started yet', steps: [{ text: `routine begins ${start}` }] }]
   }
 
   const d = dow(today)
-  const adapalene = wk >= 5 && (wk <= 8 ? d === 1 || d === 4 : d === 1 || d === 3 || d === 5)
+  const adapalene = d === 1 || d === 3 || d === 5 // Mon Wed Fri
 
-  const am: StepItem[] = [{ text: 'rinse face with lukewarm water', detail: 'no cleanser — pat dry' }]
-  if (wk >= 3) am.push({ text: 'Anua toner', detail: 'a few drops pressed in with palms' })
-  if (wk >= 4) am.push({ text: 'Good Molecules serum', detail: '2–3 drops' })
-  if (wk >= 2) am.push({ text: 'Vanicream SPF 30', detail: '¼ tsp for the whole face' })
+  const am: StepItem[] = [
+    { text: 'rinse face with lukewarm water', detail: 'no cleanser — pat dry' },
+    { text: 'Anua toner', detail: 'a few drops pressed in with palms' },
+    { text: 'Good Molecules serum', detail: '2–3 drops' },
+    { text: 'Vanicream SPF 30', detail: '¼ tsp for the whole face' },
+  ]
 
-  const pm: StepItem[] = [{ text: 'Vanicream cleanser', detail: 'pea-sized, 20–30s, lukewarm water, pat dry' }]
-  if (wk >= 3) pm.push({ text: 'Anua toner', detail: 'pressed in' })
-  pm.push({ text: 'Jumiso serum', detail: '2–3 drops on damp skin' })
+  const pm: StepItem[] = [
+    { text: 'Vanicream cleanser', detail: 'pea-sized, 20–30s, lukewarm water, pat dry' },
+    { text: 'Anua toner', detail: 'pressed in' },
+    { text: 'Jumiso serum', detail: '2–3 drops on damp skin' },
+  ]
   if (adapalene) {
     pm.push({ text: 'Dynasty Cream — thin layer', detail: 'wait 2 min before next step' })
     pm.push({ text: 'adapalene', detail: 'pea-sized · avoid eyes, nostrils, mouth corners, eczema patches' })
@@ -51,29 +54,27 @@ function skincareSteps(startDate: string, today: string): StepSection[] {
     pm.push({ text: 'Dynasty Cream', detail: 'pea- to almond-sized amount' })
   }
 
-  const sections: StepSection[] = [
+  return [
     { label: 'morning', steps: am },
     { label: `tonight${adapalene ? ' · adapalene' : ''}`, steps: pm },
   ]
-
-  const upcoming: Record<number, string> = {
-    1: 'week 2 — add SPF 30',
-    2: 'week 3 — add Anua toner',
-    3: 'week 4 — add Good Molecules serum',
-    4: 'week 5 — add adapalene (Mon/Thu nights)',
-  }
-  if (upcoming[wk]) sections.push({ label: 'up next', steps: [{ text: upcoming[wk] }] })
-
-  return sections
 }
 
 function vitaminSteps(today: string): StepSection[] {
   const d = dow(today)
   const zincToday = d === 1 || d === 3 || d === 5 // Mon Wed Fri
-  const night: StepItem[] = [{ text: 'magnesium' }]
-  if (zincToday) night.push({ text: 'zinc' })
+  const night: StepItem[] = [
+    { text: 'magnesium glycinate', detail: '2 capsules (480 mg total)' },
+  ]
+  if (zincToday) night.push({ text: 'zinc picolinate', detail: '1 capsule (25 mg)' })
   return [
-    { label: 'morning', steps: [{ text: 'D3', detail: '1 softgel' }, { text: 'omega-3', detail: '1–2 softgels' }] },
+    {
+      label: 'morning',
+      steps: [
+        { text: 'D3 + K2', detail: '1 softgel (5,000 IU D3)' },
+        { text: 'Triple Omega 3-6-9', detail: '2 softgels' },
+      ],
+    },
     { label: `tonight${zincToday ? ' · zinc' : ''}`, steps: night },
   ]
 }
@@ -83,6 +84,13 @@ export function computeSteps(habit: Habit, day: string): StepSection[] | null {
   if (n === 'skincare') return skincareSteps(habit.startDate, day)
   if (n === 'vitamins' || n === 'vitamin') return vitaminSteps(day)
   return null
+}
+
+// Returns the 向上 track name that mirrors this habit, if one exists.
+export function linkedAscendTrack(habitName: string): string | null {
+  const n = habitName.toLowerCase().trim()
+  const linked = new Set(['skincare', 'vitamins', 'diet', 'gym'])
+  return linked.has(n) ? n : null
 }
 
 export type DayEntry = {
