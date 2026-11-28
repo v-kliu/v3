@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { LazyMotion, MotionConfig, AnimatePresence, domAnimation, m } from 'motion/react'
-import { ChevronLeft, ChevronRight, MoreHorizontal, Plus, Flame, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, MoreHorizontal, Plus, Flame, X } from 'lucide-react'
 import Ring from '@/components/grit/Ring'
-import { useGrit, habitsOn, dayKey, parseDay, addDays, nextColor, ratingColor, PALETTE, type Habit, type DayEntry } from '@/components/grit/store'
+import { useGrit, habitsOn, dayKey, parseDay, addDays, nextColor, ratingColor, PALETTE, computeSteps, type Habit, type DayEntry, type StepSection } from '@/components/grit/store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -252,6 +252,15 @@ function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onD
   const [renaming, setRenaming] = useState<string | null>(null)
   const [renameDraft, setRenameDraft] = useState('')
   const [shown, setShown] = useState(false)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+
+  function toggleExpand(id: string) {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setShown(true))
@@ -305,6 +314,8 @@ function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onD
           {habits.map(h => {
             const checked = done.has(h.id)
             const streak = streakFor(h.id)
+            const steps = computeSteps(h, day)
+            const isExpanded = expanded.has(h.id)
             return (
               <m.li
                 key={h.id}
@@ -354,6 +365,17 @@ function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onD
                       <Flame size={10} />{streak}
                     </span>
                   )}
+                  {steps && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-[var(--text-faint)] opacity-60 group-hover:opacity-100"
+                      aria-label={isExpanded ? `hide ${h.name} guide` : `show ${h.name} guide`}
+                      onClick={() => toggleExpand(h.id)}
+                    >
+                      <ChevronDown size={13} className={cn('transition-transform duration-200', isExpanded && 'rotate-180')} />
+                    </Button>
+                  )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-[var(--text-faint)] opacity-60 group-hover:opacity-100" aria-label={`${h.name} options`}>
@@ -367,6 +389,21 @@ function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onD
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
+
+                <AnimatePresence initial={false}>
+                  {steps && isExpanded && (
+                    <m.div
+                      key="steps"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <StepGuide sections={steps} color={h.color} />
+                    </m.div>
+                  )}
+                </AnimatePresence>
               </m.li>
             )
           })}
@@ -417,6 +454,36 @@ function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onD
 
       <DayJournal entry={entry} disabled={future} onChange={onDay} />
     </m.section>
+  )
+}
+
+function StepGuide({ sections, color }: { sections: StepSection[]; color: string }) {
+  return (
+    <div className="mb-1 ml-9 mr-2 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-3">
+      {sections.map(sec => (
+        <div key={sec.label}>
+          <span
+            className="mb-1.5 block font-mono text-[0.6rem] uppercase tracking-[0.12em]"
+            style={{ color }}
+          >
+            {sec.label}
+          </span>
+          <ol className="m-0 list-none space-y-1 p-0">
+            {sec.steps.map((step, i) => (
+              <li key={i} className="flex gap-2 font-mono text-[0.72rem]">
+                <span className="shrink-0 tabular-nums text-[var(--text-faint)]">{i + 1}.</span>
+                <span>
+                  <span className="text-[var(--text-muted)]">{step.text}</span>
+                  {step.detail && (
+                    <span className="text-[var(--text-faint)]"> · {step.detail}</span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ))}
+    </div>
   )
 }
 

@@ -14,6 +14,77 @@ export type Habit = {
   position: number
 }
 
+export type StepItem = { text: string; detail?: string }
+export type StepSection = { label: string; steps: StepItem[] }
+
+function weekNumber(startDate: string, today: string): number {
+  if (today < startDate) return 0
+  const diffDays = Math.floor((parseDay(today).getTime() - parseDay(startDate).getTime()) / 86_400_000)
+  return Math.floor(diffDays / 7) + 1
+}
+
+function dow(day: string): number { return parseDay(day).getDay() }
+
+function skincareSteps(startDate: string, today: string): StepSection[] {
+  const wk = weekNumber(startDate, today)
+  if (wk === 0) {
+    const start = parseDay(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    return [{ label: 'not started yet', steps: [{ text: `routine begins ${start}` }] }]
+  }
+
+  const d = dow(today)
+  const adapalene = wk >= 5 && (wk <= 8 ? d === 1 || d === 4 : d === 1 || d === 3 || d === 5)
+
+  const am: StepItem[] = [{ text: 'rinse face with lukewarm water', detail: 'no cleanser — pat dry' }]
+  if (wk >= 3) am.push({ text: 'Anua toner', detail: 'a few drops pressed in with palms' })
+  if (wk >= 4) am.push({ text: 'Good Molecules serum', detail: '2–3 drops' })
+  if (wk >= 2) am.push({ text: 'Vanicream SPF 30', detail: '¼ tsp for the whole face' })
+
+  const pm: StepItem[] = [{ text: 'Vanicream cleanser', detail: 'pea-sized, 20–30s, lukewarm water, pat dry' }]
+  if (wk >= 3) pm.push({ text: 'Anua toner', detail: 'pressed in' })
+  pm.push({ text: 'Jumiso serum', detail: '2–3 drops on damp skin' })
+  if (adapalene) {
+    pm.push({ text: 'Dynasty Cream — thin layer', detail: 'wait 2 min before next step' })
+    pm.push({ text: 'adapalene', detail: 'pea-sized · avoid eyes, nostrils, mouth corners, eczema patches' })
+    pm.push({ text: 'Dynasty Cream — seal', detail: 'another thin layer on top' })
+  } else {
+    pm.push({ text: 'Dynasty Cream', detail: 'pea- to almond-sized amount' })
+  }
+
+  const sections: StepSection[] = [
+    { label: 'morning', steps: am },
+    { label: `tonight${adapalene ? ' · adapalene' : ''}`, steps: pm },
+  ]
+
+  const upcoming: Record<number, string> = {
+    1: 'week 2 — add SPF 30',
+    2: 'week 3 — add Anua toner',
+    3: 'week 4 — add Good Molecules serum',
+    4: 'week 5 — add adapalene (Mon/Thu nights)',
+  }
+  if (upcoming[wk]) sections.push({ label: 'up next', steps: [{ text: upcoming[wk] }] })
+
+  return sections
+}
+
+function vitaminSteps(today: string): StepSection[] {
+  const d = dow(today)
+  const zincToday = d === 1 || d === 3 || d === 5 // Mon Wed Fri
+  const night: StepItem[] = [{ text: 'magnesium' }]
+  if (zincToday) night.push({ text: 'zinc' })
+  return [
+    { label: 'morning', steps: [{ text: 'D3', detail: '1 softgel' }, { text: 'omega-3', detail: '1–2 softgels' }] },
+    { label: `tonight${zincToday ? ' · zinc' : ''}`, steps: night },
+  ]
+}
+
+export function computeSteps(habit: Habit, day: string): StepSection[] | null {
+  const n = habit.name.toLowerCase().trim()
+  if (n === 'skincare') return skincareSteps(habit.startDate, day)
+  if (n === 'vitamins' || n === 'vitamin') return vitaminSteps(day)
+  return null
+}
+
 export type DayEntry = {
   rating: number | null   // 1–10, independent of habit completion
   note: string            // free-form journal for the day
