@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { colorForId } from '@/components/dashboard/theme'
 import { useTabTint } from '@/components/dashboard/useTabTint'
+import { linkedAscendTrack } from '@/components/grit/store'
 
 const mono = 'var(--mono)'
 
@@ -312,6 +313,24 @@ export default function AscendPage() {
 
       {active && (
         <div className="ascend-card">
+          {linkedAscendTrack(active.name) && (
+            <div style={{ marginBottom: '0.75rem' }}>
+              <a
+                href="/dashboard/grit"
+                style={{
+                  fontFamily: 'var(--mono)',
+                  fontSize: '0.62rem',
+                  color: 'var(--text-faint)',
+                  textDecoration: 'none',
+                  transition: 'color 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-muted)' }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-faint)' }}
+              >
+                → tracked in grit
+              </a>
+            </div>
+          )}
           <ol key={active.id} className="ascend-rail">
             <AnimatePresence>
               {steps.map((step, i) => {

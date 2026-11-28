@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { LazyMotion, MotionConfig, AnimatePresence, domAnimation, m } from 'motion/react'
 import { ChevronLeft, ChevronRight, ChevronDown, MoreHorizontal, Plus, Flame, X } from 'lucide-react'
 import Ring from '@/components/grit/Ring'
-import { useGrit, habitsOn, dayKey, parseDay, addDays, nextColor, ratingColor, PALETTE, computeSteps, type Habit, type DayEntry, type StepSection } from '@/components/grit/store'
+import { useGrit, habitsOn, dayKey, parseDay, addDays, nextColor, ratingColor, PALETTE, computeSteps, linkedAscendTrack, type Habit, type DayEntry, type StepSection } from '@/components/grit/store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -400,7 +400,7 @@ function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onD
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      <StepGuide sections={steps} color={h.color} />
+                      <StepGuide sections={steps} color={h.color} habitName={h.name} />
                     </m.div>
                   )}
                 </AnimatePresence>
@@ -457,7 +457,8 @@ function DayPanel({ day, today, habits, done, allChecks, entry, takenColors, onD
   )
 }
 
-function StepGuide({ sections, color }: { sections: StepSection[]; color: string }) {
+function StepGuide({ sections, color, habitName }: { sections: StepSection[]; color: string; habitName: string }) {
+  const ascendTrack = linkedAscendTrack(habitName)
   return (
     <div className="mb-1 ml-9 mr-2 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-3">
       {sections.map(sec => (
@@ -483,6 +484,16 @@ function StepGuide({ sections, color }: { sections: StepSection[]; color: string
           </ol>
         </div>
       ))}
+      {ascendTrack && (
+        <div className="border-t border-dashed border-[var(--border)] pt-2.5">
+          <a
+            href="/dashboard/ascend"
+            className="font-mono text-[0.62rem] text-[var(--text-faint)] no-underline transition-colors hover:text-[var(--text-muted)]"
+          >
+            → see in 向上
+          </a>
+        </div>
+      )}
     </div>
   )
 }
